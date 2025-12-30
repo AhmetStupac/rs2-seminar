@@ -30,7 +30,51 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: LoginPage(),
+    );
+  }
+}
+
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("login")),
+      body: Center(
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 400, maxWidth: 400),
+            child: Card(
+              child: Column(
+                children: [
+                  Image.network(
+                    "https://www.fit.ba/content/763cbb87-718d-4eca-a991-343858daf424",
+                    height: 100,
+                    width: 100,
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: "Username",
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      prefixIcon: Icon(Icons.password),
+                    ),
+                  ),
+                  ElevatedButton(onPressed: () {}, child: Text("Login")),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
