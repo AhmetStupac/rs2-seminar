@@ -37,6 +37,8 @@ class MyApp extends StatelessWidget {
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +58,7 @@ class LoginPage extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   TextField(
+                    controller: _usernameController,
                     decoration: InputDecoration(
                       labelText: "Username",
                       prefixIcon: Icon(Icons.email),
@@ -63,6 +66,7 @@ class LoginPage extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   TextField(
+                    controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: "Password",
                       prefixIcon: Icon(Icons.password),
