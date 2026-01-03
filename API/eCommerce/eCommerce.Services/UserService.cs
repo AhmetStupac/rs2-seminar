@@ -242,7 +242,8 @@ namespace eCommerce.Services
             
             return response;
         }
-
+         
+        //login metoda
         public async Task<UserResponse?> AuthenticateAsync(UserLoginRequest request)
         {
             var user = await _context.Users

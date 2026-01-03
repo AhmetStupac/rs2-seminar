@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
+import 'package:personaltrainer_mobile/screens/exercise_list.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,7 +39,7 @@ class MyApp extends StatelessWidget {
 }
 
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+  LoginPage({super.key});
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -72,7 +75,38 @@ class LoginPage extends StatelessWidget {
                       prefixIcon: Icon(Icons.password),
                     ),
                   ),
-                  ElevatedButton(onPressed: () {}, child: Text("Login")),
+                  ElevatedButton(
+                    onPressed: () async {
+                      ExerciseProvider provider = new ExerciseProvider();
+                      AuthProvider.username = _usernameController.text;
+                      AuthProvider.password = _passwordController.text;
+                      try {
+                        var data = await provider.get();
+                        print("authenticated");
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ExerciseListScreen(),
+                          ),
+                        );
+                      } on Exception catch (e) {
+                        print("not authenticated");
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Error"),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text("Ok"),
+                              ),
+                            ],
+                            content: Text(e.toString()),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text("Login"),
+                  ),
                 ],
               ),
             ),

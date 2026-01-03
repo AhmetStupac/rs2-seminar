@@ -26,22 +26,22 @@ namespace eCommerce.Services
         }
 
 
-        protected override TrainingResponse MapToResponse(Database.Training entity)
-        {
-            var response = _mapper.Map<TrainingResponse>(entity);
+        //protected override TrainingResponse MapToResponse(Database.Training entity)
+        //{
+        //    var response = _mapper.Map<TrainingResponse>(entity);
 
-            // If the response is ExerciseResponse, set the MuscleGroupId and MuscleGroupName
-            if (response is TrainingResponse exerciseResponse)
-            {
-                var firstMuscleGroup = entity.ExerciseMuscleGroups?.FirstOrDefault()?.MuscleGroup;
-                if (firstMuscleGroup != null)
-                {
-                    exerciseResponse.MuscleGroupId = firstMuscleGroup.Id;
-                    exerciseResponse.MuscleGroupName = firstMuscleGroup.Name;
-                }
-            }
+        //    // If the response is ExerciseResponse, set the MuscleGroupId and MuscleGroupName
+        //    if (response is TrainingResponse exerciseResponse)
+        //    {
+        //        var firstMuscleGroup = entity.ExerciseMuscleGroups?.FirstOrDefault()?.MuscleGroup;
+        //        if (firstMuscleGroup != null)
+        //        {
+        //            exerciseResponse.MuscleGroupId = firstMuscleGroup.Id;
+        //            exerciseResponse.MuscleGroupName = firstMuscleGroup.Name;
+        //        }
+        //    }
 
-            return response;
-        }
+        //    return response;
+        //}
     }
 }
