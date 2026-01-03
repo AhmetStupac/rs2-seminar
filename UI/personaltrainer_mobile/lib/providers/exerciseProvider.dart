@@ -1,20 +1,29 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:personaltrainer_mobile/models/exercise.dart';
+import 'package:personaltrainer_mobile/models/search_result.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class ExerciseProvider {
   ExerciseProvider();
 
-  Future<dynamic> get() async {
+  Future<SearchResult<Exercise>> get() async {
     var url = "https://localhost:7093/api/Exercise";
     var uri = Uri.parse(url);
 
     var response = await http.get(uri, headers: createHeaders());
+    print("API response: ${response.body}"); 
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
-      return data;
+      var items = data["items"].map((e)=> Exercise.fromJson(e)).toList().cast<Exercise>();
+
+     SearchResult<Exercise> result = SearchResult<Exercise>();
+      result.result = items;
+      result.count = data["totalCount"] ?? 0;
+      // totalCount mi je null sa Backenda, popravi to
+      return result;
     } else {
       throw Exception("Unknown exception");
     }

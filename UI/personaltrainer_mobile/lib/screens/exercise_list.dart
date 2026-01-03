@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/layouts/master_screen.dart';
+import 'package:personaltrainer_mobile/models/exercise.dart';
+import 'package:personaltrainer_mobile/models/search_result.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 
 class ExerciseListScreen extends StatefulWidget {
@@ -10,8 +12,8 @@ class ExerciseListScreen extends StatefulWidget {
 }
 
 class _ExerciseListScreenState extends State<ExerciseListScreen> {
-  ExerciseProvider provider = new ExerciseProvider();
-  dynamic result;
+  ExerciseProvider provider = ExerciseProvider();
+  SearchResult<Exercise>? result = null;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,11 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              result = await provider.get();
+              
+                result = await provider.get();
+              setState(() {
+              });
+
               print(result);
             },
             child: Text("Pretaga"),
@@ -55,6 +61,20 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
   }
 
   Widget _buildResultView() {
-    return Placeholder();
+    return Expanded(
+      child: SingleChildScrollView(
+        child: DataTable(
+          columns: [
+            DataColumn(label: Text('ID'), numeric: true),
+            DataColumn(label: Text('Naziv')),
+          ],
+          rows: result?.result.map((e) =>
+          DataRow(cells: [
+            DataCell(Text(e.id.toString())),
+            DataCell(Text(e.name.toString())),
+          ])).toList().cast<DataRow>() ?? [],
+        ),
+      ),
+    );
   }
 }

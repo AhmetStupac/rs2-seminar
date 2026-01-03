@@ -66,7 +66,7 @@ class LoginPage extends StatelessWidget {
                       labelText: "Username",
                       prefixIcon: Icon(Icons.email),
                     ),
-                  ),
+                  ),  
                   SizedBox(height: 10),
                   TextField(
                     controller: _passwordController,
@@ -77,12 +77,13 @@ class LoginPage extends StatelessWidget {
                   ),
                   ElevatedButton(
                     onPressed: () async {
-                      ExerciseProvider provider = new ExerciseProvider();
+                      ExerciseProvider provider = ExerciseProvider();
                       AuthProvider.username = _usernameController.text;
                       AuthProvider.password = _passwordController.text;
                       try {
                         var data = await provider.get();
                         print("authenticated");
+                        print(data);
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => ExerciseListScreen(),
