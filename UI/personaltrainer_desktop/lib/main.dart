@@ -1,10 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
+import 'package:personaltrainer_mobile/providers/logged_exercise_provider.dart';
+import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/screens/exercise_list.dart';
+import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ExerciseProvider>(
+          create: (_) => LoggedExerciseProvider(),
+        ),
+        ChangeNotifierProvider<MuscleGroupProvider>(
+          create: (_) => MuscleGroupProvider(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -66,7 +82,7 @@ class LoginPage extends StatelessWidget {
                       labelText: "Username",
                       prefixIcon: Icon(Icons.email),
                     ),
-                  ),  
+                  ),
                   SizedBox(height: 10),
                   TextField(
                     controller: _passwordController,
@@ -86,7 +102,7 @@ class LoginPage extends StatelessWidget {
                         print(data);
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => ExerciseListScreen(),
+                            builder: (context) => TrainingPlanScreen(),
                           ),
                         );
                       } on Exception catch (e) {

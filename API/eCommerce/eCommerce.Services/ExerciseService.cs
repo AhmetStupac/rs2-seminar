@@ -83,6 +83,10 @@ namespace eCommerce.Services
                 query = query.Where(ex => ex.Name.Contains(search.Name));
             }
 
+            if (search.MuscleGroupId.HasValue && search.MuscleGroupId.Value > 0)
+            {
+                query = query.Where(ex => ex.ExerciseMuscleGroups.Any(emg => emg.MuscleGroupId == search.MuscleGroupId.Value));
+            }
             return query;
         }
 

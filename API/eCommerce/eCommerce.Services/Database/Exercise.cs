@@ -17,5 +17,6 @@ namespace eCommerce.Services.Database
         [ForeignKey(nameof(Equipment))]
         public int EquipmentId { get; set; }
         public Equipment Equipment { get; set; }
+        public byte[]? Picture { get; set; }
     }
 }
