@@ -3,6 +3,7 @@ import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 import 'package:personaltrainer_mobile/providers/logged_exercise_provider.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
+import 'package:personaltrainer_mobile/providers/training_provider.dart';
 import 'package:personaltrainer_mobile/screens/exercise_list.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,9 @@ void main() {
         ),
         ChangeNotifierProvider<MuscleGroupProvider>(
           create: (_) => MuscleGroupProvider(),
+        ),
+        ChangeNotifierProvider<TrainingProvider>(
+          create: (_) => TrainingProvider(),
         ),
       ],
       child: const MyApp(),

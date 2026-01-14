@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/screens/exercise_list.dart';
+import 'package:personaltrainer_mobile/screens/training_details_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 
@@ -86,11 +87,14 @@ class _MasterScreenState extends State<NavBar> {
 
           _buildMenuItem(
             icon: Icons.bar_chart,
-            label: 'Statistika',
-            routeName: 'Statistika',
+            label: 'Trening detalji',
+            routeName: 'Trening detalji',
             onTap: () {
               // TODO: Navigiraj na statistika screen
-              setState(() => selectedMenu = 'Statistika');
+              setState(() => selectedMenu = 'Trening detalji');
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => TrainingDetailsScreen()),
+              );
             },
           ),
 

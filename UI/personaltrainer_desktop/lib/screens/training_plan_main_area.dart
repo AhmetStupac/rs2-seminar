@@ -174,202 +174,203 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
             ),
           ),
 
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors. grey[100],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Odabrane vježbe (${addedExercises.length})',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
+          // Expanded(
+          //   flex: 1,
+          //   child: Container(
+          //     padding: const EdgeInsets.all(16),
+          //     decoration: BoxDecoration(
+          //       color: Colors. grey[100],
+          //       borderRadius: BorderRadius.circular(8),
+          //       border: Border.all(color: Colors.grey[300]!),
+          //     ),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         Text(
+          //           'Odabrane vježbe (${addedExercises.length})',
+          //           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          //         ),
+          //         const SizedBox(height: 16),
                   
-                  if (addedExercises.isEmpty)
-                    const Center(
-                      child:  Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text(
-                          'Nema dodanih vježbi',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
-                        ),
-                      ),
-                    )
-                  else
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: addedExercises.length,
-                        itemBuilder: (context, index) {
-                          final exercise = addedExercises[index];
-                          return _buildExerciseCard(exercise);
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+          //         if (addedExercises.isEmpty)
+          //           const Center(
+          //             child:  Padding(
+          //               padding: EdgeInsets.all(32),
+          //               child: Text(
+          //                 'Nema dodanih vježbi',
+          //                 style: TextStyle(color: Colors.grey, fontSize: 14),
+          //               ),
+          //             ),
+          //           )
+          //         else
+          //           Expanded(
+          //             child: ListView.builder(
+          //               itemCount: addedExercises.length,
+          //               itemBuilder: (context, index) {
+          //                 final exercise = addedExercises[index];
+          //                 return _buildExerciseCard(exercise);
+          //               },
+          //             ),
+          //           ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
   }
 
-   Widget _buildExerciseCard(Exercise exercise) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color:  Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Exercise Image (placeholder for now)
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image. network(
-                      exercise.imageUrl!,
-                      fit:  BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.fitness_center,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  )
-                : Icon(
-                    Icons.fitness_center,
-                    color: Colors.grey[400],
-                    size: 30,
-                  ),
-          ),
+//    Widget _buildExerciseCard(Exercise exercise) {
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 12),
+//       padding: const EdgeInsets.all(12),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(8),
+//         boxShadow: [
+//           BoxShadow(
+//             color:  Colors.grey.withOpacity(0.2),
+//             spreadRadius: 1,
+//             blurRadius: 3,
+//             offset: const Offset(0, 1),
+//           ),
+//         ],
+//       ),
+//       child: Row(
+//         children: [
+//           // Exercise Image (placeholder for now)
+//           Container(
+//             width: 60,
+//             height: 60,
+//             decoration: BoxDecoration(
+//               color: Colors.grey[200],
+//               borderRadius: BorderRadius.circular(8),
+//             ),
+//             child: exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty
+//                 ? ClipRRect(
+//                     borderRadius: BorderRadius.circular(8),
+//                     child: Image. network(
+//                       exercise.imageUrl!,
+//                       fit:  BoxFit.cover,
+//                       errorBuilder: (context, error, stackTrace) => Icon(
+//                         Icons.fitness_center,
+//                         color: Colors.grey[400],
+//                       ),
+//                     ),
+//                   )
+//                 : Icon(
+//                     Icons.fitness_center,
+//                     color: Colors.grey[400],
+//                     size: 30,
+//                   ),
+//           ),
 
-          const SizedBox(width: 12),
+//           const SizedBox(width: 12),
 
-          // Exercise Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  exercise.name ?? 'Unnamed Exercise',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight. bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    // Reps Dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]!),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: DropdownButton<int>(
-                        value:  exercise.reps > 0 ? exercise.reps : 8,
-                        items: List.generate(20, (i) => i + 1).map((reps) {
-                          return DropdownMenuItem(
-                            value: reps,
-                            child: Text('$reps'),
-                          );
-                        }).toList(),
-                        onChanged: (newReps) {
-                          setState(() {
-                            // Update reps (you might want to create a mutable copy)
-                          });
-                        },
-                        underline: const SizedBox(),
-                        isDense: true,
-                      ),
-                    ),
+//           // Exercise Details
+//           Expanded(
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   exercise.name ?? 'Unnamed Exercise',
+//                   style: const TextStyle(
+//                     fontSize: 16,
+//                     fontWeight: FontWeight. bold,
+//                   ),
+//                 ),
+//                 const SizedBox(height: 4),
+//                 Row(
+//                   children: [
+//                     // Reps Dropdown
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//                       decoration: BoxDecoration(
+//                         border: Border.all(color: Colors.grey[300]!),
+//                         borderRadius: BorderRadius.circular(4),
+//                       ),
+//                       child: DropdownButton<int>(
+//                         value:  exercise.reps > 0 ? exercise.reps : 8,
+//                         items: List.generate(20, (i) => i + 1).map((reps) {
+//                           return DropdownMenuItem(
+//                             value: reps,
+//                             child: Text('$reps'),
+//                           );
+//                         }).toList(),
+//                         onChanged: (newReps) {
+//                           setState(() {
+//                             // Update reps (you might want to create a mutable copy)
+//                           });
+//                         },
+//                         underline: const SizedBox(),
+//                         isDense: true,
+//                       ),
+//                     ),
                     
-                    const SizedBox(width: 8),
-                    const Text('Reps'),
+//                     const SizedBox(width: 8),
+//                     const Text('Reps'),
                     
-                    const SizedBox(width: 16),
+//                     const SizedBox(width: 16),
                     
-                    // Sets Dropdown
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]! ),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: DropdownButton<int>(
-                        value: exercise.sets > 0 ? exercise.sets : 3,
-                        items: List. generate(10, (i) => i + 1).map((sets) {
-                          return DropdownMenuItem(
-                            value:  sets,
-                            child: Text('$sets'),
-                          );
-                        }).toList(),
-                        onChanged: (newSets) {
-                          setState(() {
-                            // Update sets (you might want to create a mutable copy)
-                          });
-                        },
-                        underline:  const SizedBox(),
-                        isDense: true,
-                      ),
-                    ),
+//                     // Sets Dropdown
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+//                       decoration: BoxDecoration(
+//                         border: Border.all(color: Colors.grey[300]! ),
+//                         borderRadius: BorderRadius.circular(4),
+//                       ),
+//                       child: DropdownButton<int>(
+//                         value: exercise.sets > 0 ? exercise.sets : 3,
+//                         items: List. generate(10, (i) => i + 1).map((sets) {
+//                           return DropdownMenuItem(
+//                             value:  sets,
+//                             child: Text('$sets'),
+//                           );
+//                         }).toList(),
+//                         onChanged: (newSets) {
+//                           setState(() {
+//                             // Update sets (you might want to create a mutable copy)
+//                           });
+//                         },
+//                         underline:  const SizedBox(),
+//                         isDense: true,
+//                       ),
+//                     ),
                     
-                    const SizedBox(width: 8),
-                    const Text('Sets'),
-                  ],
-                ),
-              ],
-            ),
-          ),
+//                     const SizedBox(width: 8),
+//                     const Text('Sets'),
+//                   ],
+//                 ),
+//               ],
+//             ),
+//           ),
 
-          // Remove Button
-          IconButton(
-            onPressed: () => _removeExercise(exercise),
-            icon: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+//           // Remove Button
+//           IconButton(
+//             onPressed: () => _removeExercise(exercise),
+//             icon: Container(
+//               padding: const EdgeInsets.all(4),
+//               decoration: const BoxDecoration(
+//                 color: Colors.red,
+//                 shape: BoxShape.circle,
+//               ),
+//               child: const Icon(
+//                 Icons.close,
+//                 color: Colors.white,
+//                 size: 16,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+    // );
 
 
 
-  void posaljiNaAPI(String nazivPlana) {
-    // Ovde će biti tvoj API poziv
-    print('Šaljem na API: $nazivPlana');
-  }
+//   void posaljiNaAPI(String nazivPlana) {
+//     // Ovde će biti tvoj API poziv
+//     print('Šaljem na API: $nazivPlana');
+//   }
+// }
 }

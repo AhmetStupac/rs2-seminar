@@ -26,6 +26,7 @@ builder.Services.AddTransient<ITrainingPlanService, TrainingPlanService>();
 builder.Services.AddTransient<IExerciseService, ExerciseService>();
 builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
 builder.Services.AddTransient<IEquipmentService, EquipmentService>();
+builder.Services.AddTransient<ITrainingService, TrainingService>();
 
 
 builder.Services.AddMapster();
