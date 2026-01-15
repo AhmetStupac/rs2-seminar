@@ -7,8 +7,8 @@ class TrainingProvider extends BaseProvider<Training> {
 
   //1. korak importovati model.
   //2. dodati u main.dart, provider -> void metoda ChangeNotifierProvider<TrainingProvider>(
-       //   create: (_) => TrainingProvider(),
-        //),
+  //   create: (_) => TrainingProvider(),
+  //),
 
   //3. ako nesto radim sa providerom, obavezno uraditi hot restart
   @override

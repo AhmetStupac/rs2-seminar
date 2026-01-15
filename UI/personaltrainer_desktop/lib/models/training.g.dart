@@ -11,8 +11,8 @@ Training _$TrainingFromJson(Map<String, dynamic> json) => Training(
   name: json['name'] as String?,
   description: json['description'] as String?,
   duration: (json['duration'] as num?)?.toInt(),
-  client: json['client'] as String?,
-  personalTrainer: json['personalTrainer'] as String?,
+  clientId: (json['clientId'] as num?)?.toInt(),
+  personalTrainerId: (json['personalTrainerId'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$TrainingToJson(Training instance) => <String, dynamic>{
@@ -20,6 +20,6 @@ Map<String, dynamic> _$TrainingToJson(Training instance) => <String, dynamic>{
   'name': instance.name,
   'description': instance.description,
   'duration': instance.duration,
-  'client': instance.client,
-  'personalTrainer': instance.personalTrainer,
+  'clientId': instance.clientId,
+  'personalTrainerId': instance.personalTrainerId,
 };

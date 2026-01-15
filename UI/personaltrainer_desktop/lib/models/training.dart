@@ -8,16 +8,23 @@ class Training {
   String? name; // nije se dodalo u exercise.g.dart
   String? description;
   int? duration; // trajanje u minutama
-  String? client;
-  String? personalTrainer;
+  int? clientId;
+  int? personalTrainerId;
 
   // 1. korak preimenovati part dio, naziv klase, ctor itd.
-  //2.  korak popisati prop i dodati u ctor 
+  //2.  korak popisati prop i dodati u ctor
   //3. korak save projekat pa pokrenuti build_runner
   //4. korak kreirati provider za ovaj model
 
-  Training({this.id, this.name,this.description, this.duration, this.client, this.personalTrainer});
-  
+  Training({
+    this.id,
+    this.name,
+    this.description,
+    this.duration,
+    this.clientId,
+    this.personalTrainerId,
+  });
+
   factory Training.fromJson(Map<String, dynamic> json) =>
       _$TrainingFromJson(json);
 

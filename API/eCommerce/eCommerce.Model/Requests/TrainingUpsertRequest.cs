@@ -5,7 +5,7 @@ namespace eCommerce.Model.Requests
         public string Name { get; set; }
         public string Description { get; set; }
         public int Duration { get; set; }
-        public string Client { get; set; }
-        public string PersonalTrainer { get; set; }
+        public int ClientId { get; set; }
+        public int PersonalTrainerId { get; set; }
     }
 }

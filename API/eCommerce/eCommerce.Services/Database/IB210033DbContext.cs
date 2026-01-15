@@ -22,6 +22,7 @@ namespace eCommerce.Services.Database
         public DbSet<Equipment> Equipments { get; set; }
         public DbSet<MuscleGroup> MuscleGroups { get; set; }
         public DbSet<PlanCostItem> PlanCostItems { get; set; }
+        public DbSet<Training> Trainings { get; set; }
 
 
 
@@ -189,6 +190,18 @@ namespace eCommerce.Services.Database
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+
+            modelBuilder.Entity<Training>()
+                .HasOne(t => t.Client)
+                .WithMany()
+                .HasForeignKey(t => t.ClientId)
+                .OnDelete(DeleteBehavior.NoAction); // Change from Cascade to NoAction
+
+            modelBuilder.Entity<Training>()
+                .HasOne(t => t.PersonalTrainer)
+                .WithMany()
+                .HasForeignKey(t => t.PersonalTrainerId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
             // Create a unique constraint on UserId and RoleId

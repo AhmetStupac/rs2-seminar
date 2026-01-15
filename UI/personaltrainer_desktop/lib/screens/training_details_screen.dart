@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/layouts/navBar.dart';
 import 'package:personaltrainer_mobile/models/training.dart';
+import 'package:personaltrainer_mobile/providers/training_provider.dart';
 
 class TrainingDetailsScreen extends StatefulWidget {
   final Training? training;
@@ -18,15 +19,25 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
   late TextEditingController _durationController;
   late TextEditingController _clientController;
   late TextEditingController _personalTrainerController;
+  late TrainingProvider _trainingProvider;
 
   @override
   void initState() {
     super.initState();
+    _trainingProvider = TrainingProvider();
     _nameController = TextEditingController(text: widget.training?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.training?.description ?? '');
-    _durationController = TextEditingController(text: widget.training?.duration?.toString() ?? '');
-    _clientController = TextEditingController(text: widget.training?.client ?? '');
-    _personalTrainerController = TextEditingController(text: widget.training?.personalTrainer ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.training?.description ?? '',
+    );
+    _durationController = TextEditingController(
+      text: widget.training?.duration?.toString() ?? '',
+    );
+    _clientController = TextEditingController(
+      text: widget.training?.clientId.toString() ?? '',
+    );
+    _personalTrainerController = TextEditingController(
+      text: widget.training?.personalTrainerId.toString() ?? '',
+    );
   }
 
   @override
@@ -39,22 +50,31 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
     super.dispose();
   }
 
-  void _saveTraining() {
+  void _saveTraining() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Ovdje ide logika za spremanje (API poziv ili Provider)
       final training = Training(
         id: widget.training?.id,
         name: _nameController.text,
         description: _descriptionController.text,
         duration: int.tryParse(_durationController.text),
-        client: _clientController.text,
-        personalTrainer: _personalTrainerController.text,
+        clientId: int.tryParse(_clientController.text),
+        personalTrainerId: int.tryParse(_personalTrainerController.text),
       );
-      // TODO: Pozovi provider ili API za spremanje
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Trening spremljen!')),
-      );
-      Navigator.of(context).pop(training);
+      try {
+        await _trainingProvider.insert(training);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Trening spremljen!')));
+          Navigator.of(context).pop(training);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Greška: ${e.toString()}')));
+        }
+      }
     }
   }
 
@@ -71,7 +91,8 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(labelText: 'Naziv treninga'),
-                validator: (value) => value == null || value.isEmpty ? 'Unesite naziv' : null,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Unesite naziv' : null,
               ),
               SizedBox(height: 16),
               TextFormField(
@@ -84,17 +105,18 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                 controller: _durationController,
                 decoration: InputDecoration(labelText: 'Trajanje (min)'),
                 keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty ? 'Unesite trajanje' : null,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Unesite trajanje' : null,
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _clientController,
-                decoration: InputDecoration(labelText: 'Klijent'),
+                decoration: InputDecoration(labelText: 'Klijent ID:'),
               ),
               SizedBox(height: 16),
               TextFormField(
                 controller: _personalTrainerController,
-                decoration: InputDecoration(labelText: 'Personalni trener'),
+                decoration: InputDecoration(labelText: 'Personalni trener ID:'),
               ),
               SizedBox(height: 32),
               Row(
