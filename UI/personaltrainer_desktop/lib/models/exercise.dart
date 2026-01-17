@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:personaltrainer_mobile/models/equipment.dart';
+import 'package:personaltrainer_mobile/models/image.dart';
 
 part 'exercise.g.dart';
 
@@ -6,9 +8,19 @@ part 'exercise.g.dart';
 class Exercise {
   int? id;
   String? name;
-  String? picture; // nije se dodalo u exercise.g.dart
+  int? imageId;
+  Image? image; // nije se dodalo u exercise.g.dart
+  int? equipmentId;
+  Equipment? equipment;
 
-  Exercise({this.id, this.name});
+  Exercise({
+    this.id,
+    this.name,
+    this.imageId,
+    this.image,
+    this.equipmentId,
+    this.equipment,
+  });
 
   factory Exercise.fromJson(Map<String, dynamic> json) =>
       _$ExerciseFromJson(json);

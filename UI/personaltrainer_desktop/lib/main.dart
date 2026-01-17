@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 import 'package:personaltrainer_mobile/providers/logged_exercise_provider.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
-import 'package:personaltrainer_mobile/screens/exercise_list.dart';
+import 'package:personaltrainer_mobile/providers/image_provider.dart'
+    as img_provider;
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -20,6 +22,12 @@ void main() {
         ),
         ChangeNotifierProvider<TrainingProvider>(
           create: (_) => TrainingProvider(),
+        ),
+        ChangeNotifierProvider<img_provider.ImageProvider>(
+          create: (_) => img_provider.ImageProvider(),
+        ),
+        ChangeNotifierProvider<EquipmentProvider>(
+          create: (_) => EquipmentProvider(),
         ),
       ],
       child: const MyApp(),
@@ -104,6 +112,8 @@ class LoginPage extends StatelessWidget {
                         var data = await provider.get();
                         print("authenticated");
                         print(data);
+                        AuthProvider.applyLoginResponse(data);
+
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => TrainingPlanScreen(),

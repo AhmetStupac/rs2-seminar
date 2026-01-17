@@ -23,6 +23,7 @@ namespace eCommerce.Services.Database
         public DbSet<MuscleGroup> MuscleGroups { get; set; }
         public DbSet<PlanCostItem> PlanCostItems { get; set; }
         public DbSet<Training> Trainings { get; set; }
+        public DbSet<Image> Images { get; set; }
 
 
 
@@ -202,6 +203,7 @@ namespace eCommerce.Services.Database
                 .WithMany()
                 .HasForeignKey(t => t.PersonalTrainerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
 
 
             // Create a unique constraint on UserId and RoleId

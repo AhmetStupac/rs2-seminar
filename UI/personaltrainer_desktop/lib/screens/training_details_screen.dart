@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/layouts/navBar.dart';
 import 'package:personaltrainer_mobile/models/training.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
+import 'package:personaltrainer_mobile/screens/image_upload_screen.dart';
 
 class TrainingDetailsScreen extends StatefulWidget {
   final Training? training;
@@ -122,6 +123,20 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => ImageUploadScreen(
+                            trainingId: widget.training?.id,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Icon(Icons.image),
+                    label: Text('Upload sliku'),
+                  ),
+                  SizedBox(width: 12),
                   ElevatedButton(
                     onPressed: _saveTraining,
                     child: Text('Spremi'),

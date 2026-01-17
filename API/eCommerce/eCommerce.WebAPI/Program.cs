@@ -27,6 +27,9 @@ builder.Services.AddTransient<IExerciseService, ExerciseService>();
 builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
 builder.Services.AddTransient<IEquipmentService, EquipmentService>();
 builder.Services.AddTransient<ITrainingService, TrainingService>();
+builder.Services.AddScoped<IImageMetadataService, ImageMetadataService>();
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
 
 
 builder.Services.AddMapster();

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class eCommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260116141346_ImageComesFromCloud")]
+    partial class ImageComesFromCloud
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -372,7 +375,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 16, 19, 35, 12, 535, DateTimeKind.Utc).AddTicks(4291),
+                            CreatedAt = new DateTime(2026, 1, 16, 14, 13, 46, 387, DateTimeKind.Utc).AddTicks(2089),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -380,7 +383,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 16, 19, 35, 12, 535, DateTimeKind.Utc).AddTicks(4293),
+                            CreatedAt = new DateTime(2026, 1, 16, 14, 13, 46, 387, DateTimeKind.Utc).AddTicks(2095),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -521,7 +524,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 16, 19, 35, 12, 535, DateTimeKind.Utc).AddTicks(4457),
+                            CreatedAt = new DateTime(2026, 1, 16, 14, 13, 46, 387, DateTimeKind.Utc).AddTicks(2237),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -533,7 +536,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 16, 19, 35, 12, 535, DateTimeKind.Utc).AddTicks(4460),
+                            CreatedAt = new DateTime(2026, 1, 16, 14, 13, 46, 387, DateTimeKind.Utc).AddTicks(2240),
                             Email = "denis@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -574,14 +577,14 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 1, 16, 19, 35, 12, 535, DateTimeKind.Utc).AddTicks(4432),
+                            DateAssigned = new DateTime(2026, 1, 16, 14, 13, 46, 387, DateTimeKind.Utc).AddTicks(2208),
                             RoleId = 1,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 1, 16, 19, 35, 12, 535, DateTimeKind.Utc).AddTicks(4433),
+                            DateAssigned = new DateTime(2026, 1, 16, 14, 13, 46, 387, DateTimeKind.Utc).AddTicks(2210),
                             RoleId = 2,
                             UserId = 2
                         });

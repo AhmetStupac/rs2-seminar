@@ -13,7 +13,7 @@ class Training {
 
   // 1. korak preimenovati part dio, naziv klase, ctor itd.
   //2.  korak popisati prop i dodati u ctor
-  //3. korak save projekat pa pokrenuti build_runner
+  //3. korak save projekat pa pokrenuti -> flutter pub run build_runner build
   //4. korak kreirati provider za ovaj model
 
   Training({
