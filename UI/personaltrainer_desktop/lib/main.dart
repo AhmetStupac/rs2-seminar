@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
+import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
 import 'package:personaltrainer_mobile/providers/logged_exercise_provider.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
+import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
 import 'package:personaltrainer_mobile/providers/image_provider.dart'
     as img_provider;
@@ -28,6 +30,12 @@ void main() {
         ),
         ChangeNotifierProvider<EquipmentProvider>(
           create: (_) => EquipmentProvider(),
+        ),
+        ChangeNotifierProvider<ExercisePlanProvider>(
+     create: (_) => ExercisePlanProvider(),
+        ),
+         ChangeNotifierProvider<TrainingPlanProvider>(
+     create: (_) => TrainingPlanProvider(),
         ),
       ],
       child: const MyApp(),

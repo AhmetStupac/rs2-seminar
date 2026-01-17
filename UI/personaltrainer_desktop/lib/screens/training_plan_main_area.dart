@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:personaltrainer_mobile/models/exercise.dart';
+import 'package:personaltrainer_mobile/models/exercise_plan.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 import 'package:provider/provider.dart';
 
@@ -15,20 +16,19 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   List<Exercise> exercises = [];
   bool isLoading = false;
   String? errorMessage;
-  List<Exercise> addedExercises = [];
-
-
+  ExercisePlan? exercisePlan;
+  List<ExercisePlan> exercisePlans = [];
   Exercise? _selectedExercise;
+
   @override
   void dispose() {
-    PlanNameController.dispose(); // Obavezno očisti kada Widget nestane
+    PlanNameController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     exerciseProvider = context.read<ExerciseProvider>();
     _loadExercises();
   }
@@ -38,11 +38,10 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       isLoading = true;
       errorMessage = null;
     });
-
     try {
-      final result = await exerciseProvider.get(); // Use get() method
+      final result = await exerciseProvider.get();
       setState(() {
-        exercises = result.result; // result. result is List<Exercise>
+        exercises = result.result;
         isLoading = false;
       });
     } catch (e) {
@@ -53,25 +52,11 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
     }
   }
 
-    void _addExerciseToList() {
-    if (_selectedExercise != null) {
-      setState(() {
-        // Check if exercise is already added
-        if (!addedExercises.any((ex) => ex.id == _selectedExercise! .id)) {
-          addedExercises.add(_selectedExercise!);
-        }
-        _selectedExercise = null; // Reset dropdown
-      });
-    }
-  }
-
   void _removeExercise(Exercise exercise) {
     setState(() {
-      addedExercises.remove(exercise);
+      exercisePlans.removeWhere((plan) => plan.exerciseId == exercise.id);
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +66,6 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Plan Name TextField (Polje za unos)
           Row(
             children: [
               Text(
@@ -89,14 +73,11 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               SizedBox(width: 16),
-
-              // TextField umesto DropdownButton
               Expanded(
                 child: TextField(
-                  controller:
-                      PlanNameController, // Povezuje TextField sa controller-om
+                  controller: PlanNameController,
                   decoration: InputDecoration(
-                    hintText: 'Prsa - triceps', // Placeholder tekst
+                    hintText: 'Prsa - triceps',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(4),
                       borderSide: BorderSide(color: Colors.grey[300]!),
@@ -105,22 +86,12 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       borderRadius: BorderRadius.circular(4),
                       borderSide: BorderSide(color: Colors.grey[300]!),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
                   ),
                 ),
               ),
             ],
           ),
-
           SizedBox(height: 24),
-
           if (isLoading)
             const Center(child: CircularProgressIndicator())
           else if (errorMessage != null)
@@ -150,6 +121,17 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               onChanged: (ex) {
                 setState(() {
                   _selectedExercise = ex;
+                  if (!exercisePlans.any((plan) => plan.exerciseId == ex?.id)) {
+                    exercisePlans.add(
+                      ExercisePlan(
+                        exerciseId: ex?.id,
+                        exercise: ex,
+                        sets: 3,
+                        reps: 8,
+                        customPrice: 100,
+                      ),
+                    );
+                  }
                 });
               },
               decoration: const InputDecoration(
@@ -161,10 +143,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               ),
               hint: const Text('Odaberi vježbu'),
             ),
-
           SizedBox(height: 16),
-
-          //
           Text(
             'Vježbe',
             style: TextStyle(
@@ -173,204 +152,200 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               color: Colors.grey[600],
             ),
           ),
-
-          // Expanded(
-          //   flex: 1,
-          //   child: Container(
-          //     padding: const EdgeInsets.all(16),
-          //     decoration: BoxDecoration(
-          //       color: Colors. grey[100],
-          //       borderRadius: BorderRadius.circular(8),
-          //       border: Border.all(color: Colors.grey[300]!),
-          //     ),
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       children: [
-          //         Text(
-          //           'Odabrane vježbe (${addedExercises.length})',
-          //           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          //         ),
-          //         const SizedBox(height: 16),
-                  
-          //         if (addedExercises.isEmpty)
-          //           const Center(
-          //             child:  Padding(
-          //               padding: EdgeInsets.all(32),
-          //               child: Text(
-          //                 'Nema dodanih vježbi',
-          //                 style: TextStyle(color: Colors.grey, fontSize: 14),
-          //               ),
-          //             ),
-          //           )
-          //         else
-          //           Expanded(
-          //             child: ListView.builder(
-          //               itemCount: addedExercises.length,
-          //               itemBuilder: (context, index) {
-          //                 final exercise = addedExercises[index];
-          //                 return _buildExerciseCard(exercise);
-          //               },
-          //             ),
-          //           ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Odabrane vježbe (${exercisePlans.length})',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  if (exercisePlans.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Text(
+                          'Nema dodanih vježbi',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: exercisePlans.length,
+                        itemBuilder: (context, index) {
+                          final plan = exercisePlans[index];
+                          return _buildExerciseCard(plan.exercise!, plan);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-//    Widget _buildExerciseCard(Exercise exercise) {
-//     return Container(
-//       margin: const EdgeInsets.only(bottom: 12),
-//       padding: const EdgeInsets.all(12),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(8),
-//         boxShadow: [
-//           BoxShadow(
-//             color:  Colors.grey.withOpacity(0.2),
-//             spreadRadius: 1,
-//             blurRadius: 3,
-//             offset: const Offset(0, 1),
-//           ),
-//         ],
-//       ),
-//       child: Row(
-//         children: [
-//           // Exercise Image (placeholder for now)
-//           Container(
-//             width: 60,
-//             height: 60,
-//             decoration: BoxDecoration(
-//               color: Colors.grey[200],
-//               borderRadius: BorderRadius.circular(8),
-//             ),
-//             child: exercise.imageUrl != null && exercise.imageUrl!.isNotEmpty
-//                 ? ClipRRect(
-//                     borderRadius: BorderRadius.circular(8),
-//                     child: Image. network(
-//                       exercise.imageUrl!,
-//                       fit:  BoxFit.cover,
-//                       errorBuilder: (context, error, stackTrace) => Icon(
-//                         Icons.fitness_center,
-//                         color: Colors.grey[400],
-//                       ),
-//                     ),
-//                   )
-//                 : Icon(
-//                     Icons.fitness_center,
-//                     color: Colors.grey[400],
-//                     size: 30,
-//                   ),
-//           ),
+  Widget _buildExerciseCard(Exercise exercise, ExercisePlan exercisePlan) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Exercise Image
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: exercise.image?.url != null && exercise.image!.url!.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      exercise.image!.url!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.fitness_center,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  )
+                : Icon(
+                    Icons.fitness_center,
+                    color: Colors.grey[400],
+                    size: 30,
+                  ),
+          ),
 
-//           const SizedBox(width: 12),
+          const SizedBox(width: 12),
 
-//           // Exercise Details
-//           Expanded(
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   exercise.name ?? 'Unnamed Exercise',
-//                   style: const TextStyle(
-//                     fontSize: 16,
-//                     fontWeight: FontWeight. bold,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 4),
-//                 Row(
-//                   children: [
-//                     // Reps Dropdown
-//                     Container(
-//                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                       decoration: BoxDecoration(
-//                         border: Border.all(color: Colors.grey[300]!),
-//                         borderRadius: BorderRadius.circular(4),
-//                       ),
-//                       child: DropdownButton<int>(
-//                         value:  exercise.reps > 0 ? exercise.reps : 8,
-//                         items: List.generate(20, (i) => i + 1).map((reps) {
-//                           return DropdownMenuItem(
-//                             value: reps,
-//                             child: Text('$reps'),
-//                           );
-//                         }).toList(),
-//                         onChanged: (newReps) {
-//                           setState(() {
-//                             // Update reps (you might want to create a mutable copy)
-//                           });
-//                         },
-//                         underline: const SizedBox(),
-//                         isDense: true,
-//                       ),
-//                     ),
+          // Exercise Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exercise.name ?? 'Unnamed Exercise',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    // Reps Dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButton<int>(
+                        value: exercisePlan.reps ?? 8,
+                        items: List.generate(20, (i) => i + 1).map((reps) {
+                          return DropdownMenuItem(
+                            value: reps,
+                            child: Text('$reps'),
+                          );
+                        }).toList(),
+                        onChanged: (newReps) {
+                          setState(() {
+                            exercisePlan.reps = newReps;
+                          });
+                        },
+                        underline: const SizedBox(),
+                        isDense: true,
+                      ),
+                    ),
                     
-//                     const SizedBox(width: 8),
-//                     const Text('Reps'),
+                    const SizedBox(width: 8),
+                    const Text('Reps'),
                     
-//                     const SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     
-//                     // Sets Dropdown
-//                     Container(
-//                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-//                       decoration: BoxDecoration(
-//                         border: Border.all(color: Colors.grey[300]! ),
-//                         borderRadius: BorderRadius.circular(4),
-//                       ),
-//                       child: DropdownButton<int>(
-//                         value: exercise.sets > 0 ? exercise.sets : 3,
-//                         items: List. generate(10, (i) => i + 1).map((sets) {
-//                           return DropdownMenuItem(
-//                             value:  sets,
-//                             child: Text('$sets'),
-//                           );
-//                         }).toList(),
-//                         onChanged: (newSets) {
-//                           setState(() {
-//                             // Update sets (you might want to create a mutable copy)
-//                           });
-//                         },
-//                         underline:  const SizedBox(),
-//                         isDense: true,
-//                       ),
-//                     ),
+                    // Sets Dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButton<int>(
+                        value: exercisePlan.sets ?? 3,
+                        items: List.generate(10, (i) => i + 1).map((sets) {
+                          return DropdownMenuItem(
+                            value: sets,
+                            child: Text('$sets'),
+                          );
+                        }).toList(),
+                        onChanged: (newSets) {
+                          setState(() {
+                            exercisePlan.sets = newSets;
+                          });
+                        },
+                        underline: const SizedBox(),
+                        isDense: true,
+                      ),
+                    ),
                     
-//                     const SizedBox(width: 8),
-//                     const Text('Sets'),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
+                    const SizedBox(width: 8),
+                    const Text('Sets'),
+                  ],
+                ),
+              ],
+            ),
+          ),
 
-//           // Remove Button
-//           IconButton(
-//             onPressed: () => _removeExercise(exercise),
-//             icon: Container(
-//               padding: const EdgeInsets.all(4),
-//               decoration: const BoxDecoration(
-//                 color: Colors.red,
-//                 shape: BoxShape.circle,
-//               ),
-//               child: const Icon(
-//                 Icons.close,
-//                 color: Colors.white,
-//                 size: 16,
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-    // );
+          // Remove Button
+          IconButton(
+            onPressed: () => _removeExercise(exercise),
+            icon: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-
-
-//   void posaljiNaAPI(String nazivPlana) {
-//     // Ovde će biti tvoj API poziv
-//     print('Šaljem na API: $nazivPlana');
-//   }
-// }
+  void posaljiNaAPI(String nazivPlana) {
+    // Ovde će biti tvoj API poziv
+    print('Šaljem na API: $nazivPlana');
+  }
 }
