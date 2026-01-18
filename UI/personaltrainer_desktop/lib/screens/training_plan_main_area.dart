@@ -12,6 +12,9 @@ class TrainingPlanMainArea extends StatefulWidget {
 
 class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   final TextEditingController PlanNameController = TextEditingController();
+  final TextEditingController PriceController = TextEditingController();
+  final TextEditingController DurationController = TextEditingController();
+  final TextEditingController NoteController = TextEditingController();
   late ExerciseProvider exerciseProvider;
   List<Exercise> exercises = [];
   bool isLoading = false;
@@ -23,6 +26,9 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   @override
   void dispose() {
     PlanNameController.dispose();
+    PriceController.dispose();
+    DurationController.dispose();
+    NoteController.dispose();
     super.dispose();
   }
 
@@ -87,6 +93,87 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       borderSide: BorderSide(color: Colors.grey[300]!),
                     ),
                   ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                'Cijena:',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: TextField(
+                  controller: PriceController,
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    hintText: 'Unesite cijenu',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                'Trajanje (min):',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: TextField(
+                  controller: DurationController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Unesite trajanje',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                'Napomena:',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: TextField(
+                  controller: NoteController,
+                  decoration: InputDecoration(
+                    hintText: 'Unesite napomenu',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                  ),
+                  maxLines: 2,
                 ),
               ),
             ],
@@ -166,7 +253,10 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 children: [
                   Text(
                     'Odabrane vježbe (${exercisePlans.length})',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (exercisePlans.isEmpty)
@@ -224,23 +314,18 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: exercise.image?.url != null && exercise.image!.url!.isNotEmpty
+            child:
+                exercise.image?.url != null && exercise.image!.url!.isNotEmpty
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       exercise.image!.url!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(
-                        Icons.fitness_center,
-                        color: Colors.grey[400],
-                      ),
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.fitness_center, color: Colors.grey[400]),
                     ),
                   )
-                : Icon(
-                    Icons.fitness_center,
-                    color: Colors.grey[400],
-                    size: 30,
-                  ),
+                : Icon(Icons.fitness_center, color: Colors.grey[400], size: 30),
           ),
 
           const SizedBox(width: 12),
@@ -262,7 +347,10 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                   children: [
                     // Reps Dropdown
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey[300]!),
                         borderRadius: BorderRadius.circular(4),
@@ -284,15 +372,18 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                         isDense: true,
                       ),
                     ),
-                    
+
                     const SizedBox(width: 8),
                     const Text('Reps'),
-                    
+
                     const SizedBox(width: 16),
-                    
+
                     // Sets Dropdown
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey[300]!),
                         borderRadius: BorderRadius.circular(4),
@@ -314,7 +405,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                         isDense: true,
                       ),
                     ),
-                    
+
                     const SizedBox(width: 8),
                     const Text('Sets'),
                   ],
@@ -332,11 +423,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 color: Colors.red,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 16,
-              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 16),
             ),
           ),
         ],
