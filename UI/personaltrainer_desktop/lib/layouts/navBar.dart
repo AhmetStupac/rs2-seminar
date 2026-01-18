@@ -5,9 +5,10 @@ import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 
 class NavBar extends StatefulWidget {
-  NavBar(this.title, this.child, {super.key});
-  String title;
-  Widget child;
+  final String title;
+  final Widget child;
+  
+  const NavBar(this.title, this.child, {super.key});
 
   @override
   State<NavBar> createState() => _MasterScreenState();
@@ -75,23 +76,23 @@ class _MasterScreenState extends State<NavBar> {
 
           _buildMenuItem(
             icon: Icons.fitness_center,
-            label: 'Plan treninga',
-            routeName: 'Plan treninga',
+            label: 'Exercise plan',
+            routeName: 'Exercise plan',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => TrainingPlanScreen()),
               );
-              setState(() => selectedMenu = 'Plan treninga');
+              setState(() => selectedMenu = 'Exercise plan');
             },
           ),
 
           _buildMenuItem(
             icon: Icons.bar_chart,
-            label: 'Trening detalji',
-            routeName: 'Trening detalji',
+            label: 'Trening plan',
+            routeName: 'Trening plan',
             onTap: () {
               // TODO: Navigiraj na statistika screen
-              setState(() => selectedMenu = 'Trening detalji');
+              setState(() => selectedMenu = 'Trening plan');
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => TrainingDetailsScreen()),
               );

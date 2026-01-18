@@ -30,6 +30,7 @@ builder.Services.AddTransient<ITrainingService, TrainingService>();
 builder.Services.AddScoped<IImageMetadataService, ImageMetadataService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
+builder.Services.AddScoped<IExercisePlanService, ExercisePlanService>();
 
 
 builder.Services.AddMapster();

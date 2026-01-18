@@ -3,6 +3,7 @@ import 'package:http/http.dart';
 import 'package:personaltrainer_mobile/models/exercise.dart';
 import 'package:personaltrainer_mobile/models/exercise_plan.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
+import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
 import 'package:provider/provider.dart';
 
 class TrainingPlanMainArea extends StatefulWidget {
@@ -283,6 +284,22 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               ),
             ),
           ),
+          // Dugme za slanje plana na API
+          SizedBox(height: 24),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: isLoading ? null : posaljiNaAPI,
+              icon: Icon(Icons.send),
+              label: Text('Pošalji plan na API'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -431,8 +448,55 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
     );
   }
 
-  void posaljiNaAPI(String nazivPlana) {
-    // Ovde će biti tvoj API poziv
-    print('Šaljem na API: $nazivPlana');
+  void posaljiNaAPI() async {
+    // Prikupi sve podatke iz kontrolera i exercisePlans
+    final String cijenaText = PriceController.text.trim();
+    final String trajanjeText = DurationController.text.trim();
+    final String napomena = NoteController.text.trim();
+
+    double? cijena = double.tryParse(cijenaText);
+    int? trajanje = int.tryParse(trajanjeText);
+
+    if (PlanNameController.text.trim().isEmpty || cijena == null || trajanje == null || exercisePlans.isEmpty) {
+      setState(() {
+        errorMessage = 'Molimo popunite sva polja i dodajte barem jednu vježbu.';
+      });
+      return;
+    }
+
+    // Pohrani sve atribute i listu vježbi u svaki ExercisePlan
+    for (var plan in exercisePlans) {
+      plan.customPrice = cijena;
+      plan.duration = trajanje;
+      plan.note = napomena;
+      plan.exercise = exercises.firstWhere(
+        (ex) => ex.id == plan.exerciseId,
+        orElse: () => plan.exercise ?? Exercise(),
+      );
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      // Pozovi ExercisePlanProvider za slanje na API
+      final provider = Provider.of<ExercisePlanProvider>(context, listen: false);
+      for (var plan in exercisePlans) {
+        await provider.insert(plan);
+      }
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Plan uspješno poslan na API!')),
+      );
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Greška pri slanju na API: '+e.toString();
+      });
+    }
   }
 }
