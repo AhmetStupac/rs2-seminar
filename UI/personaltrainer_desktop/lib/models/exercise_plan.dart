@@ -9,6 +9,8 @@ part 'exercise_plan.g.dart';
 class ExercisePlan {
   int? id;
   int? exerciseId;
+  int? trainingPlanId;
+  @JsonKey(includeToJson: false)
   Exercise? exercise;
   int? sets;
   int? reps;
@@ -24,6 +26,7 @@ class ExercisePlan {
   ExercisePlan({
     this.id,
     this.exerciseId,
+    this.trainingPlanId,
     this.exercise,
     this.sets,
     this.reps,

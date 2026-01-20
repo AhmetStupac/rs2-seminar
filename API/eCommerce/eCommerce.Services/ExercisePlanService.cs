@@ -1,6 +1,7 @@
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Validators;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using MapsterMapper;
@@ -51,6 +52,21 @@ namespace eCommerce.Services
             }
             
             return response;
+        }
+
+
+        protected override Task BeforeInsert(Database.ExercisePlan entity, ExercisePlanUpsertRequest insertRequest)
+        {
+            var validator = new ExercisePlanValidator();
+            var result = validator.Validate(insertRequest);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

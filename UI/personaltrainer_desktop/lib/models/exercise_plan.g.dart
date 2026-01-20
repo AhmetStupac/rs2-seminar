@@ -9,6 +9,7 @@ part of 'exercise_plan.dart';
 ExercisePlan _$ExercisePlanFromJson(Map<String, dynamic> json) => ExercisePlan(
   id: (json['id'] as num?)?.toInt(),
   exerciseId: (json['exerciseId'] as num?)?.toInt(),
+  trainingPlanId: (json['trainingPlanId'] as num?)?.toInt(),
   exercise: json['exercise'] == null
       ? null
       : Exercise.fromJson(json['exercise'] as Map<String, dynamic>),
@@ -23,7 +24,7 @@ Map<String, dynamic> _$ExercisePlanToJson(ExercisePlan instance) =>
     <String, dynamic>{
       'id': instance.id,
       'exerciseId': instance.exerciseId,
-      'exercise': instance.exercise,
+      'trainingPlanId': instance.trainingPlanId,
       'sets': instance.sets,
       'reps': instance.reps,
       'duration': instance.duration,

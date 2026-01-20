@@ -9,9 +9,10 @@ class Exercise {
   int? id;
   String? name;
   int? imageId;
-  Image? image; // nije se dodalo u exercise.g.dart
+  Image? image;
   int? equipmentId;
   Equipment? equipment;
+  int? muscleGroupId;
 
   Exercise({
     this.id,
@@ -20,6 +21,7 @@ class Exercise {
     this.image,
     this.equipmentId,
     this.equipment,
+    this.muscleGroupId,
   });
 
   factory Exercise.fromJson(Map<String, dynamic> json) =>

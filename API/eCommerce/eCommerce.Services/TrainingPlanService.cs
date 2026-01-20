@@ -20,12 +20,13 @@ namespace eCommerce.Services
         public TrainingPlanService(IB210033DbContext context, IMapper mapper)
             : base(context, mapper)
         {
-       
+            
         }
 
 
         protected override IQueryable<Database.TrainingPlan> ApplyFilter(IQueryable<Database.TrainingPlan> query, NameSearchObject search)
         {
+
 
             var result = query.Include(t=> t.PersonalTrainer).ThenInclude(pt=> pt.User);
 
@@ -37,5 +38,20 @@ namespace eCommerce.Services
 
             return result;
         }
+
+
+        protected override TrainingPlanResponse MapToResponse(TrainingPlan entity)
+        {
+            var response = _mapper.Map<TrainingPlanResponse>(entity);
+
+            response.Id = entity.Id;
+
+            if(entity.PersonalTrainer.User != null)
+                response.PersonalTrainerUserFirstName = entity.PersonalTrainer.User.FirstName;
+
+            return response;
+
+        }
+
     }
 }

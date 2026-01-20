@@ -17,6 +17,7 @@ Exercise _$ExerciseFromJson(Map<String, dynamic> json) => Exercise(
   equipment: json['equipment'] == null
       ? null
       : Equipment.fromJson(json['equipment'] as Map<String, dynamic>),
+  muscleGroupId: (json['muscleGroupId'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$ExerciseToJson(Exercise instance) => <String, dynamic>{
@@ -26,4 +27,5 @@ Map<String, dynamic> _$ExerciseToJson(Exercise instance) => <String, dynamic>{
   'image': instance.image,
   'equipmentId': instance.equipmentId,
   'equipment': instance.equipment,
+  'muscleGroupId': instance.muscleGroupId,
 };

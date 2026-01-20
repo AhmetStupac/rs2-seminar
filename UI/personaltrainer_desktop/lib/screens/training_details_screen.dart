@@ -30,12 +30,24 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
   void initState() {
     super.initState();
     _trainingPlanProvider = TrainingPlanProvider();
-    _titleController = TextEditingController(text: widget.trainingPlan?.title ?? '');
-    _descriptionController = TextEditingController(text: widget.trainingPlan?.description ?? '');
-    _basePriceController = TextEditingController(text: widget.trainingPlan?.basePrice?.toString() ?? '');
-    _personalTrainerIdController = TextEditingController(text: widget.trainingPlan?.personalTrainerId?.toString() ?? '');
-    _userIdController = TextEditingController(text: widget.trainingPlan?.userId?.toString() ?? '');
-    _createdAtController = TextEditingController(text: widget.trainingPlan?.createdAt ?? '');
+    _titleController = TextEditingController(
+      text: widget.trainingPlan?.title ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: widget.trainingPlan?.description ?? '',
+    );
+    _basePriceController = TextEditingController(
+      text: widget.trainingPlan?.basePrice?.toString() ?? '',
+    );
+    _personalTrainerIdController = TextEditingController(
+      text: widget.trainingPlan?.personalTrainerId?.toString() ?? '',
+    );
+    _userIdController = TextEditingController(
+      text: widget.trainingPlan?.userId?.toString() ?? '',
+    );
+    _createdAtController = TextEditingController(
+      text: widget.trainingPlan?.createdAt ?? '',
+    );
     _fetchAvailablePlans();
   }
 
@@ -110,91 +122,104 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
               key: _formKey,
               child: Column(
                 children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: InputDecoration(labelText: 'Naziv plana'),
-                validator: (value) => value == null || value.isEmpty ? 'Unesite naziv plana' : null,
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Opis'),
-                maxLines: 2,
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _basePriceController,
-                decoration: InputDecoration(labelText: 'Cijena'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) => value == null || value.isEmpty ? 'Unesite cijenu' : null,
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _personalTrainerIdController,
-                decoration: InputDecoration(labelText: 'Personalni trener ID'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty ? 'Unesite ID trenera' : null,
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _userIdController,
-                decoration: InputDecoration(labelText: 'Korisnik ID'),
-                keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty ? 'Unesite ID korisnika' : null,
-              ),
-              SizedBox(height: 16),
-              GestureDetector(
-                onTap: () async {
-                  FocusScope.of(context).unfocus();
-                  DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: _createdAtController.text.isNotEmpty
-                        ? DateTime.tryParse(_createdAtController.text) ?? DateTime.now()
-                        : DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2100),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _createdAtController.text = picked.toIso8601String();
-                    });
-                  }
-                },
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    controller: _createdAtController,
-                    decoration: InputDecoration(
-                      labelText: 'Datum kreiranja',
-                      suffixIcon: Icon(Icons.calendar_today),
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: InputDecoration(labelText: 'Naziv plana'),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Unesite naziv plana'
+                        : null,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(labelText: 'Opis'),
+                    maxLines: 2,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _basePriceController,
+                    decoration: InputDecoration(labelText: 'Cijena'),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
-                    keyboardType: TextInputType.datetime,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Unesite cijenu'
+                        : null,
                   ),
-                ),
-              ),
-              SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ImageUploadScreen(
-                            trainingId: widget.trainingPlan?.id,
-                          ),
-                        ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _personalTrainerIdController,
+                    decoration: InputDecoration(
+                      labelText: 'Personalni trener ID',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Unesite ID trenera'
+                        : null,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _userIdController,
+                    decoration: InputDecoration(labelText: 'Korisnik ID'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Unesite ID korisnika'
+                        : null,
+                  ),
+                  SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
+                      DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: _createdAtController.text.isNotEmpty
+                            ? DateTime.tryParse(_createdAtController.text) ??
+                                  DateTime.now()
+                            : DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
                       );
+                      if (picked != null) {
+                        setState(() {
+                          _createdAtController.text = picked.toIso8601String();
+                        });
+                      }
                     },
-                    icon: Icon(Icons.image),
-                    label: Text('Upload sliku'),
+                    child: AbsorbPointer(
+                      child: TextFormField(
+                        controller: _createdAtController,
+                        decoration: InputDecoration(
+                          labelText: 'Datum kreiranja',
+                          suffixIcon: Icon(Icons.calendar_today),
+                        ),
+                        keyboardType: TextInputType.datetime,
+                      ),
+                    ),
                   ),
-                  SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _saveTrainingPlan,
-                    child: Text('Spremi'),
+                  SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ImageUploadScreen(
+                                trainingId: widget.trainingPlan?.id,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: Icon(Icons.image),
+                        label: Text('Dodaj novu vjezbu'),
+                      ),
+                      SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _saveTrainingPlan,
+                        child: Text('Spremi'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
                 ],
               ),
             ),
@@ -225,17 +250,21 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                   else if (_availablePlans.isEmpty)
                     Text('Nema dostupnih trening planova.')
                   else
-                    ..._availablePlans.map((plan) => Card(
-                      margin: EdgeInsets.symmetric(vertical: 6),
-                      child: ListTile(
-                        title: Text(plan.title ?? 'Bez naziva'),
-                        subtitle: Text(plan.description ?? ''),
-                        trailing: Text(
-                          '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    )).toList(),
+                    ..._availablePlans
+                        .map(
+                          (plan) => Card(
+                            margin: EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              title: Text(plan.title ?? 'Bez naziva'),
+                              subtitle: Text(plan.description ?? ''),
+                              trailing: Text(
+                                '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
                 ],
               ),
             ),
@@ -245,7 +274,3 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
     );
   }
 }
-
-  
- 
-
