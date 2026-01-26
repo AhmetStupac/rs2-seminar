@@ -117,7 +117,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Cijena:',
+                    'Price:',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
@@ -127,7 +127,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       decimal: true,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Unesite cijenu',
+                      hintText: 'Enter price',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -139,14 +139,14 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       errorText:
                           (PriceController.text.isNotEmpty &&
                               double.tryParse(PriceController.text) == null)
-                          ? 'Cijena mora biti broj'
+                          ? 'Price must be a number'
                           : null,
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Trajanje (min):',
+                    'Duration (min):',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
@@ -154,7 +154,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     controller: DurationController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      hintText: 'Unesite trajanje',
+                      hintText: 'Enter duration',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -166,21 +166,21 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       errorText:
                           (DurationController.text.isNotEmpty &&
                               int.tryParse(DurationController.text) == null)
-                          ? 'Trajanje mora biti broj'
+                          ? 'Duration must be a number'
                           : null,
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'Napomena:',
+                    'Note:',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
                   TextField(
                     controller: NoteController,
                     decoration: InputDecoration(
-                      hintText: 'Unesite napomenu',
+                      hintText: 'Enter note',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -206,14 +206,14 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                   border: Border.all(color: Colors.red[200]!),
                 ),
                 child: Text(
-                  'Greška: $errorMessage',
+                  'Error: $errorMessage',
                   style: TextStyle(color: Colors.red[700]),
                 ),
               ),
             if (isLoading)
               const Center(child: CircularProgressIndicator())
             else if (exercises.isEmpty)
-              const Text('Nema dostupnih vježbi')
+              const Text('No available exercises')
             else
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +237,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Prvo odaberite trening plan iz liste na dnu ekrana',
+                              'First select a training plan from the list at the bottom of the screen',
                               style: TextStyle(color: Colors.orange[900]),
                             ),
                           ),
@@ -280,16 +280,16 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                         vertical: 8,
                       ),
                       hintText: _selectedTrainingPlanId == null
-                          ? 'Prvo odaberite trening plan'
-                          : 'Odaberi vježbu',
+                          ? 'First select a training plan'
+                          : 'Select exercise',
                     ),
-                    disabledHint: Text('Prvo odaberite trening plan'),
+                    disabledHint: Text('First select a training plan'),
                   ),
                 ],
               ),
             SizedBox(height: 16),
             Text(
-              'Vježbe',
+              'Exercises',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -307,7 +307,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Odabrane vježbe (${exercisePlans.length})',
+                    'Selected exercises (${exercisePlans.length})',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -319,7 +319,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       child: Padding(
                         padding: EdgeInsets.all(32),
                         child: Text(
-                          'Nema dodanih vježbi',
+                          'No exercises added',
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ),
@@ -352,7 +352,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Dostupni trening planovi',
+                    'Available Training Plans',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   if (_selectedTrainingPlanId != null) ...[
@@ -377,7 +377,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Odabran: ${_availablePlans.firstWhere((p) => p.id == _selectedTrainingPlanId, orElse: () => TrainingPlan()).title ?? "Nepoznat"}',
+                              'Selected: ${_availablePlans.firstWhere((p) => p.id == _selectedTrainingPlanId, orElse: () => TrainingPlan()).title ?? "Unknown"}',
                               style: TextStyle(
                                 color: Colors.green[900],
                                 fontWeight: FontWeight.w500,
@@ -393,11 +393,11 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     Center(child: CircularProgressIndicator())
                   else if (_plansError != null)
                     Text(
-                      'Greška: $_plansError',
+                      'Error: $_plansError',
                       style: TextStyle(color: Colors.red),
                     )
                   else if (_availablePlans.isEmpty)
-                    Text('Nema dostupnih trening planova.')
+                    Text('No available training plans.')
                   else
                     ..._availablePlans.map((plan) {
                       if (plan is TrainingPlan) {
@@ -407,12 +407,12 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                             print('Plan clicked: ${plan.toJson()}');
                             if (plan.id == null) {
                               print(
-                                'UPOZORENJE: Odabrani plan nema postavljen id!',
+                                'WARNING: Selected plan has no ID set!',
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Greška: Odabrani plan nema ID!',
+                                    'Error: Selected plan has no ID!',
                                   ),
                                   backgroundColor: Colors.red,
                                 ),
@@ -428,7 +428,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Trening plan "${plan.title}" odabran!',
+                                  'Training plan "${plan.title}" selected!',
                                 ),
                               ),
                             );
@@ -464,7 +464,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          plan.title ?? 'Bez naziva',
+                                          plan.title ?? 'Untitled',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: isSelected
@@ -514,7 +514,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               child: ElevatedButton.icon(
                 onPressed: isLoading ? null : posaljiNaAPI,
                 icon: Icon(Icons.send),
-                label: Text('Pošalji plan na API'),
+                label: Text('Send plan to API'),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   backgroundColor: Colors.blue,
@@ -533,6 +533,9 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   }
 
   Widget _buildExerciseCard(Exercise exercise, ExercisePlan exercisePlan) {
+    // Debug print za image url
+    print('Exercise: "+(exercise.name ?? "")+" | imageId: "+(exercise.imageId?.toString() ?? "null")+" | image.url: "+(exercise.image?.url ?? "null")');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -558,18 +561,26 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
             ),
-            child:
-                exercise.image?.url != null && exercise.image!.url!.isNotEmpty
+            child: (exercise.image != null && exercise.image!.url != null && exercise.image!.url!.isNotEmpty)
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       exercise.image!.url!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Icon(Icons.fitness_center, color: Colors.grey[400]),
+                      errorBuilder: (context, error, stackTrace) {
+                        print('Image load error for url: '+ exercise.image!.url!);
+                        return Icon(Icons.fitness_center, color: Colors.red, size: 30);
+                      },
                     ),
                   )
-                : Icon(Icons.fitness_center, color: Colors.grey[400], size: 30),
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.fitness_center, color: Colors.grey[400], size: 30),
+                      if (exercise.image == null || exercise.image!.url == null || exercise.image!.url!.isEmpty)
+                        Text('No image', style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+                    ],
+                  ),
           ),
 
           const SizedBox(width: 12),
@@ -687,15 +698,15 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
     if (cijena == null || trajanje == null || exercisePlans.isEmpty) {
       setState(() {
         errorMessage =
-            'Molimo popunite sva polja i dodajte barem jednu vježbu.';
+            'Please fill in all fields and add at least one exercise.';
       });
       return;
     }
 
-    // Provjera da li je trainingPlanId postavljen
+    // Check if trainingPlanId is set
     if (_selectedTrainingPlanId == null) {
       setState(() {
-        errorMessage = 'Molimo odaberite trening plan iz liste na dnu ekrana!';
+        errorMessage = 'Please select a training plan from the list at the bottom of the screen!';
       });
       return;
     }
@@ -726,11 +737,11 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Plan uspješno poslan na API!')));
+      ).showSnackBar(SnackBar(content: Text('Plan successfully sent to API!')));
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Greška pri slanju na API: ' + e.toString();
+        errorMessage = 'Error sending to API: ' + e.toString();
       });
     }
   }

@@ -9,8 +9,8 @@ class TrainingProvider extends BaseProvider<Training> {
   //2. dodati u main.dart, provider -> void metoda ChangeNotifierProvider<TrainingProvider>(
   //   create: (_) => TrainingProvider(),
   //),
-
   //3. ako nesto radim sa providerom, obavezno uraditi hot restart
+  
   @override
   Training fromJson(data) {
     return Training.fromJson(data);

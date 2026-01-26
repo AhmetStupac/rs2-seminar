@@ -4,16 +4,20 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Model.Validators;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace eCommerce.Services
 {
     public class ExercisePlanService : BaseCRUDService<ExercisePlanResponse, ExercisePlanSearchObject, Database.ExercisePlan, ExercisePlanUpsertRequest, ExercisePlanUpsertRequest>, IExercisePlanService
     {
-        public ExercisePlanService(IB210033DbContext context, IMapper mapper) : base(context, mapper)
+        private readonly IValidator<ExercisePlanUpsertRequest> _validator;
+
+        public ExercisePlanService(IB210033DbContext context, IMapper mapper, IValidator<ExercisePlanUpsertRequest> validator) : base(context, mapper)
         {
-            
+            _validator = validator;
         }
 
         protected override IQueryable<Database.ExercisePlan> ApplyFilter(IQueryable<Database.ExercisePlan> query, ExercisePlanSearchObject search)

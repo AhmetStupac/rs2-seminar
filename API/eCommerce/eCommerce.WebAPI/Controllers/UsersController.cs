@@ -1,4 +1,4 @@
-using eCommerce.Model.Requests;
+﻿using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services;
@@ -70,6 +70,38 @@ namespace eCommerce.WebAPI.Controllers
         {
             var user = await _userService.AuthenticateAsync(request);
             return Ok(user);
+        }
+
+
+        // banovanje korisnika
+
+        [HttpPost("ban-user")]
+        public async Task<IActionResult> BanUser([FromBody] BanUserResponse dto)
+        {
+            var result = await _userService.BanUserAsync(dto.UserId, dto.Reason, dto.ExpiresAt);
+
+            if (!result)
+                return NotFound(new { message = "Korisnik nije pronađen" });
+
+            return Ok(new { message = "Korisnik je uspešno banovan" });
+        }
+
+        [HttpPost("unban-user/{userId}")]
+        public async Task<IActionResult> UnbanUser(int userId)
+        {
+            var result = await _userService.UnbanUserAsync(userId);
+
+            if (!result)
+                return NotFound(new { message = "Korisnik nije pronađen" });
+
+            return Ok(new { message = "Korisnik je unbanovan" });
+        }
+
+        [HttpGet("check-ban/{userId}")]
+        public async Task<IActionResult> CheckBan(int userId)
+        {
+            var isBanned = await _userService.IsUserBannedAsync(userId);
+            return Ok(new { isBanned });
         }
     }
 } 

@@ -7,12 +7,12 @@ import 'package:personaltrainer_mobile/models/image.dart' as img_model;
 import 'package:personaltrainer_mobile/models/exercise.dart';
 import 'package:personaltrainer_mobile/models/muscleGroup.dart';
 import 'package:personaltrainer_mobile/models/equipment.dart';
-import 'package:personaltrainer_mobile/providers/image_provider.dart'
-    as img_provider;
 import 'package:personaltrainer_mobile/providers/auth_provider.dart'
     as auth_provider;
+import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
+import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 
 class ImageUploadScreen extends StatefulWidget {
   final int? trainingId;
@@ -24,10 +24,11 @@ class ImageUploadScreen extends StatefulWidget {
 }
 
 class _ImageUploadScreenState extends State<ImageUploadScreen> {
+    int? _uploadedImageId;
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
   late TextEditingController _exerciseNameController;
-  late img_provider.ImageProvider _imageProvider;
+  late BlobStorageProvider _blobStorageProvider;
+  late ExerciseProvider _exerciseProvider;
   bool _isHeader = false;
 
   int? _selectedMuscleGroupId;
@@ -43,8 +44,8 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
   @override
   void initState() {
     super.initState();
-    _imageProvider = img_provider.ImageProvider();
-    _nameController = TextEditingController();
+    _blobStorageProvider = BlobStorageProvider();
+    _exerciseProvider = ExerciseProvider();
     _exerciseNameController = TextEditingController();
     _fetchDropdownData();
   }
@@ -54,6 +55,16 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     final eqProvider = EquipmentProvider();
     final mgResult = await mgProvider.get();
     final eqResult = await eqProvider.get();
+    
+    print('Muscle groups count: ${mgResult.result.length}');
+    print('Equipment count: ${eqResult.result.length}');
+    
+    if (eqResult.result.isNotEmpty) {
+      for (var eq in eqResult.result) {
+        print('Equipment: id=${eq.id}, name=${eq.name}');
+      }
+    }
+    
     setState(() {
       _muscleGroups = mgResult.result;
       _equipments = eqResult.result;
@@ -63,9 +74,49 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     super.dispose();
   }
+
+Future<void> _uploadImageOnly() async {
+  if (_selectedFile == null || _fileBytes == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please select a file')),
+    );
+    return;
+  }
+  
+  setState(() {
+    _isUploading = true;
+  });
+  
+  try {
+    int? userId = auth_provider.AuthProvider.userId;
+    
+    // uploadFile sada vraća Map<String, dynamic> umjesto Image objekta
+    final result = await _blobStorageProvider.uploadFile(
+      _fileBytes!,
+      _selectedFile!.name,
+      userId,
+      _isHeader,
+    );
+    
+    setState(() {
+      _uploadedImageId = result['imageId'];  // Uzmi imageId iz mape
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Image uploaded successfully! (ID: ${result['imageId']})')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error uploading image: ${e.toString()}')),
+    );
+  } finally {
+    setState(() {
+      _isUploading = false;
+    });
+  }
+}
 
   Future<void> _pickFile() async {
     try {
@@ -84,7 +135,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška pri izboru fajla: ${e.toString()}')),
+          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
         );
       }
     }
@@ -102,9 +153,29 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
       if (_selectedFile == null || _fileBytes == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Molimo odaberite fajl')));
+        ).showSnackBar(SnackBar(content: Text('Please select a file')));
         return;
       }
+
+      // Prikazi dialog za potvrdu nepovratne akcije
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Potvrda slanja'),
+          content: Text('Da li ste sigurni da želite poslati podatke?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Odustani'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Pošalji'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
 
       setState(() {
         _isUploading = true;
@@ -113,35 +184,39 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
       try {
         int? userId = auth_provider.AuthProvider.userId;
 
-        // Kreiraj Exercise entitet
+        // PRVI HTTP REQUEST - Upload slike
+        final imageResult = await _blobStorageProvider.uploadFile(
+          _fileBytes!,
+          _selectedFile!.name,
+          userId,
+          _isHeader,
+        );
+        
+        // Uzmi imageId iz rezultata prvog HTTP requesta
+        int? imageId = imageResult['imageId'];
+
+        // Kreiraj Exercise entitet sa imageId
         Exercise exercise = Exercise(
           name: _exerciseNameController.text,
           muscleGroupId: _selectedMuscleGroupId,
           equipmentId: _selectedEquipmentId,
+          imageId: imageId,  // Pohrani imageId u exercise objekat
         );
 
-        // Upload slike
-        final image = await _imageProvider.uploadFile(
-          _fileBytes!,
-          _selectedFile!.name,
-          _nameController.text,
-          userId,
-          _isHeader,
-        );
-
-        // Ovdje možeš dodati logiku za vezu slike i exercise entiteta ako backend to podržava
+        // DRUGI HTTP REQUEST - Kreiraj exercise na API-ju
+        await _exerciseProvider.insert(exercise);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Slika i vježba uspješno poslati!')),
+            SnackBar(content: Text('Image uploaded (ID: $imageId) and exercise created successfully!')),
           );
-          Navigator.of(context).pop(image);
+          Navigator.of(context).pop(exercise);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Greška: ${e.toString()}')));
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
         }
       } finally {
         if (mounted) {
@@ -155,6 +230,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return NavBar(
       'Upload slike',
       _isLoadingDropdowns
@@ -164,73 +240,9 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
               child: Form(
                 key: _formKey,
                 child: ListView(
+
                   children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Naziv slike',
-                        hintText: 'Unesite naziv slike',
-                      ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Unesite naziv'
-                          : null,
-                    ),
-                    SizedBox(height: 12),
-
-                    TextFormField(
-                      controller: _exerciseNameController,
-                      decoration: InputDecoration(
-                        labelText: 'Ime vježbe',
-                        hintText: 'Unesite ime vježbe',
-                      ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Unesite ime vježbe'
-                          : null,
-                    ),
-                    SizedBox(height: 12),
-
-                    DropdownButtonFormField<int>(
-                      value: _selectedMuscleGroupId,
-                      decoration: InputDecoration(labelText: "Muscle Group"),
-                      items: _muscleGroups
-                          .map(
-                            (mg) => DropdownMenuItem<int>(
-                              value: mg.id,
-                              child: Text(mg.name ?? ''),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedMuscleGroupId = val;
-                        });
-                      },
-                      validator: (val) =>
-                          val == null ? 'Odaberite muscle group' : null,
-                    ),
-                    SizedBox(height: 12),
-
-                    DropdownButtonFormField<int>(
-                      value: _selectedEquipmentId,
-                      decoration: InputDecoration(labelText: "Equipment"),
-                      items: _equipments
-                          .map(
-                            (eq) => DropdownMenuItem<int>(
-                              value: eq.id,
-                              child: Text(eq.name ?? ''),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedEquipmentId = val;
-                        });
-                      },
-                      validator: (val) =>
-                          val == null ? 'Odaberite equipment' : null,
-                    ),
-                    SizedBox(height: 12),
-
+                    // isHeader checkbox section
                     CheckboxListTile(
                       value: _isHeader,
                       onChanged: (val) {
@@ -238,12 +250,12 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                           _isHeader = val ?? false;
                         });
                       },
-                      title: Text('isHeader'),
+                      title: Text('Is Header property'),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                     ),
 
-                    SizedBox(height: 12),
+                    SizedBox(height: 24),
 
                     // File picker section
                     Container(
@@ -268,7 +280,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                             ElevatedButton.icon(
                               onPressed: _pickFile,
                               icon: Icon(Icons.upload_file),
-                              label: Text('Odaberi fajl'),
+                              label: Text('Select file'),
                             )
                           else
                             Container(
@@ -305,7 +317,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                                   IconButton(
                                     onPressed: _removeFile,
                                     icon: Icon(Icons.close, color: Colors.red),
-                                    tooltip: 'Ukloni fajl',
+                                    tooltip: 'Remove file',
                                   ),
                                 ],
                               ),
@@ -329,8 +341,92 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                               ),
                             ),
                           ],
+                          SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _isUploading ? null : _uploadImageOnly,
+                            icon: Icon(Icons.cloud_upload),
+                            label: Text('Upload image'),
+                          ),
+                          if (_uploadedImageId != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Text(
+                                'Image ID: $_uploadedImageId',
+                                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                              ),
+                            ),
                         ],
                       ),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    TextFormField(
+                      controller: _exerciseNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Exercise Name',
+                        hintText: 'Enter exercise name',
+                      ),
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please enter an exercise name'
+                          : null,
+                    ),
+                    SizedBox(height: 12),
+
+                    DropdownButtonFormField<int>(
+                      value:
+                          _muscleGroups.any(
+                            (mg) =>
+                                mg.id != null &&
+                                mg.id == _selectedMuscleGroupId,
+                          )
+                          ? _selectedMuscleGroupId
+                          : null,
+                      decoration: InputDecoration(labelText: "Muscle Group"),
+                      items: _muscleGroups
+                          .where((mg) => mg.id != null)
+                          .map(
+                            (mg) => DropdownMenuItem<int>(
+                              value: mg.id!,
+                              child: Text(mg.name ?? ''),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedMuscleGroupId = val;
+                        });
+                      },
+                      validator: (val) =>
+                          val == null ? 'Please select a muscle group' : null,
+                    ),
+                    SizedBox(height: 12),
+
+                    DropdownButtonFormField<int>(
+                      initialValue:
+                          _equipments.any(
+                            (eq) =>
+                                eq.id != null && eq.id == _selectedEquipmentId,
+                          )
+                          ? _selectedEquipmentId
+                          : null,
+                      decoration: InputDecoration(labelText: "Equipment"),
+                      items: _equipments
+                          .where((eq) => eq.id != null)
+                          .map(
+                            (eq) => DropdownMenuItem<int>(
+                              value: eq.id!,
+                              child: Text(eq.name ?? ''),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedEquipmentId = val;
+                        });
+                      },
+                      validator: (val) =>
+                          val == null ? 'Please select equipment' : null,
                     ),
 
                     SizedBox(height: 32),
@@ -342,7 +438,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                           onPressed: _isUploading
                               ? null
                               : () => Navigator.of(context).pop(),
-                          child: Text('Otkaži'),
+                          child: Text('Cancel'),
                         ),
                         SizedBox(width: 12),
                         ElevatedButton(
@@ -363,10 +459,10 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                                       ),
                                     ),
                                     SizedBox(width: 8),
-                                    Text('Šaljem...'),
+                                    Text('Sending...'),
                                   ],
                                 )
-                              : Text('Pošalji'),
+                              : Text('Send'),
                         ),
                       ],
                     ),

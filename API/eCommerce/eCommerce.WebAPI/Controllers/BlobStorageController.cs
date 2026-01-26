@@ -1,5 +1,6 @@
 ﻿using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using eCommerce.Services.Migrations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -57,7 +58,8 @@ namespace eCommerce.WebAPI.Controllers
 
             await _imageMetadataService.UploadImageMetadata(imageToSql);
             
-            return Ok(new { FileUrl = url, BlobName = blobName });
+            
+            return Ok(new { FileUrl = url, BlobName = blobName , ImageId = imageToSql.Id});
         }
 
         [HttpDelete("delete")]

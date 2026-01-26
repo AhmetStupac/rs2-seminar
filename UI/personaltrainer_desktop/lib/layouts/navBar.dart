@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:personaltrainer_mobile/screens/admin_ban_screen.dart';
 import 'package:personaltrainer_mobile/screens/exercise_list.dart';
 import 'package:personaltrainer_mobile/screens/training_details_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
+import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class NavBar extends StatefulWidget {
   final String title;
@@ -119,20 +121,54 @@ class _MasterScreenState extends State<NavBar> {
             },
           ),
 
+        
+
           _buildMenuItem(
-            icon: Icons.people,
-            label: 'Korisnici',
-            routeName: 'Korisnici',
+            icon: Icons.admin_panel_settings,
+            label: 'Admin Panel',
+            routeName: 'Admin Panel',
             onTap: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (context) => UserListScreen()));
-              setState(() => selectedMenu = 'Korisnici');
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => UsersListScreen()),
+              );
+              setState(() => selectedMenu = 'Admin Panel');
             },
           ),
 
           Spacer(), // Gurni donji deo na dno
-          // Logout ili Back dugme
+
+          // Logout dugme
+          _buildMenuItem(
+            icon: Icons.logout,
+            label: 'Logout',
+            routeName: 'Logout',
+            onTap: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Logout'),
+                  content: Text('Da li ste sigurni da želite da se odjavite?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text('Odustani'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text('Odjavi se'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                AuthProvider.logout();
+                // Vrati korisnika na login screen
+                Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+              }
+            },
+          ),
+
+          // Back dugme
           _buildMenuItem(
             icon: Icons.arrow_back,
             label: 'Back',

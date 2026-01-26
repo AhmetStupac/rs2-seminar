@@ -11,11 +11,11 @@ class TrainingPlanScreen extends StatefulWidget {
 }
 
 class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
-  String selectedPlan = "Prsa - triceps";
+  String selectedPlan = "Chest - triceps";
   List<Exercise> exercises = [];
 
   @override
   Widget build(BuildContext context) {
-    return NavBar('Trening plan', TrainingPlanMainArea());
+    return NavBar('Training Plan', TrainingPlanMainArea());
   }
 }

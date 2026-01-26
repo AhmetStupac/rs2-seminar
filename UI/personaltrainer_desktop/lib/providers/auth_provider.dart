@@ -5,6 +5,10 @@ class AuthProvider {
   static String? password;
   static int? userId;
   static String? token;
+  static bool _isBanned = false;
+  
+  static bool get isBanned => _isBanned;
+
 
   static void applyLoginResponse(dynamic data) {
     // Accept different response shapes: a Map with id/token, or a raw JWT string.
@@ -43,4 +47,19 @@ class AuthProvider {
       /* ignore parse errors */
     }
   }
+
+  /// Briše sve korisničke podatke (logout)
+  static void logout() {
+    username = null;
+    password = null;
+    userId = null;
+    token = null;
+  }
+
+  /// Provjerava da li je korisnik ulogovan
+  static bool get isLoggedIn => token != null && token!.isNotEmpty;
+
+ 
+
+  
 }

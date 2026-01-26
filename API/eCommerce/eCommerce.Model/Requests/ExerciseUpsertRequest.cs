@@ -7,5 +7,6 @@ namespace eCommerce.Model.Requests
         public string Name { get; set; }
         public int MuscleGroupId { get; set; }
         public int? EquipmentId { get; set; }
+        public int? ImageId { get; set; }
     }
 }

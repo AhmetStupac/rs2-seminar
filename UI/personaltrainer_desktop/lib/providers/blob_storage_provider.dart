@@ -6,10 +6,10 @@ import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 import '../models/image.dart';
 
-class ImageProvider with ChangeNotifier {
+class BlobStorageProvider with ChangeNotifier {
   static String? _baseUrl;
 
-  ImageProvider() {
+  BlobStorageProvider() {
     _baseUrl = const String.fromEnvironment(
       "baseUrl",
       defaultValue: "https://localhost:7093/",
@@ -20,10 +20,9 @@ class ImageProvider with ChangeNotifier {
     return Image.fromJson(data);
   }
 
-  Future<Image> uploadFile(
+  Future<Map<String, dynamic>> uploadFile(
     Uint8List fileBytes,
     String fileName,
-    String imageName,
     int? userId,
     bool? isHeader,
   ) async {
@@ -57,9 +56,15 @@ class ImageProvider with ChangeNotifier {
 
     if (response.statusCode < 299) {
       var data = jsonDecode(response.body);
-      return fromJson(data);
+      
+      // Vrati mapu sa podacima koje backend šalje
+      return {
+        'imageId': data['imageId'],
+        'fileUrl': data['fileUrl'],
+        'blobName': data['blobName'],
+      };
     } else {
-      throw Exception("Upload failed: ${response.statusCode}");
+      throw Exception("Upload failed: ${response.statusCode} - ${response.body}");
     }
   }
 

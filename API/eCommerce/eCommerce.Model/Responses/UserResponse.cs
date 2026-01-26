@@ -14,7 +14,11 @@ namespace eCommerce.Model.Responses
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
         public string? PhoneNumber { get; set; }
-        
+        public bool IsBanned { get; set; }
+        public DateTime? BannedAt { get; set; }
+        public string? BanReason { get; set; }
+        public DateTime? BanExpiresAt { get; set; }
+
         // Collection of roles assigned to the user
         public List<RoleResponse> Roles { get; set; } = new List<RoleResponse>();
     }

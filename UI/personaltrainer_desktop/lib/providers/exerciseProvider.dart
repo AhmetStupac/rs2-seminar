@@ -9,3 +9,4 @@ class ExerciseProvider extends BaseProvider<Exercise> {
     return Exercise.fromJson(data);
   }
 }
+ 

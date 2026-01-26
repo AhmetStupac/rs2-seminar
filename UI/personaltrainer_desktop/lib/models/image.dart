@@ -10,6 +10,7 @@ class Image {
   int? size;
   bool? isHeader;
   int? userId;
+  
 
   // 1. korak preimenovati part dio, naziv klase, ctor itd.
   //2.  korak popisati prop i dodati u ctor

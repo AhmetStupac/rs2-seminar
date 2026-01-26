@@ -15,5 +15,9 @@ namespace eCommerce.Services
         Task<UserResponse?> UpdateAsync(int id, UserUpsertRequest request);
         Task<bool> DeleteAsync(int id);
         Task<UserResponse?> AuthenticateAsync(UserLoginRequest request);
+        Task<bool> BanUserAsync(int userId, string reason, DateTime? expiresAt);
+        Task<bool> UnbanUserAsync(int userId);
+        Task<bool> IsUserBannedAsync(int userId);
+
     }
 } 

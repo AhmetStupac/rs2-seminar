@@ -283,5 +283,53 @@ namespace eCommerce.Services
             var hashBytes = new Rfc2898DeriveBytes(password, salt, Iterations).GetBytes(KeySize);
             return hash.SequenceEqual(hashBytes);
         }
+
+
+
+        public async Task<bool> BanUserAsync(int userId, string reason, DateTime? expiresAt = null)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.IsBanned = true;
+            user.BanReason = reason;
+            user.BanExpiresAt = expiresAt;  // Null = permanent ban
+
+            await _context.SaveChangesAsync();
+
+            // Opciono: Revoke svih aktivnih sesija/tokena
+            //await RevokeUserSessionsAsync(userId);
+
+            return true;
+        }
+
+        public async Task<bool> UnbanUserAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.IsBanned = false;
+            user.BanReason = null;
+            user.BanExpiresAt = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> IsUserBannedAsync(int userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || user.IsBanned != true) return false;
+
+            // Proveri da li je privremeni ban istekao
+            if (user.BanExpiresAt.HasValue && user.BanExpiresAt.Value <= DateTime.UtcNow)
+            {
+                await UnbanUserAsync(userId);
+                return false;
+            }
+
+            return true;
+        }
+
     }
 } 

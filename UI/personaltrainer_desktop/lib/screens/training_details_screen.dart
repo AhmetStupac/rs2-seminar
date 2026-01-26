@@ -97,14 +97,14 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Trening plan spremljen!')));
+          ).showSnackBar(SnackBar(content: Text('Training plan Saved!')));
           Navigator.of(context).pop(trainingPlan);
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Greška: ${e.toString()}')));
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
         }
       }
     }
@@ -113,7 +113,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return NavBar(
-      'Detalji trening plana',
+      'Training Plan Details',
       Padding(
         padding: const EdgeInsets.all(24.0),
         child: ListView(
@@ -124,46 +124,46 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                 children: [
                   TextFormField(
                     controller: _titleController,
-                    decoration: InputDecoration(labelText: 'Naziv plana'),
+                    decoration: InputDecoration(labelText: 'Plan Title'),
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Unesite naziv plana'
+                        ? 'Please enter the plan title'
                         : null,
                   ),
                   SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: InputDecoration(labelText: 'Opis'),
+                    decoration: InputDecoration(labelText: 'Description'),
                     maxLines: 2,
                   ),
                   SizedBox(height: 16),
                   TextFormField(
                     controller: _basePriceController,
-                    decoration: InputDecoration(labelText: 'Cijena'),
+                    decoration: InputDecoration(labelText: 'Price'),
                     keyboardType: TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Unesite cijenu'
+                        ? 'Please enter the price'
                         : null,
                   ),
                   SizedBox(height: 16),
                   TextFormField(
                     controller: _personalTrainerIdController,
                     decoration: InputDecoration(
-                      labelText: 'Personalni trener ID',
+                      labelText: 'Personal Trainer ID',
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Unesite ID trenera'
+                        ? 'Please enter the trainer ID'
                         : null,
                   ),
                   SizedBox(height: 16),
                   TextFormField(
                     controller: _userIdController,
-                    decoration: InputDecoration(labelText: 'Korisnik ID'),
+                    decoration: InputDecoration(labelText: 'User ID'),
                     keyboardType: TextInputType.number,
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Unesite ID korisnika'
+                        ? 'Please enter the user ID'
                         : null,
                   ),
                   SizedBox(height: 16),
@@ -189,7 +189,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                       child: TextFormField(
                         controller: _createdAtController,
                         decoration: InputDecoration(
-                          labelText: 'Datum kreiranja',
+                          labelText: 'Creation Date',
                           suffixIcon: Icon(Icons.calendar_today),
                         ),
                         keyboardType: TextInputType.datetime,
@@ -211,12 +211,12 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                           );
                         },
                         icon: Icon(Icons.image),
-                        label: Text('Dodaj novu vjezbu'),
+                        label: Text('Add New Exercise'),
                       ),
                       SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: _saveTrainingPlan,
-                        child: Text('Spremi'),
+                        child: Text('Save'),
                       ),
                     ],
                   ),
@@ -236,7 +236,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Dostupni trening planovi',
+                    'Available Training Plans',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16),
@@ -244,18 +244,18 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                     Center(child: CircularProgressIndicator())
                   else if (_plansError != null)
                     Text(
-                      'Greška: $_plansError',
+                      'Error: $_plansError',
                       style: TextStyle(color: Colors.red),
                     )
                   else if (_availablePlans.isEmpty)
-                    Text('Nema dostupnih trening planova.')
+                    Text('No available training plans.')
                   else
                     ..._availablePlans
                         .map(
                           (plan) => Card(
                             margin: EdgeInsets.symmetric(vertical: 6),
                             child: ListTile(
-                              title: Text(plan.title ?? 'Bez naziva'),
+                              title: Text(plan.title ?? 'No Title'),
                               subtitle: Text(plan.description ?? ''),
                               trailing: Text(
                                 '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',

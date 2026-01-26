@@ -1,7 +1,10 @@
+using eCommerce.Model.Validators;
 using eCommerce.Services;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using eCommerce.WebAPI.Filters;
+using eCommerce.WebAPI.Middleware;
+using FluentValidation;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication;
@@ -34,6 +37,7 @@ builder.Services.AddScoped<IExercisePlanService, ExercisePlanService>();
 
 
 builder.Services.AddMapster();
+builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
 // Configure database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=IB210033PersonalTrainer;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 builder.Services.AddDatabaseServices(connectionString);
@@ -69,6 +73,7 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
+app.UseMiddleware<BanCheckMiddleware>();
 
 // Ensure database is created
 // using (var scope = app.Services.CreateScope())

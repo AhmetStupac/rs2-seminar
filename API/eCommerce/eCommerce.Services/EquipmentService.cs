@@ -1,4 +1,5 @@
 ﻿using eCommerce.Model.Requests;
+using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 namespace eCommerce.Services
 {
     public class EquipmentService : BaseCRUDService
-        <EquipmentUpsertRequest, NameSearchObject, Database.Equipment, EquipmentUpsertRequest, EquipmentUpsertRequest>, IEquipmentService
+        <EquipmentResponse, NameSearchObject, Database.Equipment, EquipmentUpsertRequest, EquipmentUpsertRequest>, IEquipmentService
     {
         public EquipmentService(IB210033DbContext context, IMapper mapper)
             : base(context, mapper)

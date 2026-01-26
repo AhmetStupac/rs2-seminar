@@ -1,26 +1,40 @@
 ﻿using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Validators;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace eCommerce.Services
 {
     public class ExerciseService : BaseCRUDService<ExerciseResponse, ExerciseSearchObject, Database.Exercise, ExerciseUpsertRequest, ExerciseUpsertRequest>, IExerciseService
     {
+
         public ExerciseService(IB210033DbContext context, IMapper mapper) : base(context, mapper)
         {
-            
         }
 
         protected override Exercise MapInsertToEntity(Exercise entity, ExerciseUpsertRequest request)
         {
+            var validator = new ExerciseValidator();
+            var result = validator.Validate(request);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+
             // Only map Name and EquipmentId (ignore MuscleGroupId since it doesn't exist on Exercise)
             entity.Name = request.Name;
             entity.EquipmentId = request.EquipmentId ?? 0;
-            
+            entity.ImageId = request.ImageId;
+
             return entity;
         }
 
@@ -29,6 +43,7 @@ namespace eCommerce.Services
             // Only map Name and EquipmentId (ignore MuscleGroupId since it doesn't exist on Exercise)
             entity.Name = request.Name;
             entity.EquipmentId = request.EquipmentId ?? 0;
+            entity.ImageId = request.ImageId;
         }
 
         protected override async Task BeforeInsert(Database.Exercise entity, ExerciseUpsertRequest request)
@@ -76,7 +91,8 @@ namespace eCommerce.Services
         {
             query = query.Include(e => e.ExerciseMuscleGroups)
                 .ThenInclude(emg => emg.MuscleGroup)
-                .Include(e => e.Equipment);
+                .Include(e => e.Equipment)
+                .Include(i => i.Image);
 
             if (!string.IsNullOrEmpty(search.Name))
             {
@@ -104,7 +120,10 @@ namespace eCommerce.Services
                     exerciseResponse.MuscleGroupName = firstMuscleGroup.Name;
                 }
             }
-            
+
+            if (entity.Image != null)
+                response.Image = _mapper.Map<ImageResponse>(entity.Image);
+
             return response;
         }
     }

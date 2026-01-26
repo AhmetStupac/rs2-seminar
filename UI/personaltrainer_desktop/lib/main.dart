@@ -1,23 +1,37 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
 import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
-import 'package:personaltrainer_mobile/providers/logged_exercise_provider.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
-import 'package:personaltrainer_mobile/providers/image_provider.dart'
-    as img_provider;
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
+import 'package:personaltrainer_mobile/screens/register_screen.dart';
 import 'package:provider/provider.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 void main() {
+      HttpOverrides.global = MyHttpOverrides();
+      BaseProvider.initialize(navigatorKey);
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<ExerciseProvider>(
-          create: (_) => LoggedExerciseProvider(),
+          create: (_) => ExerciseProvider(),
         ),
         ChangeNotifierProvider<MuscleGroupProvider>(
           create: (_) => MuscleGroupProvider(),
@@ -25,8 +39,8 @@ void main() {
         ChangeNotifierProvider<TrainingProvider>(
           create: (_) => TrainingProvider(),
         ),
-        ChangeNotifierProvider<img_provider.ImageProvider>(
-          create: (_) => img_provider.ImageProvider(),
+        ChangeNotifierProvider<BlobStorageProvider>(
+          create: (_) => BlobStorageProvider(),
         ),
         ChangeNotifierProvider<EquipmentProvider>(
           create: (_) => EquipmentProvider(),
@@ -51,6 +65,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -91,7 +106,7 @@ class LoginPage extends StatelessWidget {
               child: Column(
                 children: [
                   Image.network(
-                    "https://www.fit.ba/content/763cbb87-718d-4eca-a991-343858daf424",
+                    "https://thumbs.dreamstime.com/b/man-running-against--sun-flat-vector-illustration-form-logo-icon-man-running-against-421221837.jpg",
                     height: 100,
                     width: 100,
                   ),
@@ -116,6 +131,7 @@ class LoginPage extends StatelessWidget {
                       ExerciseProvider provider = ExerciseProvider();
                       AuthProvider.username = _usernameController.text;
                       AuthProvider.password = _passwordController.text;
+                      print("Attempting login with: ${_usernameController.text}");
                       try {
                         var data = await provider.get();
                         print("authenticated");
@@ -145,6 +161,17 @@ class LoginPage extends StatelessWidget {
                       }
                     },
                     child: Text("Login"),
+                  ),
+                  SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => RegisterScreen(),
+                        ),
+                      );
+                    },
+                    child: Text("Don't have an account? Register"),
                   ),
                 ],
               ),
