@@ -19,6 +19,10 @@ namespace eCommerce.Model.Responses
         public string? BanReason { get; set; }
         public DateTime? BanExpiresAt { get; set; }
 
+        // Soft delete properties
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+
         // Collection of roles assigned to the user
         public List<RoleResponse> Roles { get; set; } = new List<RoleResponse>();
     }

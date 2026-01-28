@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class eCommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127155921_AddSuperAdminRole")]
+    partial class AddSuperAdminRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -372,7 +375,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(3840),
+                            CreatedAt = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5126),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -380,7 +383,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(3843),
+                            CreatedAt = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5130),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -388,7 +391,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(3845),
+                            CreatedAt = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5135),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -483,12 +486,6 @@ namespace eCommerce.Services.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletedBy")
-                        .HasColumnType("int");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -503,9 +500,6 @@ namespace eCommerce.Services.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool?>("IsBanned")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastLoginAt")
@@ -547,11 +541,10 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4173),
+                            CreatedAt = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5568),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
-                            IsDeleted = false,
                             LastName = "Stupac",
                             PasswordHash = "U7tUy3i14k06vqRZ4KGUX4Fe/rHqra3/l02Z3KX5IyM=",
                             PasswordSalt = "3Z3TLmz+AF2jaNxcyCmaVw==",
@@ -560,11 +553,10 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4177),
+                            CreatedAt = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5574),
                             Email = "denis@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
-                            IsDeleted = false,
                             LastName = "Music",
                             PasswordHash = "U7tUy3i14k06vqRZ4KGUX4Fe/rHqra3/l02Z3KX5IyM=",
                             PasswordSalt = "3Z3TLmz+AF2jaNxcyCmaVw==",
@@ -602,21 +594,21 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4138),
+                            DateAssigned = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5501),
                             RoleId = 1,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4140),
+                            DateAssigned = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5505),
                             RoleId = 2,
                             UserId = 2
                         },
                         new
                         {
                             Id = 3,
-                            DateAssigned = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4142),
+                            DateAssigned = new DateTime(2026, 1, 27, 15, 59, 21, 534, DateTimeKind.Utc).AddTicks(5508),
                             RoleId = 3,
                             UserId = 1
                         });

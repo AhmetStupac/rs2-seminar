@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class eCommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127215610_AddSoftDeleteToUsers")]
+    partial class AddSoftDeleteToUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -372,7 +375,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(3840),
+                            CreatedAt = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7749),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -380,7 +383,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(3843),
+                            CreatedAt = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7751),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -388,7 +391,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(3845),
+                            CreatedAt = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7752),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -547,7 +550,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4173),
+                            CreatedAt = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7960),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -560,7 +563,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4177),
+                            CreatedAt = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7963),
                             Email = "denis@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -602,21 +605,21 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4138),
+                            DateAssigned = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7937),
                             RoleId = 1,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4140),
+                            DateAssigned = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7939),
                             RoleId = 2,
                             UserId = 2
                         },
                         new
                         {
                             Id = 3,
-                            DateAssigned = new DateTime(2026, 1, 27, 22, 1, 18, 877, DateTimeKind.Utc).AddTicks(4142),
+                            DateAssigned = new DateTime(2026, 1, 27, 21, 56, 9, 889, DateTimeKind.Utc).AddTicks(7940),
                             RoleId = 3,
                             UserId = 1
                         });

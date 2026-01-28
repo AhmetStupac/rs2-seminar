@@ -195,9 +195,55 @@ namespace eCommerce.Services
             if (user == null)
                 return false;
 
+            // Soft delete - samo postavi flag
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.UtcNow;
+            // user.DeletedBy = currentUserId; // Možeš dodati ako znaš trenutnog korisnika
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Nova metoda za permanentno brisanje (samo za admin)
+        public async Task<bool> PermanentDeleteAsync(int id)
+        {
+            var user = await _context.Users.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == id);
+            
+            if (user == null)
+                return false;
+
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // Nova metoda za restore obrisanog korisnika
+        public async Task<bool> RestoreUserAsync(int id)
+        {
+            var user = await _context.Users.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == id && u.IsDeleted == true);
+            
+            if (user == null)
+                return false;
+
+            user.IsDeleted = false;
+            user.DeletedAt = null;
+            user.DeletedBy = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Nova metoda za dobijanje obrisanih korisnika
+        public async Task<List<UserResponse>> GetDeletedUsersAsync()
+        {
+            var deletedUsers = await _context.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.IsDeleted)
+                .ToListAsync();
+            
+            return deletedUsers.Select(MapToResponse).ToList();
         }
 
         private UserResponse MapToResponse(User user)
@@ -212,7 +258,13 @@ namespace eCommerce.Services
                 PhoneNumber = user.PhoneNumber,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt,
-                LastLoginAt = user.LastLoginAt
+                LastLoginAt = user.LastLoginAt,
+                IsBanned = user.IsBanned ?? false,
+                BannedAt = null,
+                BanReason = user.BanReason,
+                BanExpiresAt = user.BanExpiresAt,
+                IsDeleted = user.IsDeleted,
+                DeletedAt = user.DeletedAt
             };
         }
 
@@ -247,6 +299,7 @@ namespace eCommerce.Services
         public async Task<UserResponse?> AuthenticateAsync(UserLoginRequest request)
         {
             var user = await _context.Users
+                .IgnoreQueryFilters()
                 .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Username == request.Username);
@@ -332,4 +385,4 @@ namespace eCommerce.Services
         }
 
     }
-} 
+}

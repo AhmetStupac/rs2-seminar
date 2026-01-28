@@ -165,6 +165,10 @@ namespace eCommerce.Services.Database
                 .HasIndex(r => r.Name)
                 .IsUnique();
 
+            // Global query filter za soft delete - User
+            modelBuilder.Entity<User>()
+                .HasQueryFilter(u => !u.IsDeleted);
+
             // Configure UserRole join entity
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.User)
@@ -213,12 +217,14 @@ namespace eCommerce.Services.Database
 
             modelBuilder.Entity<Role>().HasData(
                new Role { Id = 1, Name = "Administrator", Description = "Administrator", IsActive = true, CreatedAt = DateTime.UtcNow },
-               new Role { Id = 2, Name = "Kupac", Description = "Korisnik - kupac", IsActive = true, CreatedAt = DateTime.UtcNow }
+               new Role { Id = 2, Name = "Kupac", Description = "Korisnik - kupac", IsActive = true, CreatedAt = DateTime.UtcNow },
+               new Role { Id = 3, Name = "SuperAdmin", Description = "Super Administrator sa svim privilegijama", IsActive = true, CreatedAt = DateTime.UtcNow }
            );
 
             modelBuilder.Entity<UserRole>().HasData(
                 new UserRole { Id = 1, UserId = 1, RoleId = 1, DateAssigned = DateTime.UtcNow },
-                new UserRole { Id = 2, UserId = 2, RoleId = 2, DateAssigned = DateTime.UtcNow }
+                new UserRole { Id = 2, UserId = 2, RoleId = 2, DateAssigned = DateTime.UtcNow },
+                new UserRole { Id = 3, UserId = 1, RoleId = 3, DateAssigned = DateTime.UtcNow } // Dodaj SuperAdmin rolu korisniku 1
             );
 
 

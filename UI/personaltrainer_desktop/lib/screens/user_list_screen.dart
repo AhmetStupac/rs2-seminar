@@ -11,8 +11,11 @@ class UsersListScreen extends StatefulWidget {
 
 class _UsersListScreenState extends State<UsersListScreen> {
   final _adminProvider = AdminProvider();
+  final _searchController = TextEditingController();
   List<Map<String, dynamic>> _users = [];
   bool _isLoading = true;
+  bool _showDeletedOnly = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -20,11 +23,19 @@ class _UsersListScreenState extends State<UsersListScreen> {
     _loadUsers();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUsers() async {
     setState(() => _isLoading = true);
 
     try {
-      final users = await _adminProvider.getAllUsers();
+      final users = _showDeletedOnly
+          ? await _adminProvider.getDeletedUsers()
+          : await _adminProvider.getAllUsers();
       setState(() {
         _users = users;
         _isLoading = false;
@@ -39,12 +50,46 @@ class _UsersListScreenState extends State<UsersListScreen> {
     }
   }
 
+  List<Map<String, dynamic>> get _filteredUsers {
+    if (_searchQuery.isEmpty) {
+      return _users;
+    }
+
+    final query = _searchQuery.toLowerCase();
+    return _users.where((user) {
+      final username = (user['username'] ?? '').toString().toLowerCase();
+      final email = (user['email'] ?? '').toString().toLowerCase();
+      final firstName = (user['firstName'] ?? '').toString().toLowerCase();
+      final lastName = (user['lastName'] ?? '').toString().toLowerCase();
+
+      return username.contains(query) ||
+          email.contains(query) ||
+          firstName.contains(query) ||
+          lastName.contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Korisnici'),
         actions: [
+          FilterChip(
+            label: Text(_showDeletedOnly ? 'Obrisani' : 'Svi'),
+            selected: _showDeletedOnly,
+            onSelected: (value) {
+              setState(() {
+                _showDeletedOnly = value;
+              });
+              _loadUsers();
+            },
+            avatar: Icon(
+              _showDeletedOnly ? Icons.delete : Icons.people,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadUsers,
@@ -53,15 +98,67 @@ class _UsersListScreenState extends State<UsersListScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadUsers,
-              child: _users.isEmpty
-                  ? const Center(child: Text('Nema korisnika'))
-                  : ListView.builder(
-                      itemCount: _users.length,
-                      itemBuilder: (context, index) {
-                        final user = _users[index];
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Pretraga korisnika',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Pretraži po username, email, imenu ili prezimenu...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _loadUsers,
+                    child: _filteredUsers.isEmpty
+                        ? Center(
+                            child: Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'Nema rezultata pretrage'
+                                  : 'Nema korisnika',
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _filteredUsers.length,
+                            itemBuilder: (context, index) {
+                              final user = _filteredUsers[index];
                         final isBanned = user['isBanned'] ?? false;
+                        final isDeleted = user['isDeleted'] ?? false;
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -70,11 +167,15 @@ class _UsersListScreenState extends State<UsersListScreen> {
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: isBanned
-                                  ? Colors.red.shade700
-                                  : Colors.blue.shade700,
+                              backgroundColor: isDeleted
+                                  ? Colors.grey.shade700
+                                  : (isBanned
+                                      ? Colors.red.shade700
+                                      : Colors.blue.shade700),
                               child: Icon(
-                                isBanned ? Icons.block : Icons.person,
+                                isDeleted
+                                    ? Icons.person_off
+                                    : (isBanned ? Icons.block : Icons.person),
                                 color: Colors.white,
                               ),
                             ),
@@ -91,7 +192,18 @@ class _UsersListScreenState extends State<UsersListScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(user['email'] ?? 'N/A'),
-                                if (isBanned) ...[
+                                if (isDeleted) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'OBRISAN',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                                if (isBanned && !isDeleted) ...[
                                   const SizedBox(height: 4),
                                   Text(
                                     'BANOVAN: ${user['banReason'] ?? 'Bez razloga'}',
@@ -104,23 +216,44 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                 ],
                               ],
                             ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                isBanned ? Icons.check_circle : Icons.block,
-                                color: isBanned ? Colors.green : Colors.red,
-                              ),
-                              onPressed: () {
-                                if (isBanned) {
-                                  _showUnbanDialog(user);
-                                } else {
-                                  _openBanScreen(user);
-                                }
-                              },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isDeleted) ...[
+                                  IconButton(
+                                    icon: const Icon(Icons.undo, color: Colors.green),
+                                    tooltip: 'Vrati korisnika',
+                                    onPressed: () => _showRestoreDialog(user),
+                                  ),
+                                ] else ...[
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    tooltip: 'Obriši korisnika',
+                                    onPressed: () => _showDeleteDialog(user),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      isBanned ? Icons.check_circle : Icons.arrow_forward,
+                                      color: isBanned ? Colors.green : Colors.red,
+                                    ),
+                                    onPressed: () {
+                                      if (isBanned) {
+                                        _showUnbanDialog(user);
+                                      } else {
+                                        _openBanScreen(user);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         );
                       },
                     ),
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -173,6 +306,102 @@ class _UsersListScreenState extends State<UsersListScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(result['message'] ?? 'Uspešno unbanovano'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadUsers();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Greška'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showDeleteDialog(Map<String, dynamic> user) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Obriši korisnika'),
+        content: Text(
+          'Da li ste sigurni da želite da obrišete korisnika ${user['username']}?\n\nOvo je soft delete operacija.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Otkaži'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Obriši'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final result = await _adminProvider.softDeleteUser(user['id']);
+
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Uspešno obrisano'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadUsers();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Greška'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _showRestoreDialog(Map<String, dynamic> user) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Vrati korisnika'),
+        content: Text(
+          'Da li ste sigurni da želite da vratite korisnika ${user['username']}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Otkaži'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text('Vrati'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final result = await _adminProvider.restoreUser(user['id']);
+
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Uspešno vraćeno'),
               backgroundColor: Colors.green,
             ),
           );

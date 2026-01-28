@@ -13,6 +13,8 @@ abstract class BaseProvider<T> with ChangeNotifier {
   // ⭐ SAMO navigator key (bez httpClient)
   static GlobalKey<NavigatorState>? navigatorKey;
 
+  static String get baseUrl => _baseUrl ?? "https://localhost:7093/api/";
+
   static void initialize(GlobalKey<NavigatorState> navKey) {
     navigatorKey = navKey;
     print('BaseProvider initialized with navigator key');
@@ -37,7 +39,13 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
+    print("🔍 GET Request to: $url");
+    print("🔍 Headers: ${headers.keys.join(', ')}");
+    print("🔍 Auth header value: ${headers['Authorization']}");
+
     var response = await http.get(uri, headers: headers);
+
+    print("🔍 Response status: ${response.statusCode}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -95,6 +103,12 @@ abstract class BaseProvider<T> with ChangeNotifier {
     if (response.statusCode < 299) {
       return true;
     } else if (response.statusCode == 401) {
+      print("❌ 401 UNAUTHORIZED ERROR");
+      print("❌ Request URL: ${response.request?.url}");
+      print("❌ Response body: '${response.body}'");
+      print("❌ Response headers: ${response.headers}");
+      print("❌ Current username: ${AuthProvider.username}");
+      print("❌ Current password set: ${AuthProvider.password != null && AuthProvider.password!.isNotEmpty}");
       throw Exception("Unauthorized");
     } else if (response.statusCode == 403) {
       // ⭐ Proveri da li je ban
@@ -142,10 +156,13 @@ abstract class BaseProvider<T> with ChangeNotifier {
     String username = AuthProvider.username ?? "";
     String password = AuthProvider.password ?? "";
 
-    print("passed creds: $username, $password");
+    print("Creating headers with Basic Auth for user: $username");
+    print("Password is ${password.isNotEmpty ? 'set (${password.length} chars)' : 'EMPTY'}");
 
     String basicAuth =
         "Basic ${base64Encode(utf8.encode('$username:$password'))}";
+
+    print("Authorization header: $basicAuth");
 
     var headers = {
       "Content-Type": "application/json",

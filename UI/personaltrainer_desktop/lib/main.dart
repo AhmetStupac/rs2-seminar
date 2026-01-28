@@ -9,6 +9,7 @@ import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
+import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
 import 'package:provider/provider.dart';
@@ -128,15 +129,23 @@ class LoginPage extends StatelessWidget {
                   ),
                   ElevatedButton(
                     onPressed: () async {
-                      ExerciseProvider provider = ExerciseProvider();
-                      AuthProvider.username = _usernameController.text;
-                      AuthProvider.password = _passwordController.text;
-                      print("Attempting login with: ${_usernameController.text}");
+                      UserProvider userProvider = UserProvider();
+                      var username = _usernameController.text;
+                      var password = _passwordController.text;
+                      print("Attempting login with: $username");
                       try {
-                        var data = await provider.get();
-                        print("authenticated");
-                        print(data);
+                        // Call the proper login endpoint
+                        var data = await userProvider.login(username, password);
+                        print("✅ Login successful");
+                        print("Login response: $data");
+                        
+                        // Save credentials BEFORE any other API calls
+                        AuthProvider.username = username;
+                        AuthProvider.password = password;
                         AuthProvider.applyLoginResponse(data);
+                        
+                        print("📝 Saved credentials - Username: ${AuthProvider.username}");
+                        print("📝 Saved credentials - Password: ${AuthProvider.password != null ? '***' : 'null'}");
 
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -144,11 +153,11 @@ class LoginPage extends StatelessWidget {
                           ),
                         );
                       } on Exception catch (e) {
-                        print("not authenticated");
+                        print("❌ Login failed: $e");
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text("Error"),
+                            title: Text("Login Error"),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),

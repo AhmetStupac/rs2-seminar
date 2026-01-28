@@ -14,6 +14,9 @@ namespace eCommerce.Services
         Task<UserResponse> CreateAsync(UserUpsertRequest request);
         Task<UserResponse?> UpdateAsync(int id, UserUpsertRequest request);
         Task<bool> DeleteAsync(int id);
+        Task<bool> PermanentDeleteAsync(int id);
+        Task<bool> RestoreUserAsync(int id);
+        Task<List<UserResponse>> GetDeletedUsersAsync();
         Task<UserResponse?> AuthenticateAsync(UserLoginRequest request);
         Task<bool> BanUserAsync(int userId, string reason, DateTime? expiresAt);
         Task<bool> UnbanUserAsync(int userId);

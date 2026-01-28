@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:personaltrainer_mobile/models/user.dart';
 import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class UserProvider extends BaseProvider<User> {
   UserProvider() : super("Users");
@@ -7,5 +10,55 @@ class UserProvider extends BaseProvider<User> {
   @override
   User fromJson(data) {
     return User.fromJson(data);
+  }
+
+  Future<dynamic> login(String username, String password) async {
+    var url = "${BaseProvider.baseUrl}Users/login";
+    var uri = Uri.parse(url);
+
+    var headers = {
+      "Content-Type": "application/json",
+    };
+
+    var body = jsonEncode({
+      "username": username,
+      "password": password,
+    });
+
+    print("🔐 Attempting login to: $url");
+    print("🔐 Username: $username");
+
+    var response = await http.post(uri, headers: headers, body: body);
+
+    print("🔐 Login response status: ${response.statusCode}");
+    print("🔐 Login response body: ${response.body}");
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      // 204 No Content means successful login without response body
+      if (response.statusCode == 204 || response.body.isEmpty) {
+        return {"success": true};
+      }
+      var data = jsonDecode(response.body);
+      return data;
+    } else if (response.statusCode == 401) {
+      throw Exception("Invalid username or password");
+    } else {
+      throw Exception("Login failed: ${response.body}");
+    }
+  }
+
+  Future<User?> getCurrentUser() async {
+    if (AuthProvider.userId == null) return null;
+    var url = "${BaseProvider.baseUrl}Users/${AuthProvider.userId}";
+    var uri = Uri.parse(url);
+    var headers = {
+      "Content-Type": "application/json",
+    };
+    var response = await http.get(uri, headers: headers);
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      return User.fromJson(data);
+    }
+    return null;
   }
 }

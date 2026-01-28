@@ -5,11 +5,8 @@ class BanUserScreen extends StatefulWidget {
   final int userId;
   final String username;
 
-  const BanUserScreen({
-    Key? key,
-    required this.userId,
-    required this.username,
-  }) : super(key: key);
+  const BanUserScreen({Key? key, required this.userId, required this.username})
+    : super(key: key);
 
   @override
   State<BanUserScreen> createState() => _BanUserScreenState();
@@ -23,6 +20,95 @@ class _BanUserScreenState extends State<BanUserScreen> {
   bool _isPermanent = true;
   DateTime? _expiryDate;
   bool _isLoading = false;
+
+  // Unban related state
+  bool _isBanned = false;
+  bool _isCheckingBan = true;
+  Map<String, dynamic>? _banInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBanStatus();
+  }
+
+  Future<void> _checkBanStatus() async {
+    setState(() => _isCheckingBan = true);
+
+    try {
+      final result = await _adminProvider.checkBan(widget.userId);
+      if (mounted) {
+        setState(() {
+          _isBanned = result['isBanned'] ?? false;
+          _banInfo = result;
+          _isCheckingBan = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCheckingBan = false);
+      }
+    }
+  }
+
+  Future<void> _unbanUser() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Potvrda'),
+        content: Text(
+          'Da li ste sigurni da želite da unbanuјete ${widget.username}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Otkaži'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('Unbanuj'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _adminProvider.unbanUser(widget.userId);
+
+      if (!mounted) return;
+
+      if (result['success']) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Korisnik uspešno unbanovan'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Greška pri unbanovanju'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Future<void> _banUser() async {
     if (!_formKey.currentState!.validate()) return;
@@ -65,10 +151,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Greška: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) {
@@ -85,6 +168,178 @@ class _BanUserScreenState extends State<BanUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingBan) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Upravljanje banom'),
+          backgroundColor: Colors.grey.shade700,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Ako je korisnik banovan, prikaži unban ekran
+    if (_isBanned) {
+      return _buildUnbanScreen();
+    }
+
+    // Inače prikaži ban formu
+    return _buildBanScreen();
+  }
+
+  Widget _buildUnbanScreen() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Unbanuj korisnika'),
+        backgroundColor: Colors.green.shade700,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ban info card
+            Card(
+              color: Colors.red.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.block, color: Colors.red.shade700, size: 32),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.username,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade700,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'BANOVAN',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24),
+                    _buildBanInfoRow(
+                      'Razlog:',
+                      _banInfo?['reason'] ?? 'Nije naveden',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildBanInfoRow(
+                      'Banovan:',
+                      _banInfo?['bannedAt'] != null
+                          ? _formatDateTime(_banInfo!['bannedAt'])
+                          : 'Nepoznato',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildBanInfoRow(
+                      'Tip bana:',
+                      (_banInfo?['isPermanent'] ?? true)
+                          ? 'Permanentan'
+                          : 'Privremeni',
+                    ),
+                    if (_banInfo?['expiresAt'] != null) ...[
+                      const SizedBox(height: 8),
+                      _buildBanInfoRow(
+                        'Ističe:',
+                        _formatDateTime(_banInfo!['expiresAt']),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Unban dugme
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _unbanUser,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.check_circle),
+                label: Text(
+                  _isLoading ? 'Unbanovavanje...' : 'Unbanuj korisnika',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade700,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBanInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 100,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDateTime(DateTime date) {
+    return '${date.day}.${date.month}.${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildBanScreen() {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Banuj korisnika'),

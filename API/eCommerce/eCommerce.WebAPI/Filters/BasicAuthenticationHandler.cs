@@ -38,7 +38,7 @@ namespace eCommerce.WebAPI.Filters
 
             var user = await _userService.AuthenticateAsync(new UserLoginRequest { Username = username, Password = password });
             
-            if (user == null)
+                if (user == null)
                 return AuthenticateResult.Fail("Invalid credentials");
 
             // Create a list to hold all claims

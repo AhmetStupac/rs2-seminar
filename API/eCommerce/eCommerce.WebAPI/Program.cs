@@ -44,6 +44,8 @@ builder.Services.AddDatabaseServices(connectionString);
 builder.Services.AddAuthentication("BasicAuthentication")
     .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
 
+builder.Services.AddAuthorization();
+
 
 builder.Services.AddControllers( x=> 
     {
@@ -73,7 +75,6 @@ builder.Services.AddSwaggerGen(c =>
 
 
 var app = builder.Build();
-app.UseMiddleware<BanCheckMiddleware>();
 
 // Ensure database is created
 // using (var scope = app.Services.CreateScope())
@@ -91,7 +92,10 @@ app.UseMiddleware<BanCheckMiddleware>();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<BanCheckMiddleware>();
 
 app.MapControllers();
 

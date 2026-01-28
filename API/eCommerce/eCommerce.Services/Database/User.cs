@@ -44,6 +44,11 @@ namespace eCommerce.Services.Database
         public DateTime? BanExpiresAt { get; set; }  // Opciono: privremeni ban
         public string? BanReason { get; set; }  // Razlog bana
 
+        // Soft delete properties
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+        public int? DeletedBy { get; set; }  // UserId ko je obrisao
+
         // Navigation property for the many-to-many relationship with Role
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }

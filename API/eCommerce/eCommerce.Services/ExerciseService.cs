@@ -18,7 +18,7 @@ namespace eCommerce.Services
         {
         }
 
-        protected override Exercise MapInsertToEntity(Exercise entity, ExerciseUpsertRequest request)
+        protected override Database.Exercise MapInsertToEntity(Database.Exercise entity, ExerciseUpsertRequest request)
         {
             var validator = new ExerciseValidator();
             var result = validator.Validate(request);
@@ -38,7 +38,7 @@ namespace eCommerce.Services
             return entity;
         }
 
-        protected override void MapUpdateToEntity(Exercise entity, ExerciseUpsertRequest request)
+        protected override void MapUpdateToEntity(Database.Exercise entity, ExerciseUpsertRequest request)
         {
             // Only map Name and EquipmentId (ignore MuscleGroupId since it doesn't exist on Exercise)
             entity.Name = request.Name;
@@ -49,12 +49,12 @@ namespace eCommerce.Services
         protected override async Task BeforeInsert(Database.Exercise entity, ExerciseUpsertRequest request)
         {
             // Initialize the collection
-            entity.ExerciseMuscleGroups = new List<ExerciseMuscleGroup>();
+            entity.ExerciseMuscleGroups = new List<Database.ExerciseMuscleGroup>();
 
             // Create the ExerciseMuscleGroup relationship
             if (request.MuscleGroupId > 0)
             {
-                var exerciseMuscleGroup = new ExerciseMuscleGroup
+                var exerciseMuscleGroup = new Database.ExerciseMuscleGroup
                 {
                     MuscleGroupId = request.MuscleGroupId,
                     Exercise = entity
@@ -68,21 +68,21 @@ namespace eCommerce.Services
         protected override async Task BeforeUpdate(Database.Exercise entity, ExerciseUpsertRequest request)
         {
             // Remove existing muscle group relationships
-            var existingRelationships = await _context.Set<ExerciseMuscleGroup>()
+            var existingRelationships = await _context.Set<Database.ExerciseMuscleGroup>()
                 .Where(emg => emg.ExerciseId == entity.Id)
                 .ToListAsync();
             
-            _context.Set<ExerciseMuscleGroup>().RemoveRange(existingRelationships);
+            _context.Set<Database.ExerciseMuscleGroup>().RemoveRange(existingRelationships);
 
             // Add new relationship
             if (request.MuscleGroupId > 0)
             {
-                var newRelationship = new ExerciseMuscleGroup
+                var newRelationship = new Database.ExerciseMuscleGroup
                 {
                     ExerciseId = entity.Id,
                     MuscleGroupId = request.MuscleGroupId
                 };
-                _context.Set<ExerciseMuscleGroup>().Add(newRelationship);
+                _context.Set<Database.ExerciseMuscleGroup>().Add(newRelationship);
             }
             
         }

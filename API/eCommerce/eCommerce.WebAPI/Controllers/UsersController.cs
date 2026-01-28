@@ -2,8 +2,10 @@
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -43,7 +45,9 @@ namespace eCommerce.WebAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
         }
 
-        [HttpPut("{id}")]
+        // update
+
+        [HttpPut("update/{id}")]
         public async Task<ActionResult<UserResponse>> Update(int id, UserUpsertRequest request)
         {
             var updatedUser = await _userService.UpdateAsync(id, request);
@@ -54,7 +58,9 @@ namespace eCommerce.WebAPI.Controllers
             return updatedUser;
         }
 
-        [HttpDelete("{id}")]
+        // soft delete
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpDelete("soft/{id}")]
         public async Task<ActionResult> Delete(int id)
         {
             var deleted = await _userService.DeleteAsync(id);
@@ -63,6 +69,41 @@ namespace eCommerce.WebAPI.Controllers
                 return NotFound();
                 
             return NoContent();
+        }
+
+        // Permanentno brisanje - samo za SuperAdmin
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpDelete("{id}/permanent")]
+        public async Task<ActionResult> PermanentDelete(int id)
+        {
+            var deleted = await _userService.PermanentDeleteAsync(id);
+            
+            if (!deleted)
+                return NotFound();
+                
+            return NoContent();
+        }
+
+        // Restore obrisanog korisnika
+       // [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("restore/{id}")]
+        public async Task<ActionResult> RestoreUser(int id)
+        {
+            var restored = await _userService.RestoreUserAsync(id);
+            
+            if (!restored)
+                return NotFound();
+                
+            return Ok(new { message = "Korisnik je uspješno vraćen" });
+        }
+
+        // Pregled obrisanih korisnika
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpGet("deleted")]
+        public async Task<ActionResult<List<UserResponse>>> GetDeletedUsers()
+        {
+            var deletedUsers = await _userService.GetDeletedUsersAsync();
+            return Ok(deletedUsers);
         }
 
         [HttpPost("login")]
@@ -74,7 +115,8 @@ namespace eCommerce.WebAPI.Controllers
 
 
         // banovanje korisnika
-
+        
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("ban-user")]
         public async Task<IActionResult> BanUser([FromBody] BanUserResponse dto)
         {
@@ -86,6 +128,7 @@ namespace eCommerce.WebAPI.Controllers
             return Ok(new { message = "Korisnik je uspešno banovan" });
         }
 
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("unban-user/{userId}")]
         public async Task<IActionResult> UnbanUser(int userId)
         {
@@ -103,5 +146,7 @@ namespace eCommerce.WebAPI.Controllers
             var isBanned = await _userService.IsUserBannedAsync(userId);
             return Ok(new { isBanned });
         }
+
+       
     }
 } 

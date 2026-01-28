@@ -4,6 +4,7 @@ import 'package:personaltrainer_mobile/screens/exercise_list.dart';
 import 'package:personaltrainer_mobile/screens/training_details_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
+import 'package:personaltrainer_mobile/screens/profile_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class NavBar extends StatefulWidget {
@@ -61,7 +62,9 @@ class _MasterScreenState extends State<NavBar> {
             label: 'Profil',
             routeName: 'Profil',
             onTap: () {
-              // TODO: Navigiraj na profil screen
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
               setState(() => selectedMenu = 'Profil');
             },
           ),
