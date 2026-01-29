@@ -2,6 +2,7 @@ using eCommerce.Model.Validators;
 using eCommerce.Services;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using eCommerce.Services.SignalR;
 using eCommerce.WebAPI.Filters;
 using eCommerce.WebAPI.Middleware;
 using FluentValidation;
@@ -35,6 +36,10 @@ builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
 builder.Services.AddScoped<IExercisePlanService, ExercisePlanService>();
 
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 
 builder.Services.AddMapster();
 builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
@@ -42,9 +47,15 @@ builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=IB210033PersonalTrainer;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 builder.Services.AddDatabaseServices(connectionString);
 builder.Services.AddAuthentication("BasicAuthentication")
-    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
+    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", options => { });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SignalRPolicy", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+    });
+});
 
 
 builder.Services.AddControllers( x=> 
@@ -73,6 +84,17 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SignalRCors", builder =>
+    {
+        builder.WithOrigins("http://localhost:3000") // Your client URL
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials();
+    });
+});
+
 
 var app = builder.Build();
 
@@ -91,12 +113,16 @@ var app = builder.Build();
 }
 
 app.UseHttpsRedirection();
+app.UseCors("SignalRCors");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<BanCheckMiddleware>();
 
+
 app.MapControllers();
+app.MapHub<PresenceHub>("/hubs/presence");
+
 
 app.Run();

@@ -10,6 +10,7 @@ import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
+import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
 import 'package:provider/provider.dart';
@@ -20,13 +21,14 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
 
 void main() {
-      HttpOverrides.global = MyHttpOverrides();
-      BaseProvider.initialize(navigatorKey);
+  HttpOverrides.global = MyHttpOverrides();
+  BaseProvider.initialize(navigatorKey);
 
   runApp(
     MultiProvider(
@@ -47,10 +49,13 @@ void main() {
           create: (_) => EquipmentProvider(),
         ),
         ChangeNotifierProvider<ExercisePlanProvider>(
-     create: (_) => ExercisePlanProvider(),
+          create: (_) => ExercisePlanProvider(),
         ),
-         ChangeNotifierProvider<TrainingPlanProvider>(
-     create: (_) => TrainingPlanProvider(),
+        ChangeNotifierProvider<TrainingPlanProvider>(
+          create: (_) => TrainingPlanProvider(),
+        ),
+        ChangeNotifierProvider<SignalRProvider>(
+          create: (_) => SignalRProvider(),
         ),
       ],
       child: const MyApp(),
@@ -138,14 +143,25 @@ class LoginPage extends StatelessWidget {
                         var data = await userProvider.login(username, password);
                         print("✅ Login successful");
                         print("Login response: $data");
-                        
+
                         // Save credentials BEFORE any other API calls
                         AuthProvider.username = username;
                         AuthProvider.password = password;
                         AuthProvider.applyLoginResponse(data);
-                        
-                        print("📝 Saved credentials - Username: ${AuthProvider.username}");
-                        print("📝 Saved credentials - Password: ${AuthProvider.password != null ? '***' : 'null'}");
+
+                        //connecting to signalr after login
+                        final signalRProvider = Provider.of<SignalRProvider>(
+                          context,
+                          listen: false,
+                        );
+                        signalRProvider.connect();
+
+                        print(
+                          "📝 Saved credentials - Username: ${AuthProvider.username}",
+                        );
+                        print(
+                          "📝 Saved credentials - Password: ${AuthProvider.password != null ? '***' : 'null'}",
+                        );
 
                         Navigator.of(context).push(
                           MaterialPageRoute(

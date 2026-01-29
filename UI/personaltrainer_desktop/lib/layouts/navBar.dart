@@ -5,12 +5,13 @@ import 'package:personaltrainer_mobile/screens/training_details_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
+import 'package:personaltrainer_mobile/screens/messaging_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class NavBar extends StatefulWidget {
   final String title;
   final Widget child;
-  
+
   const NavBar(this.title, this.child, {super.key});
 
   @override
@@ -99,7 +100,9 @@ class _MasterScreenState extends State<NavBar> {
               // TODO: Navigiraj na statistika screen
               setState(() => selectedMenu = 'Trening plan');
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => TrainingDetailsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => TrainingDetailsScreen(),
+                ),
               );
             },
           ),
@@ -124,7 +127,19 @@ class _MasterScreenState extends State<NavBar> {
             },
           ),
 
-        
+          _buildMenuItem(
+            icon: Icons.message,
+            label: 'Messaging',
+            routeName: 'Messaging',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const MessagingScreen(),
+                ),
+              );
+              setState(() => selectedMenu = 'Messaging');
+            },
+          ),
 
           _buildMenuItem(
             icon: Icons.admin_panel_settings,
@@ -139,7 +154,6 @@ class _MasterScreenState extends State<NavBar> {
           ),
 
           Spacer(), // Gurni donji deo na dno
-
           // Logout dugme
           _buildMenuItem(
             icon: Icons.logout,
@@ -166,7 +180,9 @@ class _MasterScreenState extends State<NavBar> {
               if (confirmed == true) {
                 AuthProvider.logout();
                 // Vrati korisnika na login screen
-                Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/', (route) => false);
               }
             },
           ),

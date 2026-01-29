@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:json_annotation/json_annotation.dart';
 import 'package:personaltrainer_mobile/models/exercise.dart';
 

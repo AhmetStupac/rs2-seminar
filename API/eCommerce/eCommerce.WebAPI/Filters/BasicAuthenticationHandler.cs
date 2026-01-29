@@ -30,41 +30,60 @@ namespace eCommerce.WebAPI.Filters
             if (!Request.Headers.ContainsKey("Authorization"))
                 return AuthenticateResult.NoResult();
 
-            var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
-            var credentialsBytes = Convert.FromBase64String(authHeader.Parameter!);
-            var credentials = Encoding.UTF8.GetString(credentialsBytes).Split(':');
-            var username = credentials[0];
-            var password = credentials[1];
+            try
+            {
+                var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+                
+                if (authHeader.Scheme != "Basic" || string.IsNullOrEmpty(authHeader.Parameter))
+                    return AuthenticateResult.NoResult();
+                
+                var credentialsBytes = Convert.FromBase64String(authHeader.Parameter!);
+                var credentials = Encoding.UTF8.GetString(credentialsBytes).Split(':');
+                
+                if (credentials.Length != 2)
+                    return AuthenticateResult.Fail("Invalid credentials format");
+                
+                var username = credentials[0];
+                var password = credentials[1];
 
-            var user = await _userService.AuthenticateAsync(new UserLoginRequest { Username = username, Password = password });
-            
+                var user = await _userService.AuthenticateAsync(new UserLoginRequest { Username = username, Password = password });
+                
                 if (user == null)
-                return AuthenticateResult.Fail("Invalid credentials");
+                    return AuthenticateResult.Fail("Invalid credentials");
 
-            // Create a list to hold all claims
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.GivenName, user.FirstName),
-                new Claim(ClaimTypes.Surname, user.LastName),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-            
-            // Add role claims
-            if (user.Roles != null)
-            {
-                foreach (var role in user.Roles)
+                // Create a list to hold all claims
+                var claims = new List<Claim>
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, role.Name));
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.GivenName, user.FirstName),
+                    new Claim(ClaimTypes.Surname, user.LastName),
+                    new Claim(ClaimTypes.Email, user.Email)
+                };
+                
+                // Add role claims
+                if (user.Roles != null)
+                {
+                    foreach (var role in user.Roles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role.Name));
+                    }
                 }
-            }
-            
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Scheme.Name);
+                
+                var identity = new ClaimsIdentity(claims, Scheme.Name);
+                var principal = new ClaimsPrincipal(identity);
+                var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-            return AuthenticateResult.Success(ticket);
+                return AuthenticateResult.Success(ticket);
+            }
+            catch (FormatException)
+            {
+                return AuthenticateResult.Fail("Invalid authorization header format");
+            }
+            catch (Exception ex)
+            {
+                return AuthenticateResult.Fail($"Authentication failed: {ex.Message}");
+            }
         }
     }
 }
