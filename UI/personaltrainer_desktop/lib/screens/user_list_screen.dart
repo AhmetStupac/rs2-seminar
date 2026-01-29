@@ -37,7 +37,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
       // Periodic UI refresh to show online status
       // (Backend sends events, we just need to refresh UI)
-      _pollTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      _pollTimer = Timer.periodic(Duration(seconds: 10), (timer) {
         if (signalR.isConnected) {
           signalR.refreshOnlineUsers();
         }

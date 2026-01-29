@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 class AuthProvider {
-  static String? username;
-  static String? password;
   static int? userId;
   static String? token;
   static bool _isBanned = false;
@@ -11,14 +9,24 @@ class AuthProvider {
 
 
   static void applyLoginResponse(dynamic data) {
-    // Accept different response shapes: a Map with id/token, or a raw JWT string.
+    // Accept different response shapes: a Map with Token/User, token/id, or a raw JWT string.
     if (data is Map<String, dynamic>) {
-      if (data['id'] != null) {
-        userId = int.tryParse(data['id'].toString());
-      }
-      if (data['token'] != null) {
-        token = data['token'] as String;
-        _setUserIdFromToken(token!);
+      // Handle backend response: { Token: "...", User: { id: ... } }
+      if (data['Token'] != null || data['token'] != null) {
+        token = (data['Token'] ?? data['token']) as String;
+        
+        // Try to get userId from User object first
+        if (data['User'] != null && data['User'] is Map<String, dynamic>) {
+          final user = data['User'] as Map<String, dynamic>;
+          userId = int.tryParse(user['id']?.toString() ?? '');
+        } else if (data['id'] != null) {
+          userId = int.tryParse(data['id'].toString());
+        }
+        
+        // If userId still not found, try to extract from JWT token
+        if (userId == null) {
+          _setUserIdFromToken(token!);
+        }
       }
       return;
     }
@@ -50,8 +58,6 @@ class AuthProvider {
 
   /// Briše sve korisničke podatke (logout)
   static void logout() {
-    username = null;
-    password = null;
     userId = null;
     token = null;
   }

@@ -5,7 +5,7 @@ using System.Security.Claims;
 
 namespace eCommerce.Services.SignalR
 {
-    //[Authorize]
+    [Authorize]
     public class PresenceHub : Hub
     {
         private static readonly ConcurrentDictionary<string, string> _userConnections = new();

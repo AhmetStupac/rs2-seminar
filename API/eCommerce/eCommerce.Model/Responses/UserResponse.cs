@@ -18,6 +18,7 @@ namespace eCommerce.Model.Responses
         public DateTime? BannedAt { get; set; }
         public string? BanReason { get; set; }
         public DateTime? BanExpiresAt { get; set; }
+     //   public string Token { get; set; }
 
         // Soft delete properties
         public bool IsDeleted { get; set; }

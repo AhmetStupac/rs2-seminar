@@ -1,13 +1,14 @@
-using eCommerce.Services.Database;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using eCommerce.Model.Responses;
 using eCommerce.Model.Requests;
+using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
-using System.Linq;
+using eCommerce.Services.Database;
+using eCommerce.Services.Interface;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace eCommerce.Services
 {
@@ -17,10 +18,12 @@ namespace eCommerce.Services
         private const int SaltSize = 16;
         private const int KeySize = 32;
         private const int Iterations = 10000;
+        private readonly ITokenService _tokenService;
 
-        public UserService(IB210033DbContext context)
+        public UserService(IB210033DbContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
         public async Task<List<UserResponse>> GetAsync(UserSearchObject search)
@@ -264,7 +267,8 @@ namespace eCommerce.Services
                 BanReason = user.BanReason,
                 BanExpiresAt = user.BanExpiresAt,
                 IsDeleted = user.IsDeleted,
-                DeletedAt = user.DeletedAt
+                DeletedAt = user.DeletedAt,
+                //Token = _tokenService.CreateToken(user)
             };
         }
 
@@ -382,6 +386,14 @@ namespace eCommerce.Services
             }
 
             return true;
+        }
+
+        public async Task<User> GetUserByIdAsync(int userId)
+        {
+            return await _context.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == userId);
         }
 
     }

@@ -34,14 +34,25 @@ class Message {
 
 @JsonSerializable()
 class OnlineUser {
+  @JsonKey(name: 'userId', defaultValue: '')
   String userId;
+  
+  @JsonKey(name: 'email')
   String? email;
+  
+  @JsonKey(name: 'connectionId')
   String? connectionId;
 
   OnlineUser({required this.userId, this.email, this.connectionId});
 
-  factory OnlineUser.fromJson(Map<String, dynamic> json) =>
-      _$OnlineUserFromJson(json);
+  factory OnlineUser.fromJson(Map<String, dynamic> json) {
+    // Handle both PascalCase (C# backend) and camelCase
+    return OnlineUser(
+      userId: json['userId']?.toString() ?? json['UserId']?.toString() ?? '',
+      email: json['email']?.toString() ?? json['Email']?.toString(),
+      connectionId: json['connectionId']?.toString() ?? json['ConnectionId']?.toString(),
+    );
+  }
 
   Map<String, dynamic> toJson() => _$OnlineUserToJson(this);
 }

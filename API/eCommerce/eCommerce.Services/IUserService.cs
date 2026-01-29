@@ -21,6 +21,6 @@ namespace eCommerce.Services
         Task<bool> BanUserAsync(int userId, string reason, DateTime? expiresAt);
         Task<bool> UnbanUserAsync(int userId);
         Task<bool> IsUserBannedAsync(int userId);
-
+        Task<User> GetUserByIdAsync(int userId);
     }
 } 

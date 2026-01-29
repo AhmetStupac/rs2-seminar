@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="10.3.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.20" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.9" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.2" />
@@ -21,6 +22,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.ML" Version="1.5.5" />
 	  <PackageReference Include="Microsoft.ML.Recommender" Version="0.17.5" />
+	  <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1" />
   </ItemGroup>
 
   <ItemGroup>

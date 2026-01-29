@@ -144,24 +144,20 @@ class LoginPage extends StatelessWidget {
                         print("✅ Login successful");
                         print("Login response: $data");
 
-                        // Save credentials BEFORE any other API calls
-                        AuthProvider.username = username;
-                        AuthProvider.password = password;
-                        AuthProvider.applyLoginResponse(data);
+                        // JWT token is already stored by userProvider.login via AuthProvider.applyLoginResponse
+                        print(
+                          "📝 JWT token stored - User ID: ${AuthProvider.userId}",
+                        );
+                        print(
+                          "📝 Token present: ${AuthProvider.token != null ? 'Yes' : 'No'}",
+                        );
 
-                        //connecting to signalr after login
+                        // Connect to SignalR after login
                         final signalRProvider = Provider.of<SignalRProvider>(
                           context,
                           listen: false,
                         );
                         signalRProvider.connect();
-
-                        print(
-                          "📝 Saved credentials - Username: ${AuthProvider.username}",
-                        );
-                        print(
-                          "📝 Saved credentials - Password: ${AuthProvider.password != null ? '***' : 'null'}",
-                        );
 
                         Navigator.of(context).push(
                           MaterialPageRoute(

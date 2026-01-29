@@ -110,8 +110,7 @@ class BannedScreen extends StatelessWidget {
                     const SizedBox(height: 32),
                     ElevatedButton.icon(
                       onPressed: () {
-                        AuthProvider.username = null;
-                        AuthProvider.password = null;
+                        AuthProvider.logout();
                         Navigator.of(context).pushNamedAndRemoveUntil(
                           '/login',
                           (route) => false,

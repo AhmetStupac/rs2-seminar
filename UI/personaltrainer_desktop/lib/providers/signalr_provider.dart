@@ -19,25 +19,20 @@ class SignalRProvider with ChangeNotifier {
 
   Future<void> connect() async {
     try {
-      final username = AuthProvider.username;
-      final password = AuthProvider.password;
+      final token = AuthProvider.token;
 
-      if (username == null || password == null) {
-        _error = "No authentication credentials available";
+      if (token == null || token.isEmpty) {
+        _error = "No authentication token available";
         notifyListeners();
         return;
       }
 
-      // Create Basic Auth header
-      final basicAuth =
-          'Basic ${base64Encode(utf8.encode('$username:$password'))}';
-
-      // Configure the SignalR connection with Basic Auth
+      // Configure the SignalR connection with JWT Bearer token
       _hubConnection = HubConnectionBuilder()
           .withUrl(
             "https://localhost:7093/hubs/presence",
             options: HttpConnectionOptions(
-              accessTokenFactory: () async => basicAuth,
+              accessTokenFactory: () async => token,
               skipNegotiation: false,
               transport: HttpTransportType.WebSockets,
             ),
@@ -54,22 +49,9 @@ class SignalRProvider with ChangeNotifier {
       _error = null;
 
       print("✅ SignalR Connected successfully");
-
-      // Request current online users list
-      try {
-        final onlineUserIds = await getOnlineUsers();
-        print("🔍 DEBUG: Fetched online users: $onlineUserIds");
-
-        // Add current user to online list if not there
-        final currentUserId = AuthProvider.userId?.toString();
-        if (currentUserId != null &&
-            !_onlineUsers.any((u) => u.userId == currentUserId)) {
-          _onlineUsers.add(OnlineUser(userId: currentUserId));
-          print("🔍 DEBUG: Added current user ($currentUserId) to online list");
-        }
-      } catch (e) {
-        print("⚠️ Warning: Could not fetch online users: $e");
-      }
+      print("🔍 Connection ID: ${_hubConnection!.connectionId}");
+      print("🔍 Connection State: ${_hubConnection!.state}");
+      print("⏳ Waiting for backend to send OnlineUsers event...");
 
       notifyListeners();
     } catch (e) {
@@ -88,38 +70,82 @@ class SignalRProvider with ChangeNotifier {
       print("🔍 DEBUG: UserOnline event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
-          final data = arguments[0] as Map<String, dynamic>;
-          print("🔍 DEBUG: UserOnline data: $data");
-          final onlineUser = OnlineUser.fromJson(data);
+          final rawData = arguments[0];
+          print("🔍 DEBUG: UserOnline raw data: $rawData (type: ${rawData.runtimeType})");
+          
+          OnlineUser? onlineUser;
+          
+          if (rawData is String) {
+            // Just a user ID string
+            onlineUser = OnlineUser(userId: rawData);
+          } else if (rawData is int) {
+            // User ID as integer
+            onlineUser = OnlineUser(userId: rawData.toString());
+          } else if (rawData is Map<String, dynamic>) {
+            // Full user object
+            onlineUser = OnlineUser.fromJson(rawData);
+          }
 
-          // Add user if not already in the list
-          if (!_onlineUsers.any((u) => u.userId == onlineUser.userId)) {
-            _onlineUsers.add(onlineUser);
-            print(
-              "👤 User online: ${onlineUser.email} (ID: ${onlineUser.userId})",
-            );
-            notifyListeners();
+          if (onlineUser != null) {
+            // Add user if not already in the list
+            if (!_onlineUsers.any((u) => u.userId == onlineUser!.userId)) {
+              _onlineUsers.add(onlineUser);
+              print(
+                "👤 User online: ${onlineUser.email ?? 'N/A'} (ID: ${onlineUser.userId})",
+              );
+              print("👥 Total online users now: ${_onlineUsers.length}");
+              notifyListeners();
+            } else {
+              print("👤 User already in list: ${onlineUser.userId}");
+            }
           }
         } catch (e) {
           print("❌ Error parsing UserOnline: $e");
+          print("❌ Stack trace: ${StackTrace.current}");
         }
       }
     });
 
     // Handle user going offline
     _hubConnection!.on("UserOffline", (arguments) {
+      print("🔍 DEBUG: UserOffline event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
-          final data = arguments[0] as Map<String, dynamic>;
-          final userId = data['UserId'] as String?;
+          final rawData = arguments[0];
+          print("🔍 DEBUG: UserOffline raw data: $rawData (type: ${rawData.runtimeType})");
+          
+          String? userId;
+          
+          if (rawData is String) {
+            // Just a user ID string
+            userId = rawData;
+          } else if (rawData is int) {
+            // User ID as integer
+            userId = rawData.toString();
+          } else if (rawData is Map<String, dynamic>) {
+            // User object - try both PascalCase and camelCase
+            userId = rawData['userId']?.toString() ?? rawData['UserId']?.toString();
+          }
 
           if (userId != null) {
+            print("🔍 DEBUG: Removing user: $userId");
+            print("🔍 DEBUG: Online users before removal: ${_onlineUsers.map((u) => u.userId).toList()}");
+            
+            final removedCount = _onlineUsers.length;
             _onlineUsers.removeWhere((u) => u.userId == userId);
-            print("👤 User offline: ${data['Email']}");
+            
+            print("👤 User offline: $userId");
+            print("🔍 DEBUG: Removed ${removedCount - _onlineUsers.length} user(s)");
+            print("🔍 DEBUG: Online users after removal: ${_onlineUsers.map((u) => u.userId).toList()}");
+            print("👥 Total online users now: ${_onlineUsers.length}");
+            
             notifyListeners();
+          } else {
+            print("⚠️ WARNING: Could not extract userId from UserOffline event");
           }
         } catch (e) {
-          print("Error parsing UserOffline: $e");
+          print("❌ Error parsing UserOffline: $e");
+          print("❌ Stack trace: ${StackTrace.current}");
         }
       }
     });
@@ -187,23 +213,41 @@ class SignalRProvider with ChangeNotifier {
       print("🔍 DEBUG: OnlineUsers event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
-          final userIds = (arguments[0] as List<dynamic>)
-              .map((id) => id.toString())
-              .toList();
+          // Clear the existing list before adding new users
+          _onlineUsers.clear();
+          print("🔍 DEBUG: Cleared existing online users list");
 
-          print("🔍 DEBUG: Parsed user IDs: $userIds");
+          final rawData = arguments[0];
+          print("🔍 DEBUG: Raw data type: ${rawData.runtimeType}");
+          print("🔍 DEBUG: Raw data: $rawData");
 
-          for (var userId in userIds) {
-            if (!_onlineUsers.any((u) => u.userId == userId)) {
-              _onlineUsers.add(OnlineUser(userId: userId));
-              print("🔍 DEBUG: Added user $userId to online list");
+          if (rawData is List<dynamic>) {
+            for (var item in rawData) {
+              print("🔍 DEBUG: Processing item: $item (type: ${item.runtimeType})");
+              
+              if (item is String) {
+                // Backend sent just user IDs as strings
+                _onlineUsers.add(OnlineUser(userId: item));
+                print("🔍 DEBUG: Added user from string: $item");
+              } else if (item is Map<String, dynamic>) {
+                // Backend sent full user objects
+                final user = OnlineUser.fromJson(item);
+                _onlineUsers.add(user);
+                print("🔍 DEBUG: Added user from object: ${user.userId}");
+              } else if (item is int) {
+                // Backend sent user IDs as integers
+                _onlineUsers.add(OnlineUser(userId: item.toString()));
+                print("🔍 DEBUG: Added user from int: $item");
+              }
             }
           }
-          print("👥 Online users received: ${userIds.length}");
-          print("🔍 DEBUG: Total online users now: ${_onlineUsers.length}");
+          
+          print("👥 Online users received: ${_onlineUsers.length}");
+          print("👥 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
           notifyListeners();
         } catch (e) {
           print("❌ Error parsing OnlineUsers: $e");
+          print("❌ Stack trace: ${StackTrace.current}");
         }
       }
     });
@@ -228,25 +272,22 @@ class SignalRProvider with ChangeNotifier {
 
   // Send message via HTTP endpoint (alternative to SignalR invoke)
   Future<void> sendMessageViaHttp(String message) async {
-    final username = AuthProvider.username;
-    final password = AuthProvider.password;
+    final token = AuthProvider.token;
 
-    if (username == null || password == null) {
-      _error = "No authentication credentials available";
+    if (token == null || token.isEmpty) {
+      _error = "No authentication token available";
       notifyListeners();
       return;
     }
 
     try {
-      final basicAuth =
-          'Basic ${base64Encode(utf8.encode('$username:$password'))}';
       final url = Uri.parse('https://localhost:7093/api/MessageTest/broadcast');
 
       final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': basicAuth,
+          'Authorization': 'Bearer $token',
         },
         body: jsonEncode(message),
       );
@@ -315,7 +356,7 @@ class SignalRProvider with ChangeNotifier {
     }
   }
 
-  // Refresh the online users list from the server
+ // Refresh the online users list from the server
   Future<void> refreshOnlineUsers() async {
     if (!_isConnected || _hubConnection == null) {
       return;

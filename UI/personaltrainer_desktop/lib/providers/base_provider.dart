@@ -107,8 +107,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
       print("❌ Request URL: ${response.request?.url}");
       print("❌ Response body: '${response.body}'");
       print("❌ Response headers: ${response.headers}");
-      print("❌ Current username: ${AuthProvider.username}");
-      print("❌ Current password set: ${AuthProvider.password != null && AuthProvider.password!.isNotEmpty}");
+      print("❌ Current token set: ${AuthProvider.token != null && AuthProvider.token!.isNotEmpty}");
       throw Exception("Unauthorized");
     } else if (response.statusCode == 403) {
       // ⭐ Proveri da li je ban
@@ -153,21 +152,19 @@ abstract class BaseProvider<T> with ChangeNotifier {
   }
 
   Map<String, String> createHeaders() {
-    String username = AuthProvider.username ?? "";
-    String password = AuthProvider.password ?? "";
+    String token = AuthProvider.token ?? "";
 
-    print("Creating headers with Basic Auth for user: $username");
-    print("Password is ${password.isNotEmpty ? 'set (${password.length} chars)' : 'EMPTY'}");
-
-    String basicAuth =
-        "Basic ${base64Encode(utf8.encode('$username:$password'))}";
-
-    print("Authorization header: $basicAuth");
+    print("Creating headers with JWT Bearer token");
+    print("Token is ${token.isNotEmpty ? 'set (${token.length} chars)' : 'EMPTY'}");
 
     var headers = {
       "Content-Type": "application/json",
-      "Authorization": basicAuth,
     };
+
+    if (token.isNotEmpty) {
+      headers["Authorization"] = "Bearer $token";
+      print("Authorization header: Bearer ${token.substring(0, token.length > 20 ? 20 : token.length)}...");
+    }
 
     return headers;
   }

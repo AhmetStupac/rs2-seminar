@@ -3,13 +3,14 @@ using eCommerce.Services;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using eCommerce.Services.SignalR;
-using eCommerce.WebAPI.Filters;
 using eCommerce.WebAPI.Middleware;
 using FluentValidation;
 using Mapster;
 using MapsterMapper;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,36 @@ builder.Services.AddScoped<IImageMetadataService, ImageMetadataService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
 builder.Services.AddScoped<IExercisePlanService, ExercisePlanService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var tokenKey = builder.Configuration["TokenKey"]
+            ?? throw new Exception("Token key not found - program.cs");
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey)),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+        
+        // Enable JWT for SignalR
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 builder.Services.AddSignalR(options =>
 {
@@ -46,8 +77,6 @@ builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
 // Configure database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=IB210033PersonalTrainer;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 builder.Services.AddDatabaseServices(connectionString);
-builder.Services.AddAuthentication("BasicAuthentication")
-    .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", options => { });
 
 builder.Services.AddAuthorization(options =>
 {
@@ -58,27 +87,31 @@ builder.Services.AddAuthorization(options =>
 });
 
 
-builder.Services.AddControllers( x=> 
-    {
-        x.Filters.Add<ExceptionFilter>();
-    }
-);
+builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("BasicAuthentication", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
-        Scheme = "basic",
+        Scheme = "bearer",
+        BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Basic Authorization header using the Bearer scheme."
+        Description = "JWT Authorization header using the Bearer scheme. Enter your token in the text input below."
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "BasicAuthentication" } },
+            new OpenApiSecurityScheme 
+            { 
+                Reference = new OpenApiReference 
+                { 
+                    Type = ReferenceType.SecurityScheme, 
+                    Id = "Bearer" 
+                } 
+            },
             new string[] { }
         }
     });

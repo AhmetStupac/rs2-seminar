@@ -2,6 +2,7 @@
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services;
+using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -10,15 +11,18 @@ using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly ITokenService _tokenService;
 
-        public UsersController(IUserService userService)
+        public UsersController(IUserService userService, ITokenService tokenService)
         {
             _userService = userService;
+            _tokenService = tokenService;
         }
 
         [HttpGet]
@@ -105,12 +109,23 @@ namespace eCommerce.WebAPI.Controllers
             var deletedUsers = await _userService.GetDeletedUsersAsync();
             return Ok(deletedUsers);
         }
-
+        [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<UserResponse>> Login(UserLoginRequest request)
+        public async Task<ActionResult> Login(UserLoginRequest request)
         {
             var user = await _userService.AuthenticateAsync(request);
-            return Ok(user);
+            
+            if (user == null)
+                return Unauthorized(new { message = "Invalid username or password" });
+            
+            // Create JWT token
+            var token = _tokenService.CreateToken(await _userService.GetUserByIdAsync(user.Id));
+            
+            return Ok(new LoginResponse
+            { 
+                Token = token,
+                User = user
+            });
         }
 
 

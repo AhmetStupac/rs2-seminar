@@ -69,13 +69,13 @@ class BlobStorageProvider with ChangeNotifier {
   }
 
   Map<String, String> _createHeaders() {
-    String username = AuthProvider.username ?? "";
-    String password = AuthProvider.password ?? "";
+    String token = AuthProvider.token ?? "";
 
-    String basicAuth =
-        "Basic ${base64Encode(utf8.encode('$username:$password'))}";
+    var headers = <String, String>{};
 
-    var headers = {"Authorization": basicAuth};
+    if (token.isNotEmpty) {
+      headers["Authorization"] = "Bearer $token";
+    }
 
     return headers;
   }

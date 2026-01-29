@@ -34,11 +34,15 @@ class UserProvider extends BaseProvider<User> {
     print("🔐 Login response body: ${response.body}");
 
     if (response.statusCode == 200 || response.statusCode == 204) {
-      // 204 No Content means successful login without response body
+      // Handle JWT response
       if (response.statusCode == 204 || response.body.isEmpty) {
         return {"success": true};
       }
       var data = jsonDecode(response.body);
+      
+      // Store the JWT token in AuthProvider
+      AuthProvider.applyLoginResponse(data);
+      
       return data;
     } else if (response.statusCode == 401) {
       throw Exception("Invalid username or password");
@@ -51,9 +55,7 @@ class UserProvider extends BaseProvider<User> {
     if (AuthProvider.userId == null) return null;
     var url = "${BaseProvider.baseUrl}Users/${AuthProvider.userId}";
     var uri = Uri.parse(url);
-    var headers = {
-      "Content-Type": "application/json",
-    };
+    var headers = createHeaders();
     var response = await http.get(uri, headers: headers);
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);

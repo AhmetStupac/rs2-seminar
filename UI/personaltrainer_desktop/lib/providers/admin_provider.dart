@@ -8,20 +8,21 @@ class AdminProvider {
     defaultValue: "https://localhost:7093/api/",
   );
 
-  // ⭐ Kreiraj headers sa Basic Auth
+  // Create headers with JWT Bearer token
   Map<String, String> _createHeaders() {
-    String username = AuthProvider.username ?? "";
-    String password = AuthProvider.password ?? "";
+    String token = AuthProvider.token ?? "";
 
-    print("AdminProvider credentials: username='$username', password='${password.isNotEmpty ? '***' : '(empty)'}'");
+    print("AdminProvider using JWT token: ${token.isNotEmpty ? 'present' : 'missing'}");
 
-    String basicAuth =
-        "Basic ${base64Encode(utf8.encode('$username:$password'))}";
-
-    return {
+    var headers = {
       "Content-Type": "application/json",
-      "Authorization": basicAuth,
     };
+
+    if (token.isNotEmpty) {
+      headers["Authorization"] = "Bearer $token";
+    }
+
+    return headers;
   }
 
   // ⭐ Banovanje korisnika
