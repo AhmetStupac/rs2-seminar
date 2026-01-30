@@ -108,5 +108,11 @@ namespace eCommerce.Services.SignalR
         {
             return _userConnections.Keys.ToList();
         }
+
+
+        public static ConcurrentDictionary<string, string> GetUserConnections()
+        {
+            return _userConnections;
+        }
     }
 }

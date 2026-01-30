@@ -33,7 +33,7 @@ Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
 };
 
 OnlineUser _$OnlineUserFromJson(Map<String, dynamic> json) => OnlineUser(
-  userId: json['userId'] as String,
+  userId: json['userId'] as String? ?? '',
   email: json['email'] as String?,
   connectionId: json['connectionId'] as String?,
 );

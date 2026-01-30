@@ -26,8 +26,25 @@ class Message {
     this.isPrivate = false,
   });
 
-  factory Message.fromJson(Map<String, dynamic> json) =>
-      _$MessageFromJson(json);
+  factory Message.fromJson(Map<String, dynamic> json) {
+    // Handle both PascalCase (C# backend) and camelCase
+    return Message(
+      userId: json['userId']?.toString() ?? json['UserId']?.toString(),
+      user: json['user']?.toString() ?? json['User']?.toString(),
+      email: json['email']?.toString() ?? json['Email']?.toString(),
+      message: json['message']?.toString() ?? json['Message']?.toString(),
+      timestamp: json['timestamp'] != null
+          ? DateTime.parse(json['timestamp'].toString())
+          : (json['Timestamp'] != null
+                ? DateTime.parse(json['Timestamp'].toString())
+                : null),
+      fromUserId:
+          json['fromUserId']?.toString() ?? json['FromUserId']?.toString(),
+      from: json['from']?.toString() ?? json['From']?.toString(),
+      toUserId: json['toUserId']?.toString() ?? json['ToUserId']?.toString(),
+      isPrivate: json['isPrivate'] ?? json['IsPrivate'] ?? false,
+    );
+  }
 
   Map<String, dynamic> toJson() => _$MessageToJson(this);
 }
@@ -36,10 +53,10 @@ class Message {
 class OnlineUser {
   @JsonKey(name: 'userId', defaultValue: '')
   String userId;
-  
+
   @JsonKey(name: 'email')
   String? email;
-  
+
   @JsonKey(name: 'connectionId')
   String? connectionId;
 
@@ -50,7 +67,8 @@ class OnlineUser {
     return OnlineUser(
       userId: json['userId']?.toString() ?? json['UserId']?.toString() ?? '',
       email: json['email']?.toString() ?? json['Email']?.toString(),
-      connectionId: json['connectionId']?.toString() ?? json['ConnectionId']?.toString(),
+      connectionId:
+          json['connectionId']?.toString() ?? json['ConnectionId']?.toString(),
     );
   }
 

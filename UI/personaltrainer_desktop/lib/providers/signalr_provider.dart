@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:personaltrainer_mobile/models/message.dart';
@@ -26,14 +27,13 @@ class SignalRProvider with ChangeNotifier {
         notifyListeners();
         return;
       }
-
-      // Configure the SignalR connection with JWT Bearer token
+      //Configure the SignalR connection with JWT Bearer token
       _hubConnection = HubConnectionBuilder()
           .withUrl(
             "https://localhost:7093/hubs/presence",
             options: HttpConnectionOptions(
               accessTokenFactory: () async => token,
-              skipNegotiation: false,
+              skipNegotiation: true,
               transport: HttpTransportType.WebSockets,
             ),
           )
@@ -50,8 +50,6 @@ class SignalRProvider with ChangeNotifier {
 
       print("✅ SignalR Connected successfully");
       print("🔍 Connection ID: ${_hubConnection!.connectionId}");
-      print("🔍 Connection State: ${_hubConnection!.state}");
-      print("⏳ Waiting for backend to send OnlineUsers event...");
 
       notifyListeners();
     } catch (e) {
@@ -71,37 +69,26 @@ class SignalRProvider with ChangeNotifier {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final rawData = arguments[0];
-          print("🔍 DEBUG: UserOnline raw data: $rawData (type: ${rawData.runtimeType})");
-          
           OnlineUser? onlineUser;
-          
+
           if (rawData is String) {
-            // Just a user ID string
             onlineUser = OnlineUser(userId: rawData);
           } else if (rawData is int) {
-            // User ID as integer
             onlineUser = OnlineUser(userId: rawData.toString());
           } else if (rawData is Map<String, dynamic>) {
-            // Full user object
             onlineUser = OnlineUser.fromJson(rawData);
           }
 
           if (onlineUser != null) {
-            // Add user if not already in the list
             if (!_onlineUsers.any((u) => u.userId == onlineUser!.userId)) {
               _onlineUsers.add(onlineUser);
-              print(
-                "👤 User online: ${onlineUser.email ?? 'N/A'} (ID: ${onlineUser.userId})",
-              );
+              print("👤 User online: ${onlineUser.userId}");
               print("👥 Total online users now: ${_onlineUsers.length}");
               notifyListeners();
-            } else {
-              print("👤 User already in list: ${onlineUser.userId}");
             }
           }
         } catch (e) {
           print("❌ Error parsing UserOnline: $e");
-          print("❌ Stack trace: ${StackTrace.current}");
         }
       }
     });
@@ -112,56 +99,25 @@ class SignalRProvider with ChangeNotifier {
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final rawData = arguments[0];
-          print("🔍 DEBUG: UserOffline raw data: $rawData (type: ${rawData.runtimeType})");
-          
           String? userId;
-          
+
           if (rawData is String) {
-            // Just a user ID string
             userId = rawData;
           } else if (rawData is int) {
-            // User ID as integer
             userId = rawData.toString();
           } else if (rawData is Map<String, dynamic>) {
-            // User object - try both PascalCase and camelCase
-            userId = rawData['userId']?.toString() ?? rawData['UserId']?.toString();
+            userId =
+                rawData['userId']?.toString() ?? rawData['UserId']?.toString();
           }
 
           if (userId != null) {
-            print("🔍 DEBUG: Removing user: $userId");
-            print("🔍 DEBUG: Online users before removal: ${_onlineUsers.map((u) => u.userId).toList()}");
-            
-            final removedCount = _onlineUsers.length;
             _onlineUsers.removeWhere((u) => u.userId == userId);
-            
             print("👤 User offline: $userId");
-            print("🔍 DEBUG: Removed ${removedCount - _onlineUsers.length} user(s)");
-            print("🔍 DEBUG: Online users after removal: ${_onlineUsers.map((u) => u.userId).toList()}");
             print("👥 Total online users now: ${_onlineUsers.length}");
-            
             notifyListeners();
-          } else {
-            print("⚠️ WARNING: Could not extract userId from UserOffline event");
           }
         } catch (e) {
           print("❌ Error parsing UserOffline: $e");
-          print("❌ Stack trace: ${StackTrace.current}");
-        }
-      }
-    });
-
-    // Handle receiving a broadcast message
-    _hubConnection!.on("ReceiveMessage", (arguments) {
-      if (arguments != null && arguments.isNotEmpty) {
-        try {
-          final data = arguments[0] as Map<String, dynamic>;
-          final message = Message.fromJson(data);
-          message.isPrivate = false;
-          _messages.add(message);
-          print("💬 Message received: ${message.message}");
-          notifyListeners();
-        } catch (e) {
-          print("Error parsing ReceiveMessage: $e");
         }
       }
     });
@@ -177,33 +133,7 @@ class SignalRProvider with ChangeNotifier {
           print("🔒 Private message received: ${message.message}");
           notifyListeners();
         } catch (e) {
-          print("Error parsing ReceivePrivateMessage: $e");
-        }
-      }
-    });
-
-    // Handle message sent confirmation
-    _hubConnection!.on("MessageSent", (arguments) {
-      if (arguments != null && arguments.isNotEmpty) {
-        try {
-          final data = arguments[0] as Map<String, dynamic>;
-          print("✅ Message sent confirmation: ${data['Message']}");
-        } catch (e) {
-          print("Error parsing MessageSent: $e");
-        }
-      }
-    });
-
-    // Handle message error
-    _hubConnection!.on("MessageError", (arguments) {
-      if (arguments != null && arguments.isNotEmpty) {
-        try {
-          final errorMsg = arguments[0] as String;
-          _error = errorMsg;
-          print("❌ Message error: $errorMsg");
-          notifyListeners();
-        } catch (e) {
-          print("Error parsing MessageError: $e");
+          print("❌ Error parsing ReceivePrivateMessage: $e");
         }
       }
     });
@@ -213,56 +143,61 @@ class SignalRProvider with ChangeNotifier {
       print("🔍 DEBUG: OnlineUsers event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
-          // Clear the existing list before adding new users
           _onlineUsers.clear();
-          print("🔍 DEBUG: Cleared existing online users list");
-
           final rawData = arguments[0];
-          print("🔍 DEBUG: Raw data type: ${rawData.runtimeType}");
-          print("🔍 DEBUG: Raw data: $rawData");
 
           if (rawData is List<dynamic>) {
             for (var item in rawData) {
-              print("🔍 DEBUG: Processing item: $item (type: ${item.runtimeType})");
-              
               if (item is String) {
-                // Backend sent just user IDs as strings
                 _onlineUsers.add(OnlineUser(userId: item));
-                print("🔍 DEBUG: Added user from string: $item");
               } else if (item is Map<String, dynamic>) {
-                // Backend sent full user objects
                 final user = OnlineUser.fromJson(item);
                 _onlineUsers.add(user);
-                print("🔍 DEBUG: Added user from object: ${user.userId}");
               } else if (item is int) {
-                // Backend sent user IDs as integers
                 _onlineUsers.add(OnlineUser(userId: item.toString()));
-                print("🔍 DEBUG: Added user from int: $item");
               }
             }
           }
-          
+
           print("👥 Online users received: ${_onlineUsers.length}");
           print("👥 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
           notifyListeners();
         } catch (e) {
           print("❌ Error parsing OnlineUsers: $e");
-          print("❌ Stack trace: ${StackTrace.current}");
         }
       }
     });
+    // Implement message polling if needed
   }
 
   Future<void> sendMessage(String message) async {
-    if (!_isConnected || _hubConnection == null) {
-      _error = "Not connected to SignalR hub";
+    if (!_isConnected) {
+      _error = "Not connected";
       notifyListeners();
       return;
     }
 
     try {
-      await _hubConnection!.invoke("SendMessage", args: [message]);
-      print("📤 Broadcast message sent: $message");
+      // Use HTTP endpoint for sending messages
+      final token = AuthProvider.token;
+      final url = Uri.parse('https://localhost:7093/api/MessageTest/broadcast');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(message),
+      );
+
+      if (response.statusCode == 200) {
+        print("📤 Broadcast message sent: $message");
+      } else {
+        _error = "Failed to send message: ${response.statusCode}";
+        print("❌ Error sending message: ${response.body}");
+        notifyListeners();
+      }
     } catch (e) {
       _error = e.toString();
       print("❌ Error sending message: $e");
@@ -307,31 +242,49 @@ class SignalRProvider with ChangeNotifier {
   }
 
   Future<void> sendPrivateMessage(String toUserId, String message) async {
-    if (!_isConnected || _hubConnection == null) {
-      _error = "Not connected to SignalR hub";
+    // Use HTTP endpoint instead of SignalR invoke due to compatibility issues
+    // with .NET 8.0 SignalR and signalr_netcore package
+    final token = AuthProvider.token;
+
+    if (token == null || token.isEmpty) {
+      _error = "No authentication token available";
       notifyListeners();
       return;
     }
 
     try {
-      await _hubConnection!.invoke(
-        "SendPrivateMessage",
-        args: [toUserId, message],
+      final url = Uri.parse(
+        'https://localhost:7093/hubs/presence/SendPrivateMessage',
       );
 
-      // Add the sent message to local list
-      _messages.add(
-        Message(
-          userId: AuthProvider.userId?.toString(),
-          message: message,
-          timestamp: DateTime.now(),
-          toUserId: toUserId,
-          isPrivate: true,
-        ),
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'toUserId': toUserId, 'message': message}),
       );
 
-      print("📤 Private message sent to $toUserId: $message");
-      notifyListeners();
+      if (response.statusCode == 200) {
+        // Add the sent message to local list
+        _messages.add(
+          Message(
+            userId: AuthProvider.userId?.toString(),
+            message: message,
+            timestamp: DateTime.now(),
+            toUserId: toUserId,
+            isPrivate: true,
+          ),
+        );
+
+        print("📤 Private message sent to $toUserId via HTTP: $message");
+        notifyListeners();
+      } else {
+        _error = "Failed to send message: ${response.statusCode}";
+        print("❌ Error sending private message: ${response.body}");
+        notifyListeners();
+      }
     } catch (e) {
       _error = e.toString();
       print("❌ Error sending private message: $e");
@@ -339,41 +292,13 @@ class SignalRProvider with ChangeNotifier {
     }
   }
 
-  Future<List<String>> getOnlineUsers() async {
-    if (!_isConnected || _hubConnection == null) {
-      return [];
-    }
-
-    try {
-      final result = await _hubConnection!.invoke("GetOnlineUsers");
-      if (result != null && result is List) {
-        return result.map((id) => id.toString()).toList();
-      }
-      return [];
-    } catch (e) {
-      print("❌ Error getting online users: $e");
-      return [];
-    }
-  }
-
- // Refresh the online users list from the server
   Future<void> refreshOnlineUsers() async {
-    if (!_isConnected || _hubConnection == null) {
+    if (!_isConnected) {
       return;
     }
-
-    try {
-      // WORKAROUND: Don't call GetOnlineUsers due to package compatibility issues
-      // Instead, rely on UserOnline/UserOffline events only
-      // The backend already sends OnlineUsers list on connection
-      print("🔄 Current online users: ${_onlineUsers.length} users online");
-      print("🔄 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
-
-      // Just trigger a UI update
-      notifyListeners();
-    } catch (e) {
-      print("❌ Error refreshing online users: $e");
-    }
+    print("🔄 Current online users: ${_onlineUsers.length} users online");
+    print("🔄 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
+    notifyListeners();
   }
 
   Future<void> disconnect() async {
