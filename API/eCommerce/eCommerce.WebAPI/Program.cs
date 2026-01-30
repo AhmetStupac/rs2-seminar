@@ -156,6 +156,7 @@ app.UseMiddleware<BanCheckMiddleware>();
 
 app.MapControllers();
 app.MapHub<PresenceHub>("/hubs/presence");
+app.MapHub<MessageHub>("/hubs/messages");
 
 
 app.Run();

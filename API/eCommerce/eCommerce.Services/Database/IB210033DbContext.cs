@@ -24,6 +24,9 @@ namespace eCommerce.Services.Database
         public DbSet<PlanCostItem> PlanCostItems { get; set; }
         public DbSet<Training> Trainings { get; set; }
         public DbSet<Image> Images { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
 
 
