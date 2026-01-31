@@ -17,6 +17,7 @@ namespace eCommerce.Services.Database
         public bool RecipientDeleted { get; set; }
 
         // nav properties
+
         public required string SenderId { get; set; }
         public User Sender { get; set; } = null!;
         public required string RecipientId { get; set; }

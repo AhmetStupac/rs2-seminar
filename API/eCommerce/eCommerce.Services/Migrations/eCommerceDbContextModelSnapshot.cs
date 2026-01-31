@@ -36,7 +36,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Equipments");
+                    b.ToTable("Equipments", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Exercise", b =>
@@ -63,7 +63,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("ImageId");
 
-                    b.ToTable("Exercises");
+                    b.ToTable("Exercises", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.ExerciseMuscleGroup", b =>
@@ -86,7 +86,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("MuscleGroupId");
 
-                    b.ToTable("ExerciseMuscleGroup");
+                    b.ToTable("ExerciseMuscleGroup", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.ExercisePlan", b =>
@@ -125,7 +125,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("TrainingPlanId");
 
-                    b.ToTable("ExercisePlans");
+                    b.ToTable("ExercisePlans", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Image", b =>
@@ -157,7 +157,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Images");
+                    b.ToTable("Images", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Meal", b =>
@@ -187,7 +187,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("NutritionPlanId");
 
-                    b.ToTable("Meals");
+                    b.ToTable("Meals", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.MealFood", b =>
@@ -213,7 +213,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("MealId");
 
-                    b.ToTable("MealFoods");
+                    b.ToTable("MealFoods", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.MuscleGroup", b =>
@@ -230,7 +230,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MuscleGroups");
+                    b.ToTable("MuscleGroups", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.NutritionPlan", b =>
@@ -282,7 +282,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("NutritionPlans");
+                    b.ToTable("NutritionPlans", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.PersonalTrainer", b =>
@@ -309,7 +309,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PersonalTrainers");
+                    b.ToTable("PersonalTrainers", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.PlanCostItem", b =>
@@ -334,7 +334,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("TrainingPlanId");
 
-                    b.ToTable("PlanCostItems");
+                    b.ToTable("PlanCostItems", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Role", b =>
@@ -366,7 +366,7 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
 
                     b.HasData(
                         new
@@ -426,7 +426,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("PersonalTrainerId");
 
-                    b.ToTable("Trainings");
+                    b.ToTable("Trainings", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.TrainingPlan", b =>
@@ -463,7 +463,7 @@ namespace eCommerce.Services.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TrainingPlans");
+                    b.ToTable("TrainingPlans", (string)null);
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.User", b =>
@@ -541,7 +541,7 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
                     b.HasData(
                         new
@@ -596,7 +596,7 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("UserId", "RoleId")
                         .IsUnique();
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRoles", (string)null);
 
                     b.HasData(
                         new

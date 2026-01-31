@@ -1,4 +1,5 @@
-﻿using eCommerce.Services.Interface;
+﻿using eCommerce.Services.Extensions;
+using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -6,13 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace eCommerce.Services.SignalR
 {
     [Authorize]
     public class MessageHub(IMessageRepository messageRepository) : Hub
     {
-        public override async Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()    //Mouce da kod puca jer getUserId ne radi dobro
         {
             var httpContext = Context.GetHttpContext();
             var otherUser = httpContext?.Request.Query["userId"].ToString()
@@ -21,14 +23,15 @@ namespace eCommerce.Services.SignalR
 
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-            var messages = await messageRepositorysitory.GetMessageThread(GetUserId(), otherUser);
+            var messages = await messageRepository.GetMessageThread(GetUserId(), otherUser);
             
             await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
         }
 
-        private object GetUserId()
+        private string GetUserId() 
         {
-            throw new NotImplementedException();
+            return Context.User?.GetUserId()
+                ?? throw new HubException("Cannot get member id");
         }
 
         private static string GetGroupName(string? caller, string otherUser)
