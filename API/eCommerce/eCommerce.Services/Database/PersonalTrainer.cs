@@ -14,7 +14,7 @@ namespace eCommerce.Services.Database
         public int Id { get; set; }
         [ForeignKey(nameof(User))]
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
         public int YearsOfExperience { get; set; }
         public bool? IsActive { get; set; }
         public string? Certifications { get; set; }

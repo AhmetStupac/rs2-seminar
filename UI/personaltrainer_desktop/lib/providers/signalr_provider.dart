@@ -178,29 +178,11 @@ class SignalRProvider with ChangeNotifier {
     }
 
     try {
-      // Use HTTP endpoint for sending messages
-      final token = AuthProvider.token;
-      final url = Uri.parse('https://localhost:7093/api/MessageTest/broadcast');
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(message),
-      );
-
-      if (response.statusCode == 200) {
-        print("📤 Broadcast message sent: $message");
-      } else {
-        _error = "Failed to send message: ${response.statusCode}";
-        print("❌ Error sending message: ${response.body}");
-        notifyListeners();
-      }
+      await _hubConnection!.invoke("SendMessage", args: [message]);
+      print("📤 Message sent via SignalR: $message");
     } catch (e) {
       _error = e.toString();
-      print("❌ Error sending message: $e");
+      print("❌ Error sending message via SignalR: $e");
       notifyListeners();
     }
   }

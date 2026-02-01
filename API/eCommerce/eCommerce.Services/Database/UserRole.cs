@@ -13,7 +13,7 @@ namespace eCommerce.Services.Database
         public int UserId { get; set; }
         
         [ForeignKey("UserId")]
-        public User User { get; set; } = null!;
+        public User? User { get; set; }
         
         // Role
         public int RoleId { get; set; }

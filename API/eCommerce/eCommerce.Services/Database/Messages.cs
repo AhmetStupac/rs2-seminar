@@ -1,6 +1,7 @@
 ﻿using AutoMapper.Execution;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace eCommerce.Services.Database
 {
     public class Message
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public int Id { get; set; } 
         public required string Content { get; set; }
         public DateTime? DateRead { get; set; }
         public DateTime MessageSent { get; set; } = DateTime.UtcNow;
@@ -17,10 +18,10 @@ namespace eCommerce.Services.Database
         public bool RecipientDeleted { get; set; }
 
         // nav properties
-
-        public required string SenderId { get; set; }
-        public User Sender { get; set; } = null!;
-        public required string RecipientId { get; set; }
-        public User Recipient { get; set; } = null!;
+        public int SenderId { get; set; }
+        public User? Sender { get; set; }
+        
+        public int RecipientId { get; set; }
+        public User? Recipient { get; set; }
     }
 }

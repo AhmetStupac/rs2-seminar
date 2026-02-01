@@ -2,6 +2,7 @@ using eCommerce.Model.Validators;
 using eCommerce.Services;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using eCommerce.Services.Repository;
 using eCommerce.Services.SignalR;
 using eCommerce.WebAPI.Middleware;
 using FluentValidation;
@@ -37,6 +38,9 @@ builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
 builder.Services.AddScoped<IExercisePlanService, ExercisePlanService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -70,6 +74,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
+    options.SupportedProtocols.Add("json");
 });
 
 builder.Services.AddMapster();

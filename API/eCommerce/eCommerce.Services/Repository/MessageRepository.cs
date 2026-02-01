@@ -79,7 +79,7 @@ namespace eCommerce.Services.Repository
         //        messageParams.PageSize);
         //}
 
-        public async Task<IReadOnlyList<MessageResponse>> GetMessageThread(string currentMemberId, string recipientId)
+        public async Task<IReadOnlyList<MessageResponse>> GetMessageThread(int currentMemberId, int recipientId)
         {
             await context.Messages
                 .Where(x => x.RecipientId == currentMemberId

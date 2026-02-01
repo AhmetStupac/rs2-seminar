@@ -211,6 +211,19 @@ namespace eCommerce.Services.Database
                 .HasForeignKey(t => t.PersonalTrainerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure Message relationships to avoid multiple cascade paths
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Recipient)
+                .WithMany()
+                .HasForeignKey(m => m.RecipientId)
+                .OnDelete(DeleteBehavior.NoAction); // Use NoAction for Recipient to avoid cascade path conflict
+
 
 
             // Create a unique constraint on UserId and RoleId

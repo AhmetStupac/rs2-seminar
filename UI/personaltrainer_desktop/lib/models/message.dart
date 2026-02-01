@@ -28,20 +28,43 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     // Handle both PascalCase (C# backend) and camelCase
+    // Also handle MessageHub DTO format with 'content', 'senderId', 'recipientId', 'messageSent'
     return Message(
-      userId: json['userId']?.toString() ?? json['UserId']?.toString(),
-      user: json['user']?.toString() ?? json['User']?.toString(),
+      userId: json['userId']?.toString() ?? 
+              json['UserId']?.toString() ?? 
+              json['senderId']?.toString() ?? 
+              json['SenderId']?.toString(),
+      user: json['user']?.toString() ?? 
+            json['User']?.toString() ?? 
+            json['senderDisplayName']?.toString() ?? 
+            json['SenderDisplayName']?.toString(),
       email: json['email']?.toString() ?? json['Email']?.toString(),
-      message: json['message']?.toString() ?? json['Message']?.toString(),
+      message: json['message']?.toString() ?? 
+               json['Message']?.toString() ?? 
+               json['content']?.toString() ?? 
+               json['Content']?.toString(),
       timestamp: json['timestamp'] != null
           ? DateTime.parse(json['timestamp'].toString())
           : (json['Timestamp'] != null
                 ? DateTime.parse(json['Timestamp'].toString())
-                : null),
+                : (json['messageSent'] != null
+                    ? DateTime.parse(json['messageSent'].toString())
+                    : (json['MessageSent'] != null
+                        ? DateTime.parse(json['MessageSent'].toString())
+                        : null))),
       fromUserId:
-          json['fromUserId']?.toString() ?? json['FromUserId']?.toString(),
-      from: json['from']?.toString() ?? json['From']?.toString(),
-      toUserId: json['toUserId']?.toString() ?? json['ToUserId']?.toString(),
+          json['fromUserId']?.toString() ?? 
+          json['FromUserId']?.toString() ?? 
+          json['senderId']?.toString() ?? 
+          json['SenderId']?.toString(),
+      from: json['from']?.toString() ?? 
+            json['From']?.toString() ?? 
+            json['senderDisplayName']?.toString() ?? 
+            json['SenderDisplayName']?.toString(),
+      toUserId: json['toUserId']?.toString() ?? 
+                json['ToUserId']?.toString() ?? 
+                json['recipientId']?.toString() ?? 
+                json['RecipientId']?.toString(),
       isPrivate: json['isPrivate'] ?? json['IsPrivate'] ?? false,
     );
   }

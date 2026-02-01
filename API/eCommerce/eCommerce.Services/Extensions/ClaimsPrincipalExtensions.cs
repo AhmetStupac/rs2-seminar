@@ -9,11 +9,18 @@ namespace eCommerce.Services.Extensions
 {
     public static class ClaimsPrincipalExtensions
     {
-        public static string GetUserId(this ClaimsPrincipal user)
+        public static int GetUserId(this ClaimsPrincipal user)
         {
-            return user.FindFirst("userId")?.Value
+            var userIdString = user.FindFirst("userId")?.Value
                 ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
                 ?? throw new Exception("Cannot get userId from token");
+
+            if (!int.TryParse(userIdString, out var userId))
+            {
+                throw new Exception("UserId claim is not a valid integer");
+            }
+
+            return userId;
         }
     }
 }

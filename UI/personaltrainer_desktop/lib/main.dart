@@ -14,6 +14,8 @@ import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:personaltrainer_mobile/providers/messages_provider.dart';
+
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -56,6 +58,9 @@ void main() {
         ),
         ChangeNotifierProvider<SignalRProvider>(
           create: (_) => SignalRProvider(),
+        ),
+         ChangeNotifierProvider<MessagesProvider>(
+          create: (_) => MessagesProvider(),
         ),
       ],
       child: const MyApp(),
