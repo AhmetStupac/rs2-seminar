@@ -5,8 +5,8 @@ namespace eCommerce.Model.Responses
     public class NutritionPlanResponse
     {
         public int Id { get; set; }
-        public int TrainerId { get; set; }
-        public string? TrainerName { get; set; }
+        public int PersonalTrainerId { get; set; }
+        public string? PersonalTrainer { get; set; }
         public int UserId { get; set; }
         public string? UserName { get; set; }
         public string Title { get; set; }

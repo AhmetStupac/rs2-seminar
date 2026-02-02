@@ -95,7 +95,7 @@ namespace eCommerce.Services
         protected override IQueryable<Database.NutritionPlan> ApplyFilter(IQueryable<Database.NutritionPlan> query, NameSearchObject search)
         {
             // Include related entities for better query performance
-            query = query.Include(np => np.Trainer)
+            query = query.Include(np => np.PersonalTrainer)
                          .ThenInclude(pt => pt.User)
                          .Include(np => np.User);
 
@@ -114,9 +114,9 @@ namespace eCommerce.Services
             var response = _mapper.Map<NutritionPlanResponse>(entity);
             
             // Add related data if needed
-            if (entity.Trainer != null)
+            if (entity.PersonalTrainer != null)
             {
-                response.TrainerName = $"{entity.Trainer.User?.FirstName} {entity.Trainer.User?.LastName}";
+                response.PersonalTrainer = $"{entity.PersonalTrainer.User?.FirstName} {entity.PersonalTrainer.User?.LastName}";
             }
 
             if (entity.User != null)

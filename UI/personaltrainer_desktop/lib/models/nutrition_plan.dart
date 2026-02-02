@@ -30,8 +30,40 @@ class NutritionPlan {
     this.createdAt,
   });
 
-  factory NutritionPlan.fromJson(Map<String, dynamic> json) =>
-      _$NutritionPlanFromJson(json);
+  factory NutritionPlan.fromJson(Map<String, dynamic> json) {
+    final np = _$NutritionPlanFromJson(json);
+
+    // Handle cases where API returns nested personalTrainer object
+    try {
+      if ((np.personalTrainerId == null || np.personalTrainerId == 0) &&
+          json['personalTrainer'] != null) {
+        final pt = json['personalTrainer'];
+        if (pt is Map && pt['id'] != null) {
+          final idVal = pt['id'];
+          if (idVal is num) {
+            np.personalTrainerId = idVal.toInt();
+          } else if (idVal is String) {
+            np.personalTrainerId = int.tryParse(idVal);
+          }
+        }
+      }
+
+      // Also handle string numeric values for personalTrainerId
+      if ((np.personalTrainerId == null || np.personalTrainerId == 0) &&
+          json['personalTrainerId'] != null) {
+        final raw = json['personalTrainerId'];
+        if (raw is num) {
+          np.personalTrainerId = raw.toInt();
+        } else if (raw is String) {
+          np.personalTrainerId = int.tryParse(raw);
+        }
+      }
+    } catch (e) {
+      // ignore parsing errors and keep existing values
+    }
+
+    return np;
+  }
 
   Map<String, dynamic> toJson() => _$NutritionPlanToJson(this);
 }
