@@ -42,7 +42,7 @@ namespace eCommerce.WebAPI.Controllers
 
             var message = new Message
             {
-                SenderId = sender.Id,
+                SenderId = sender.Id, 
                 RecipientId = recipient.Id,
                 Content = dto.Content
             };

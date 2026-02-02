@@ -1,8 +1,10 @@
 ﻿using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Validators;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,10 +19,12 @@ namespace eCommerce.Services
         , ITrainingPlanService
     {
 
-        public TrainingPlanService(IB210033DbContext context, IMapper mapper)
+        private readonly IValidator<TrainingPlanUpsertRequest> _validator;
+
+        public TrainingPlanService(IB210033DbContext context, IMapper mapper, IValidator<TrainingPlanUpsertRequest> validator)
             : base(context, mapper)
         {
-            
+            _validator = validator;
         }
 
 
@@ -53,5 +57,34 @@ namespace eCommerce.Services
 
         }
 
+        protected override Task BeforeInsert(TrainingPlan entity, TrainingPlanUpsertRequest insertRequest)
+        {
+
+            var result = _validator.Validate(insertRequest);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+            return Task.CompletedTask;
+        }
+
+
+
+        protected override Task BeforeUpdate(TrainingPlan entity, TrainingPlanUpsertRequest insertRequest)
+        {
+
+            var result = _validator.Validate(insertRequest);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }

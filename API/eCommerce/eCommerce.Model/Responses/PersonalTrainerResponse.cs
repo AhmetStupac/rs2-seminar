@@ -7,6 +7,7 @@ namespace eCommerce.Model.Responses
 {
     public class PersonalTrainerResponse
     {
+        public int Id { get; set; }
         public int UserId { get; set; }
         public string UserFirstName { get; set; }
         public int YearsOfExperience { get; set; }

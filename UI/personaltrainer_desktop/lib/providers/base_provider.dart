@@ -46,6 +46,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var response = await http.get(uri, headers: headers);
 
     print("🔍 Response status: ${response.statusCode}");
+    print("🔍 Response body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -114,8 +115,17 @@ abstract class BaseProvider<T> with ChangeNotifier {
       _handleBanRedirect(response);
       throw Exception("Access forbidden - User banned");
     } else {
-      print(response.body);
-      throw Exception("Something bad happened please try again");
+      print("❌ Error ${response.statusCode}: ${response.body}");
+      try {
+        var errorData = jsonDecode(response.body);
+        var errorMessage = errorData['message'] ?? errorData['title'] ?? errorData.toString();
+        throw Exception("API Error (${response.statusCode}): $errorMessage");
+      } catch (e) {
+        if (e is Exception && e.toString().contains('API Error')) {
+          rethrow;
+        }
+        throw Exception("API Error (${response.statusCode}): ${response.body}");
+      }
     }
   }
 

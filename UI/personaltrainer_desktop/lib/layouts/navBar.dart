@@ -6,6 +6,7 @@ import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
 import 'package:personaltrainer_mobile/screens/messaging_screen.dart';
+import 'package:personaltrainer_mobile/screens/nutrition_plan_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class NavBar extends StatefulWidget {
@@ -122,7 +123,11 @@ class _MasterScreenState extends State<NavBar> {
             label: 'Plan ishrane',
             routeName: 'Plan ishrane',
             onTap: () {
-              // TODO: Navigiraj na plan ishrane screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => NutritionPlanScreen(),
+                ),
+              );
               setState(() => selectedMenu = 'Plan ishrane');
             },
           ),

@@ -40,6 +40,7 @@ builder.Services.AddScoped<IExercisePlanService, ExercisePlanService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<INutritionPlanService, NutritionPlanService>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -79,6 +80,11 @@ builder.Services.AddSignalR(options =>
 
 builder.Services.AddMapster();
 builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<TrainingPlanValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<ExercisePlanValidator>();
+
+
+
 // Configure database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=IB210033PersonalTrainer;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 builder.Services.AddDatabaseServices(connectionString);

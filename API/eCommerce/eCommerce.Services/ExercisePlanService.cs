@@ -61,8 +61,20 @@ namespace eCommerce.Services
 
         protected override Task BeforeInsert(Database.ExercisePlan entity, ExercisePlanUpsertRequest insertRequest)
         {
-            var validator = new ExercisePlanValidator();
-            var result = validator.Validate(insertRequest);
+            var result = _validator.Validate(insertRequest);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+            return Task.CompletedTask;
+        }
+
+        protected override Task BeforeUpdate(Database.ExercisePlan entity, ExercisePlanUpsertRequest insertRequest)
+        {
+            var result = _validator.Validate(insertRequest);
 
             if (!result.IsValid)
             {

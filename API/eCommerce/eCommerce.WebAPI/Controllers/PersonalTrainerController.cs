@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace eCommerce.WebAPI.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class PersonalTrainerController : BaseCRUDController
         <PersonalTrainerResponse, PersonalTrainerSearchObject, PersonalTrainerUpsertRequest, PersonalTrainerUpsertRequest>
