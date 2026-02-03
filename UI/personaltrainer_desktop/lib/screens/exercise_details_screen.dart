@@ -6,6 +6,7 @@ import 'package:personaltrainer_mobile/models/equipment.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
+import 'package:personaltrainer_mobile/screens/image_upload_screen.dart';
 
 class ExerciseDetailsScreen extends StatefulWidget {
   ExerciseDetailsScreen({super.key});
@@ -120,6 +121,22 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
                           val == null ? 'Odaberite equipment' : null,
                     ),
                     SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => ImageUploadScreen(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.upload_file),
+                      label: Text('Upload sliku i kreiraj vježbu'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [

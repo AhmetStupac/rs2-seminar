@@ -10,6 +10,6 @@ class NutritionPlanScreen extends StatefulWidget {
 class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
   @override
   Widget build(BuildContext context) {
-    return NavBar('Nutrition Plan', NutritionPlanMainArea());
+    return NavBar('Plan ishrane', NutritionPlanMainArea());
   }
 }

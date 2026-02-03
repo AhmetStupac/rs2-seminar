@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class eCommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260203152631_addedEntityGym")]
+    partial class addedEntityGym
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -312,13 +315,13 @@ namespace eCommerce.Services.Migrations
                     b.Property<bool>("RecipientDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("RecipientId")
+                    b.Property<int>("RecipientId")
                         .HasColumnType("int");
 
                     b.Property<bool>("SenderDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("SenderId")
+                    b.Property<int>("SenderId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -387,7 +390,7 @@ namespace eCommerce.Services.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -413,7 +416,7 @@ namespace eCommerce.Services.Migrations
                     b.Property<bool?>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.Property<int>("YearsOfExperience")
@@ -486,7 +489,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(2953),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6806),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -494,7 +497,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(2959),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6808),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -502,7 +505,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(2961),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6810),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -517,7 +520,7 @@ namespace eCommerce.Services.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("ClientId")
+                    b.Property<int>("ClientId")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
@@ -568,7 +571,7 @@ namespace eCommerce.Services.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -661,7 +664,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3102),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6979),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -674,7 +677,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3105),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6982),
                             Email = "denis@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -700,7 +703,7 @@ namespace eCommerce.Services.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -708,8 +711,7 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("RoleId");
 
                     b.HasIndex("UserId", "RoleId")
-                        .IsUnique()
-                        .HasFilter("[UserId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("UserRoles");
 
@@ -717,21 +719,21 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3072),
+                            DateAssigned = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6949),
                             RoleId = 1,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3073),
+                            DateAssigned = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6951),
                             RoleId = 2,
                             UserId = 2
                         },
                         new
                         {
                             Id = 3,
-                            DateAssigned = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3074),
+                            DateAssigned = new DateTime(2026, 2, 3, 15, 26, 30, 573, DateTimeKind.Utc).AddTicks(6952),
                             RoleId = 3,
                             UserId = 1
                         });
@@ -848,12 +850,14 @@ namespace eCommerce.Services.Migrations
                     b.HasOne("eCommerce.Services.Database.User", "Recipient")
                         .WithMany()
                         .HasForeignKey("RecipientId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("eCommerce.Services.Database.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Recipient");
 
@@ -904,7 +908,8 @@ namespace eCommerce.Services.Migrations
                     b.HasOne("eCommerce.Services.Database.User", "Client")
                         .WithMany()
                         .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("eCommerce.Services.Database.PersonalTrainer", "PersonalTrainer")
                         .WithMany()
@@ -928,7 +933,8 @@ namespace eCommerce.Services.Migrations
                     b.HasOne("eCommerce.Services.Database.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("PersonalTrainer");
 
@@ -946,7 +952,8 @@ namespace eCommerce.Services.Migrations
                     b.HasOne("eCommerce.Services.Database.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Role");
 

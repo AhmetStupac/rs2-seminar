@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/image.dart' as img_model;
 import 'package:personaltrainer_mobile/models/exercise.dart';
 import 'package:personaltrainer_mobile/models/muscleGroup.dart';
 import 'package:personaltrainer_mobile/models/equipment.dart';

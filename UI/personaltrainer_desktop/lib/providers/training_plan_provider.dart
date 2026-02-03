@@ -1,7 +1,5 @@
-import 'package:personaltrainer_mobile/models/equipment.dart';
+import 'package:personaltrainer_mobile/models/exercise_plan.dart';
 import 'package:personaltrainer_mobile/models/training_plan.dart';
-import 'package:personaltrainer_mobile/models/muscleGroup.dart';
-import 'package:personaltrainer_mobile/models/training.dart';
 import 'package:personaltrainer_mobile/providers/base_provider.dart';
 
 class TrainingPlanProvider extends BaseProvider<TrainingPlan> {

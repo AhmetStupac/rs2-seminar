@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class eCommerceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260203153153_MakeUserRelationshipsOptional")]
+    partial class MakeUserRelationshipsOptional
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -312,13 +315,13 @@ namespace eCommerce.Services.Migrations
                     b.Property<bool>("RecipientDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("RecipientId")
+                    b.Property<int>("RecipientId")
                         .HasColumnType("int");
 
                     b.Property<bool>("SenderDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("SenderId")
+                    b.Property<int>("SenderId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -486,7 +489,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(2953),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8465),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -494,7 +497,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(2959),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8470),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -502,7 +505,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(2961),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8471),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -661,7 +664,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3102),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8621),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -674,7 +677,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3105),
+                            CreatedAt = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8624),
                             Email = "denis@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -717,21 +720,21 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3072),
+                            DateAssigned = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8588),
                             RoleId = 1,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3073),
+                            DateAssigned = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8590),
                             RoleId = 2,
                             UserId = 2
                         },
                         new
                         {
                             Id = 3,
-                            DateAssigned = new DateTime(2026, 2, 3, 15, 36, 2, 79, DateTimeKind.Utc).AddTicks(3074),
+                            DateAssigned = new DateTime(2026, 2, 3, 15, 31, 53, 618, DateTimeKind.Utc).AddTicks(8591),
                             RoleId = 3,
                             UserId = 1
                         });
@@ -848,12 +851,14 @@ namespace eCommerce.Services.Migrations
                     b.HasOne("eCommerce.Services.Database.User", "Recipient")
                         .WithMany()
                         .HasForeignKey("RecipientId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.HasOne("eCommerce.Services.Database.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Recipient");
 

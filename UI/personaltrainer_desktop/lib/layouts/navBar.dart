@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/screens/admin_ban_screen.dart';
-import 'package:personaltrainer_mobile/screens/exercise_list.dart';
-import 'package:personaltrainer_mobile/screens/training_details_screen.dart';
+import 'package:personaltrainer_mobile/screens/exercise_details_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
@@ -20,8 +18,6 @@ class NavBar extends StatefulWidget {
 }
 
 class _MasterScreenState extends State<NavBar> {
-  String selectedMenu = "Plan treninga";
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +63,6 @@ class _MasterScreenState extends State<NavBar> {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const ProfileScreen()),
               );
-              setState(() => selectedMenu = 'Profil');
             },
           ),
 
@@ -77,7 +72,6 @@ class _MasterScreenState extends State<NavBar> {
             routeName: 'Kalendar',
             onTap: () {
               // TODO:  Navigiraj na kalendar screen
-              setState(() => selectedMenu = 'Kalendar');
             },
           ),
 
@@ -87,23 +81,20 @@ class _MasterScreenState extends State<NavBar> {
             routeName: 'Exercise plan',
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => TrainingPlanScreen()),
+                MaterialPageRoute(
+                  builder: (context) => ExerciseDetailsScreen(),
+                ),
               );
-              setState(() => selectedMenu = 'Exercise plan');
             },
           ),
 
           _buildMenuItem(
             icon: Icons.bar_chart,
-            label: 'Trening plan',
-            routeName: 'Trening plan',
+            label: 'Training plan',
+            routeName: 'Training plan',
             onTap: () {
-              // TODO: Navigiraj na statistika screen
-              setState(() => selectedMenu = 'Trening plan');
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => TrainingDetailsScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => TrainingPlanScreen()),
               );
             },
           ),
@@ -114,7 +105,6 @@ class _MasterScreenState extends State<NavBar> {
             routeName: 'Teretane',
             onTap: () {
               // TODO: Navigiraj na teretane screen
-              setState(() => selectedMenu = 'Teretane');
             },
           ),
 
@@ -124,11 +114,8 @@ class _MasterScreenState extends State<NavBar> {
             routeName: 'Plan ishrane',
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => NutritionPlanScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => NutritionPlanScreen()),
               );
-              setState(() => selectedMenu = 'Plan ishrane');
             },
           ),
 
@@ -142,7 +129,6 @@ class _MasterScreenState extends State<NavBar> {
                   builder: (context) => const MessagingScreen(),
                 ),
               );
-              setState(() => selectedMenu = 'Messaging');
             },
           ),
 
@@ -154,7 +140,6 @@ class _MasterScreenState extends State<NavBar> {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => UsersListScreen()),
               );
-              setState(() => selectedMenu = 'Admin Panel');
             },
           ),
 
@@ -212,7 +197,7 @@ class _MasterScreenState extends State<NavBar> {
     required String routeName,
     required VoidCallback onTap,
   }) {
-    bool isActive = selectedMenu == routeName;
+    bool isActive = widget.title == routeName;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),

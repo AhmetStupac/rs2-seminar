@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/providers/admin_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/screens/admin_ban_screen.dart';
+import 'package:personaltrainer_mobile/layouts/navBar.dart';
 
 class UsersListScreen extends StatefulWidget {
   const UsersListScreen({Key? key}) : super(key: key);
@@ -94,264 +95,295 @@ class _UsersListScreenState extends State<UsersListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Korisnici'),
-        actions: [
-          FilterChip(
-            label: Text(_showDeletedOnly ? 'Obrisani' : 'Svi'),
-            selected: _showDeletedOnly,
-            onSelected: (value) {
-              setState(() {
-                _showDeletedOnly = value;
-              });
-              _loadUsers();
-            },
-            avatar: Icon(
-              _showDeletedOnly ? Icons.delete : Icons.people,
-              size: 18,
+    return NavBar(
+      'Admin Panel',
+      Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadUsers),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+            child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Pretraga korisnika',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText:
-                              'Pretraži po username, email, imenu ili prezimenu...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      _searchQuery = '';
-                                    });
-                                  },
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
-                    ],
+                FilterChip(
+                  label: Text(_showDeletedOnly ? 'Obrisani' : 'Svi'),
+                  selected: _showDeletedOnly,
+                  onSelected: (value) {
+                    setState(() {
+                      _showDeletedOnly = value;
+                    });
+                    _loadUsers();
+                  },
+                  avatar: Icon(
+                    _showDeletedOnly ? Icons.delete : Icons.people,
+                    size: 18,
                   ),
                 ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: _loadUsers,
-                    child: _filteredUsers.isEmpty
-                        ? Center(
-                            child: Text(
-                              _searchQuery.isNotEmpty
-                                  ? 'Nema rezultata pretrage'
-                                  : 'Nema korisnika',
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _filteredUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = _filteredUsers[index];
-                              final isBanned = user['isBanned'] ?? false;
-                              final isDeleted = user['isDeleted'] ?? false;
-
-                              return Consumer<SignalRProvider>(
-                                builder: (context, signalRProvider, child) {
-                                  final userId = user['id']?.toString();
-                                  final isOnline =
-                                      userId != null &&
-                                      signalRProvider.onlineUsers.any(
-                                        (u) => u.userId == userId,
-                                      );
-
-                                  // Debug logging
-                                  if (index == 0) {
-                                    print(
-                                      "🔍 Checking user: ${user['username']} (ID: $userId)",
-                                    );
-                                    print(
-                                      "🔍 Online users: ${signalRProvider.onlineUsers.map((u) => u.userId).toList()}",
-                                    );
-                                    print("🔍 Is online? $isOnline");
-                                  }
-
-                                  return Card(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    child: ListTile(
-                                      leading: Stack(
-                                        children: [
-                                          CircleAvatar(
-                                            backgroundColor: isDeleted
-                                                ? Colors.grey.shade700
-                                                : (isBanned
-                                                      ? Colors.red.shade700
-                                                      : Colors.blue.shade700),
-                                            child: Icon(
-                                              isDeleted
-                                                  ? Icons.person_off
-                                                  : (isBanned
-                                                        ? Icons.block
-                                                        : Icons.person),
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          if (isOnline && !isDeleted)
-                                            Positioned(
-                                              right: 0,
-                                              bottom: 0,
-                                              child: Container(
-                                                width: 12,
-                                                height: 12,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.green,
-                                                  shape: BoxShape.circle,
-                                                  border: Border.all(
-                                                    color: Colors.white,
-                                                    width: 2,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      title: Row(
-                                        children: [
-                                          if (isOnline && !isDeleted)
-                                            Container(
-                                              width: 8,
-                                              height: 8,
-                                              margin: const EdgeInsets.only(
-                                                right: 6,
-                                              ),
-                                              decoration: const BoxDecoration(
-                                                color: Colors.green,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                          Expanded(
-                                            child: Text(
-                                              user['username'] ?? 'N/A',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                decoration: isBanned
-                                                    ? TextDecoration.lineThrough
-                                                    : null,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(user['email'] ?? 'N/A'),
-                                          if (isDeleted) ...[
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'OBRISAN',
-                                              style: TextStyle(
-                                                color: Colors.grey.shade700,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                          if (isBanned && !isDeleted) ...[
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'BANOVAN: ${user['banReason'] ?? 'Bez razloga'}',
-                                              style: TextStyle(
-                                                color: Colors.red.shade700,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (isDeleted) ...[
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.undo,
-                                                color: Colors.green,
-                                              ),
-                                              tooltip: 'Vrati korisnika',
-                                              onPressed: () =>
-                                                  _showRestoreDialog(user),
-                                            ),
-                                          ] else ...[
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
-                                              ),
-                                              tooltip: 'Obriši korisnika',
-                                              onPressed: () =>
-                                                  _showDeleteDialog(user),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(
-                                                isBanned
-                                                    ? Icons.check_circle
-                                                    : Icons.arrow_forward,
-                                                color: isBanned
-                                                    ? Colors.green
-                                                    : Colors.red,
-                                              ),
-                                              onPressed: () {
-                                                if (isBanned) {
-                                                  _showUnbanDialog(user);
-                                                } else {
-                                                  _openBanScreen(user);
-                                                }
-                                              },
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                  ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadUsers,
                 ),
               ],
             ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Pretraga korisnika',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Pretraži po username, email, imenu ili prezimenu...',
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() {
+                                            _searchQuery = '';
+                                          });
+                                        },
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: _loadUsers,
+                          child: _filteredUsers.isEmpty
+                              ? Center(
+                                  child: Text(
+                                    _searchQuery.isNotEmpty
+                                        ? 'Nema rezultata pretrage'
+                                        : 'Nema korisnika',
+                                  ),
+                                )
+                              : ListView.builder(
+                                  itemCount: _filteredUsers.length,
+                                  itemBuilder: (context, index) {
+                                    final user = _filteredUsers[index];
+                                    final isBanned = user['isBanned'] ?? false;
+                                    final isDeleted =
+                                        user['isDeleted'] ?? false;
+
+                                    return Consumer<SignalRProvider>(
+                                      builder: (context, signalRProvider, child) {
+                                        final userId = user['id']?.toString();
+                                        final isOnline =
+                                            userId != null &&
+                                            signalRProvider.onlineUsers.any(
+                                              (u) => u.userId == userId,
+                                            );
+
+                                        // Debug logging
+                                        if (index == 0) {
+                                          print(
+                                            "🔍 Checking user: ${user['username']} (ID: $userId)",
+                                          );
+                                          print(
+                                            "🔍 Online users: ${signalRProvider.onlineUsers.map((u) => u.userId).toList()}",
+                                          );
+                                          print("🔍 Is online? $isOnline");
+                                        }
+
+                                        return Card(
+                                          margin: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
+                                          child: ListTile(
+                                            leading: Stack(
+                                              children: [
+                                                CircleAvatar(
+                                                  backgroundColor: isDeleted
+                                                      ? Colors.grey.shade700
+                                                      : (isBanned
+                                                            ? Colors
+                                                                  .red
+                                                                  .shade700
+                                                            : Colors
+                                                                  .blue
+                                                                  .shade700),
+                                                  child: Icon(
+                                                    isDeleted
+                                                        ? Icons.person_off
+                                                        : (isBanned
+                                                              ? Icons.block
+                                                              : Icons.person),
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                if (isOnline && !isDeleted)
+                                                  Positioned(
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    child: Container(
+                                                      width: 12,
+                                                      height: 12,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.green,
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(
+                                                          color: Colors.white,
+                                                          width: 2,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            title: Row(
+                                              children: [
+                                                if (isOnline && !isDeleted)
+                                                  Container(
+                                                    width: 8,
+                                                    height: 8,
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                          right: 6,
+                                                        ),
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                          color: Colors.green,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                  ),
+                                                Expanded(
+                                                  child: Text(
+                                                    user['username'] ?? 'N/A',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      decoration: isBanned
+                                                          ? TextDecoration
+                                                                .lineThrough
+                                                          : null,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            subtitle: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(user['email'] ?? 'N/A'),
+                                                if (isDeleted) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'OBRISAN',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.grey.shade700,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                                if (isBanned && !isDeleted) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'BANOVAN: ${user['banReason'] ?? 'Bez razloga'}',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.red.shade700,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                if (isDeleted) ...[
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.undo,
+                                                      color: Colors.green,
+                                                    ),
+                                                    tooltip: 'Vrati korisnika',
+                                                    onPressed: () =>
+                                                        _showRestoreDialog(
+                                                          user,
+                                                        ),
+                                                  ),
+                                                ] else ...[
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.delete,
+                                                      color: Colors.red,
+                                                    ),
+                                                    tooltip: 'Obriši korisnika',
+                                                    onPressed: () =>
+                                                        _showDeleteDialog(user),
+                                                  ),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      isBanned
+                                                          ? Icons.check_circle
+                                                          : Icons.arrow_forward,
+                                                      color: isBanned
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                    ),
+                                                    onPressed: () {
+                                                      if (isBanned) {
+                                                        _showUnbanDialog(user);
+                                                      } else {
+                                                        _openBanScreen(user);
+                                                      }
+                                                    },
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

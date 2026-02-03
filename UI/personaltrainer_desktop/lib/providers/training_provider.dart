@@ -1,4 +1,3 @@
-import 'package:personaltrainer_mobile/models/muscleGroup.dart';
 import 'package:personaltrainer_mobile/models/training.dart';
 import 'package:personaltrainer_mobile/providers/base_provider.dart';
 

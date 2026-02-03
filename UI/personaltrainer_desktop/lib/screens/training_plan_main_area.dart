@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:personaltrainer_mobile/models/exercise.dart';
 import 'package:personaltrainer_mobile/models/exercise_plan.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
@@ -400,108 +399,102 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     Text('No available training plans.')
                   else
                     ..._availablePlans.map((plan) {
-                      if (plan is TrainingPlan) {
-                        bool isSelected = _selectedTrainingPlanId == plan.id;
-                        return GestureDetector(
-                          onTap: () {
-                            print('Plan clicked: ${plan.toJson()}');
-                            if (plan.id == null) {
-                              print(
-                                'WARNING: Selected plan has no ID set!',
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Error: Selected plan has no ID!',
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-                            setState(() {
-                              _selectedTrainingPlanId = plan.id;
-                              for (var ep in exercisePlans) {
-                                ep.trainingPlanId = plan.id;
-                              }
-                            });
+                      bool isSelected = _selectedTrainingPlanId == plan.id;
+                      return GestureDetector(
+                        onTap: () {
+                          print('Plan clicked: ${plan.toJson()}');
+                          if (plan.id == null) {
+                            print('WARNING: Selected plan has no ID set!');
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Training plan "${plan.title}" selected!',
+                                  'Error: Selected plan has no ID!',
                                 ),
+                                backgroundColor: Colors.red,
                               ),
                             );
-                          },
-                          child: Card(
-                            margin: EdgeInsets.symmetric(vertical: 6),
-                            color: isSelected ? Colors.green[50] : Colors.white,
-                            elevation: isSelected ? 3 : 1,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? Colors.green[700]!
-                                    : Colors.grey[300]!,
-                                width: isSelected ? 2 : 1,
+                            return;
+                          }
+                          setState(() {
+                            _selectedTrainingPlanId = plan.id;
+                            for (var ep in exercisePlans) {
+                              ep.trainingPlanId = plan.id;
+                            }
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Training plan "${plan.title}" selected!',
                               ),
                             ),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  if (isSelected)
-                                    Padding(
-                                      padding: EdgeInsets.only(right: 12),
-                                      child: Icon(
-                                        Icons.check_circle,
-                                        color: Colors.green[700],
-                                      ),
-                                    ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          plan.title ?? 'Untitled',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                        if (plan.description != null &&
-                                            plan.description!.isNotEmpty)
-                                          Padding(
-                                            padding: EdgeInsets.only(top: 4),
-                                            child: Text(
-                                              plan.description!,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey[600],
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  Text(
-                                    '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          );
+                        },
+                        child: Card(
+                          margin: EdgeInsets.symmetric(vertical: 6),
+                          color: isSelected ? Colors.green[50] : Colors.white,
+                          elevation: isSelected ? 3 : 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: isSelected
+                                  ? Colors.green[700]!
+                                  : Colors.grey[300]!,
+                              width: isSelected ? 2 : 1,
                             ),
                           ),
-                        );
-                      } else {
-                        return SizedBox.shrink();
-                      }
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                if (isSelected)
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 12),
+                                    child: Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        plan.title ?? 'Untitled',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                      if (plan.description != null &&
+                                          plan.description!.isNotEmpty)
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 4),
+                                          child: Text(
+                                            plan.description!,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
                     }).toList(),
                 ],
               ),
@@ -534,7 +527,9 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
 
   Widget _buildExerciseCard(Exercise exercise, ExercisePlan exercisePlan) {
     // Debug print za image url
-    print('Exercise: "+(exercise.name ?? "")+" | imageId: "+(exercise.imageId?.toString() ?? "null")+" | image.url: "+(exercise.image?.url ?? "null")');
+    print(
+      'Exercise: "+(exercise.name ?? "")+" | imageId: "+(exercise.imageId?.toString() ?? "null")+" | image.url: "+(exercise.image?.url ?? "null")',
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -561,24 +556,45 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: (exercise.image != null && exercise.image!.url != null && exercise.image!.url!.isNotEmpty)
+            child:
+                (exercise.image != null &&
+                    exercise.image!.url != null &&
+                    exercise.image!.url!.isNotEmpty)
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       exercise.image!.url!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        print('Image load error for url: '+ exercise.image!.url!);
-                        return Icon(Icons.fitness_center, color: Colors.red, size: 30);
+                        print(
+                          'Image load error for url: ' + exercise.image!.url!,
+                        );
+                        return Icon(
+                          Icons.fitness_center,
+                          color: Colors.red,
+                          size: 30,
+                        );
                       },
                     ),
                   )
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.fitness_center, color: Colors.grey[400], size: 30),
-                      if (exercise.image == null || exercise.image!.url == null || exercise.image!.url!.isEmpty)
-                        Text('No image', style: TextStyle(fontSize: 10, color: Colors.grey[500])),
+                      Icon(
+                        Icons.fitness_center,
+                        color: Colors.grey[400],
+                        size: 30,
+                      ),
+                      if (exercise.image == null ||
+                          exercise.image!.url == null ||
+                          exercise.image!.url!.isEmpty)
+                        Text(
+                          'No image',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[500],
+                          ),
+                        ),
                     ],
                   ),
           ),
@@ -706,7 +722,8 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
     // Check if trainingPlanId is set
     if (_selectedTrainingPlanId == null) {
       setState(() {
-        errorMessage = 'Please select a training plan from the list at the bottom of the screen!';
+        errorMessage =
+            'Please select a training plan from the list at the bottom of the screen!';
       });
       return;
     }

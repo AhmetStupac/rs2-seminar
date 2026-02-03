@@ -27,7 +27,7 @@ namespace eCommerce.Services.Database
         public DbSet<Message> Messages { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Connection> Connections { get; set; }
-
+        public DbSet<Gym> Gyms { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -185,11 +185,20 @@ namespace eCommerce.Services.Database
                 .HasForeignKey(ur => ur.RoleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Configure PersonalTrainer -> User relationship as optional
+            modelBuilder.Entity<PersonalTrainer>()
+                .HasOne(pt => pt.User)
+                .WithMany()
+                .HasForeignKey(pt => pt.UserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
             modelBuilder.Entity<NutritionPlan>()
               .HasOne(n => n.User)
               .WithMany()
               .HasForeignKey(n => n.UserId)
-              .OnDelete(DeleteBehavior.NoAction);
+              .OnDelete(DeleteBehavior.NoAction)
+              .IsRequired(false);
 
             // Set TrainingPlans -> Users as NO ACTION to break potential cycles
             modelBuilder.Entity<TrainingPlan>()

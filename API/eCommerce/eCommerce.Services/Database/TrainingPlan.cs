@@ -11,7 +11,7 @@ namespace eCommerce.Services.Database
         public int PersonalTrainerId { get; set; }
         public PersonalTrainer PersonalTrainer { get; set; }
         [ForeignKey(nameof(User))]
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public User? User { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }

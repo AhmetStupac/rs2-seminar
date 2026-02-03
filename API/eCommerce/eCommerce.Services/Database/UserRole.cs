@@ -10,7 +10,7 @@ namespace eCommerce.Services.Database
         public int Id { get; set; }
         
         // User
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         
         [ForeignKey("UserId")]
         public User? User { get; set; }
