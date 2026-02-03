@@ -6,6 +6,7 @@ import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
 import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
+import 'package:personaltrainer_mobile/providers/gym_provider.dart';
 import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_provider.dart';
@@ -61,6 +62,9 @@ void main() {
         ),
          ChangeNotifierProvider<MessagesProvider>(
           create: (_) => MessagesProvider(),
+        ),
+         ChangeNotifierProvider<GymProvider>(
+          create: (_) => GymProvider(),
         ),
       ],
       child: const MyApp(),

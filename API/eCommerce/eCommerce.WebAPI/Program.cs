@@ -41,6 +41,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INutritionPlanService, NutritionPlanService>();
+builder.Services.AddTransient<IGymService, GymService>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -82,6 +83,7 @@ builder.Services.AddMapster();
 builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
 //builder.Services.AddValidatorsFromAssemblyContaining<TrainingPlanValidator>();
 //builder.Services.AddValidatorsFromAssemblyContaining<ExercisePlanValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<GymValidator>();
 
 
 

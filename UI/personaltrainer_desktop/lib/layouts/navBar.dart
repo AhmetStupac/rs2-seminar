@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/screens/exercise_details_screen.dart';
+import 'package:personaltrainer_mobile/screens/gym_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
@@ -104,7 +105,9 @@ class _MasterScreenState extends State<NavBar> {
             label: 'Teretane',
             routeName: 'Teretane',
             onTap: () {
-              // TODO: Navigiraj na teretane screen
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => GymScreen()),
+              );
             },
           ),
 
