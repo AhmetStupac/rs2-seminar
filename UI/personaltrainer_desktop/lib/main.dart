@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:app_links/app_links.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/base_provider.dart';
 import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
@@ -14,10 +17,9 @@ import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
+import 'package:personaltrainer_mobile/screens/change_password_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
-
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -30,8 +32,7 @@ class MyHttpOverrides extends HttpOverrides {
 
 void main() {
   HttpOverrides.global = MyHttpOverrides();
-  BaseProvider.initialize(navigatorKey);
-
+  
   runApp(
     MultiProvider(
       providers: [
@@ -72,32 +73,228 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    Widget homeWidget;
+    
+    // Choose appropriate handler based on platform
+    if (kIsWeb) {
+      homeWidget = _WebUrlHandler();
+    } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      // Desktop platforms - use simple handler since app_links may not work
+      homeWidget = _DesktopHandler();
+    } else {
+      // Mobile platforms (Android/iOS) - use app_links
+      homeWidget = _MobileDeepLinkHandler();
+    }
+    
     return MaterialApp(
-      title: 'Flutter Demo',
-      navigatorKey: navigatorKey,
+      title: 'Personal Trainer',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: LoginPage(),
+      home: homeWidget,
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/register':
+            return MaterialPageRoute(builder: (context) => RegisterScreen());
+          case '/training-plans':
+            return MaterialPageRoute(builder: (context) => TrainingPlanScreen());
+          case '/change-password':
+            return MaterialPageRoute(builder: (context) => ChangePasswordScreen());
+          default:
+            return MaterialPageRoute(builder: (context) => LoginPage());
+        }
+      },
     );
+  }
+}
+
+// Desktop handler - simple approach for Windows/Mac/Linux
+class _DesktopHandler extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return LoginPage();
+  }
+}
+
+// Mobile/Desktop deep link handler using app_links
+class _MobileDeepLinkHandler extends StatefulWidget {
+  @override
+  State<_MobileDeepLinkHandler> createState() => _MobileDeepLinkHandlerState();
+}
+
+class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _appLinks = AppLinks();
+    _initDeepLinks();
+  }
+
+  Future<void> _initDeepLinks() async {
+    // Check initial link
+    try {
+      final uri = await _appLinks.getInitialLink();
+      print('📱 Initial link: $uri');
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    } catch (e) {
+      print('❌ Error getting initial link: $e');
+    }
+
+    // Listen for incoming links
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      print('📱 Incoming link: $uri');
+      _handleDeepLink(uri);
+    }, onError: (err) {
+      print('❌ Error listening to links: $err');
+    });
+  }
+
+  void _handleDeepLink(Uri uri) {
+    print('📱 Handling deep link: $uri');
+    print('📱 Scheme: ${uri.scheme}');
+    print('📱 Host: ${uri.host}');
+    print('📱 Path: ${uri.path}');
+    print('📱 Query params: ${uri.queryParameters}');
+
+    // Handle custom scheme: personaltrainerapp://reset-password?token=xxx
+    if (uri.scheme == 'personaltrainerapp' && uri.host == 'reset-password') {
+      final token = uri.queryParameters['token'];
+      print('📱 Reset token: ${token?.substring(0, 30)}...');
+      
+      if (token != null && token.isNotEmpty && mounted) {
+        print('✅ Navigating to password reset screen');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ChangePasswordScreen(resetToken: token),
+          ),
+        );
+      }
+    }
+    // Handle HTTP/HTTPS: http://localhost:8080/reset-password?token=xxx
+    else if ((uri.scheme == 'http' || uri.scheme == 'https') && 
+             uri.path.contains('reset-password')) {
+      final token = uri.queryParameters['token'];
+      print('📱 Reset token from HTTP: ${token?.substring(0, 30)}...');
+      
+      if (token != null && token.isNotEmpty && mounted) {
+        print('✅ Navigating to password reset screen');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ChangePasswordScreen(resetToken: token),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LoginPage();
+  }
+}
+
+// Web URL handler (for web platform)
+class _WebUrlHandler extends StatefulWidget {
+  @override
+  State<_WebUrlHandler> createState() => _WebUrlHandlerState();
+}
+
+class _WebUrlHandlerState extends State<_WebUrlHandler> {
+  @override
+  void initState() {
+    super.initState();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleWebUrl();
+    });
+  }
+
+  void _handleWebUrl() {
+    final uri = Uri.base;
+    print('🌐 ========== WEB URL HANDLER ==========');
+    print('🌐 Full URI: $uri');
+    print('🌐 Fragment: "${uri.fragment}"');
+    print('🌐 Fragment isEmpty: ${uri.fragment.isEmpty}');
+    
+    if (uri.fragment.isNotEmpty) {
+      try {
+        final fragmentPath = uri.fragment;
+        print('🌐 Raw fragment: "$fragmentPath"');
+        
+        final parts = fragmentPath.split('?');
+        final path = parts[0];
+        
+        print('🌐 Path from fragment: "$path"');
+        print('🌐 Number of parts: ${parts.length}');
+        
+        if (path == '/reset-password') {
+          print('🌐 ✓ Path matches /reset-password');
+          
+          if (parts.length > 1) {
+            final queryString = parts[1];
+            print('🌐 Query string: "${queryString.substring(0, queryString.length > 50 ? 50 : queryString.length)}..."');
+            
+            final queryParams = Uri.splitQueryString(queryString);
+            print('🌐 Parsed query params keys: ${queryParams.keys.toList()}');
+            
+            final token = queryParams['token'];
+            
+            if (token != null) {
+              print('🌐 Token found: ${token.substring(0, token.length > 30 ? 30 : token.length)}...');
+              print('🌐 Token length: ${token.length}');
+              
+              if (token.isNotEmpty) {
+                print('✅ All checks passed - Navigating to password reset screen');
+                
+                Future.delayed(Duration(milliseconds: 100), () {
+                  if (mounted) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => ChangePasswordScreen(resetToken: token),
+                      ),
+                    );
+                  }
+                });
+                return;
+              } else {
+                print('❌ Token is empty');
+              }
+            } else {
+              print('❌ Token is null');
+            }
+          } else {
+            print('❌ No query parameters found (parts.length = ${parts.length})');
+          }
+        } else {
+          print('❌ Path "$path" does not match /reset-password');
+        }
+      } catch (e, stack) {
+        print('❌ Error handling URL: $e');
+        print('Stack trace: $stack');
+      }
+    } else {
+      print('🌐 Fragment is empty - staying on login page');
+    }
+    
+    print('🌐 ========== END URL HANDLER ==========');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LoginPage();
   }
 }
 
@@ -166,7 +363,7 @@ class LoginPage extends StatelessWidget {
                         );
                         signalRProvider.connect();
 
-                        Navigator.of(context).push(
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (context) => TrainingPlanScreen(),
                           ),
@@ -201,11 +398,98 @@ class LoginPage extends StatelessWidget {
                     },
                     child: Text("Don't have an account? Register"),
                   ),
+                  TextButton(
+                    onPressed: () {
+                      _showResetPasswordDialog(context);
+                    },
+                    child: Text("Forgot Password? Reset Here"),
+                  ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showResetPasswordDialog(BuildContext context) {
+    final TextEditingController tokenController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Reset Password"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Paste your reset link or token from the email:",
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: tokenController,
+              decoration: InputDecoration(
+                labelText: "Reset Link or Token",
+                hintText: "personaltrainerapp://reset-password?token=...",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final input = tokenController.text.trim();
+              if (input.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Please paste a reset link or token")),
+                );
+                return;
+              }
+              
+              String? token;
+              
+              // Try to extract token from URL
+              if (input.contains('token=')) {
+                final uri = Uri.tryParse(input);
+                if (uri != null) {
+                  token = uri.queryParameters['token'];
+                } else {
+                  // Try to extract from plain string
+                  final match = RegExp(r'token=([^&\s]+)').firstMatch(input);
+                  if (match != null) {
+                    token = match.group(1);
+                  }
+                }
+              } else {
+                // Assume entire input is the token
+                token = input;
+              }
+              
+              if (token != null && token.isNotEmpty) {
+                Navigator.pop(context); // Close dialog
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ChangePasswordScreen(resetToken: token),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Could not extract token from input")),
+                );
+              }
+            },
+            child: Text("Continue"),
+          ),
+        ],
       ),
     );
   }

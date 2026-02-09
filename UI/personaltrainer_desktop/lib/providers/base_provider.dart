@@ -4,21 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:personaltrainer_mobile/models/search_result.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
-import 'package:personaltrainer_mobile/screens/banned_screen.dart'; // ⭐ Dodaj import
 
 abstract class BaseProvider<T> with ChangeNotifier {
   static String? _baseUrl;
   String _endpoint = "";
 
-  // ⭐ SAMO navigator key (bez httpClient)
-  static GlobalKey<NavigatorState>? navigatorKey;
-
   static String get baseUrl => _baseUrl ?? "https://localhost:7093/api/";
-
-  static void initialize(GlobalKey<NavigatorState> navKey) {
-    navigatorKey = navKey;
-    print('BaseProvider initialized with navigator key');
-  }
 
   BaseProvider(String endpoint) {
     _endpoint = endpoint;
@@ -153,25 +144,10 @@ abstract class BaseProvider<T> with ChangeNotifier {
       final message = data['message']?.toString().toLowerCase() ?? '';
 
       if (message.contains('banovan') || message.contains('banned')) {
-        print('🚫 User is banned! Redirecting to BannedScreen...');
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          navigatorKey?.currentState?.pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => BannedScreen(
-                reason: data['reason'] ?? 'Nije naveden razlog',
-                bannedAt: data['bannedAt'] != null
-                    ? DateTime.parse(data['bannedAt'])
-                    : null,
-                expiresAt: data['expiresAt'] != null
-                    ? DateTime.parse(data['expiresAt'])
-                    : null,
-                isPermanent: data['isPermanent'] ?? true,
-              ),
-            ),
-            (route) => false,
-          );
-        });
+        print('🚫 User is banned! Details: ${data['reason']}');
+        // Note: Ban handling should be done at the UI level when user tries to login
+        // or through a proper error state management system
+        // Direct navigation from a provider is not compatible with GoRouter
       }
     } catch (e) {
       print('Error handling ban redirect: $e');

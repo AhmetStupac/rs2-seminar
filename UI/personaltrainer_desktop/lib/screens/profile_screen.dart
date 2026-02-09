@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/models/user.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/layouts/navBar.dart';
+import 'package:personaltrainer_mobile/screens/change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -135,6 +136,122 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _showPasteResetLinkDialog() async {
+    final TextEditingController tokenController = TextEditingController();
+
+    final result = await showDialog<String?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Paste Reset Link'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Paste the password reset link from your email here:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: tokenController,
+              decoration: const InputDecoration(
+                hintText: 'personaltrainerapp://reset-password?token=...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'You can paste the full URL, scheme URL, or just the token.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final input = tokenController.text.trim();
+              if (input.isNotEmpty) {
+                Navigator.pop(context, input);
+              }
+            },
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      String? token;
+
+      // Try parsing as URI first
+      final uri = Uri.tryParse(result);
+      if (uri != null && uri.queryParameters.containsKey('token')) {
+        token = uri.queryParameters['token'];
+      } else {
+        // Try extracting token with regex
+        final regex = RegExp(r'token=([^&\s]+)');
+        final match = regex.firstMatch(result);
+        if (match != null) {
+          token = match.group(1);
+        } else {
+          // Assume the entire input is the token
+          token = result;
+        }
+      }
+
+      if (token != null && token.isNotEmpty && mounted) {
+        // Validate token format (JWT tokens have 3 parts separated by dots)
+        if (!_isValidTokenFormat(token)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid token format. Please check the reset link and try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+          return;
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChangePasswordScreen(resetToken: token),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not extract token from the provided input.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  bool _isValidTokenFormat(String token) {
+    // JWT tokens have 3 parts separated by dots: header.payload.signature
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      return false;
+    }
+
+    // Each part should be non-empty and contain valid base64url characters
+    final base64UrlPattern = RegExp(r'^[A-Za-z0-9_-]+$');
+    for (final part in parts) {
+      if (part.isEmpty || !base64UrlPattern.hasMatch(part)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return NavBar(
@@ -254,7 +371,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               child: const Text(
-                                'Reset Password',
+                                'Send Reset Email',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: _showPasteResetLinkDialog,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Paste Reset Link',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),
