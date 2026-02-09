@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/screens/exercise_details_screen.dart';
-import 'package:personaltrainer_mobile/screens/gym_screen.dart';
+import 'package:personaltrainer_mobile/screens/gym_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
+import 'package:personaltrainer_mobile/screens/training_session_calendar_screen.dart';
 import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
 import 'package:personaltrainer_mobile/screens/messaging_screen.dart';
@@ -69,10 +70,14 @@ class _MasterScreenState extends State<NavBar> {
 
           _buildMenuItem(
             icon: Icons.calendar_today,
-            label: 'Kalendar',
-            routeName: 'Kalendar',
+            label: 'Calendar',
+            routeName: 'Calendar',
             onTap: () {
-              // TODO:  Navigiraj na kalendar screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => TrainingSessionCalendarScreen(),
+                ),
+              );
             },
           ),
 
@@ -102,19 +107,19 @@ class _MasterScreenState extends State<NavBar> {
 
           _buildMenuItem(
             icon: Icons.location_on,
-            label: 'Teretane',
-            routeName: 'Teretane',
+            label: 'Gym List',
+            routeName: 'Gym List',
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => GymScreen()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (context) => GymListScreen()));
             },
           ),
 
           _buildMenuItem(
             icon: Icons.restaurant_menu,
-            label: 'Plan ishrane',
-            routeName: 'Plan ishrane',
+            label: 'Nutrition Plan',
+            routeName: 'Nutrition Plan',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => NutritionPlanScreen()),

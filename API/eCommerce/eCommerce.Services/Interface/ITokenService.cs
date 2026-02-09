@@ -10,5 +10,7 @@ namespace eCommerce.Services.Interface
     public interface ITokenService
     {
         string CreateToken(User user);
+        string CreatePasswordResetToken(string email);
+        string ValidatePasswordResetToken(string token);
     }
 }

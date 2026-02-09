@@ -17,7 +17,6 @@ import 'package:personaltrainer_mobile/screens/register_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
 
-
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyHttpOverrides extends HttpOverrides {
@@ -60,12 +59,10 @@ void main() {
         ChangeNotifierProvider<SignalRProvider>(
           create: (_) => SignalRProvider(),
         ),
-         ChangeNotifierProvider<MessagesProvider>(
+        ChangeNotifierProvider<MessagesProvider>(
           create: (_) => MessagesProvider(),
         ),
-         ChangeNotifierProvider<GymProvider>(
-          create: (_) => GymProvider(),
-        ),
+        ChangeNotifierProvider<GymProvider>(create: (_) => GymProvider()),
       ],
       child: const MyApp(),
     ),
@@ -140,6 +137,7 @@ class LoginPage extends StatelessWidget {
                       labelText: "Password",
                       prefixIcon: Icon(Icons.password),
                     ),
+                    obscureText: true,
                   ),
                   ElevatedButton(
                     onPressed: () async {

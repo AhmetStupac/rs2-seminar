@@ -7,6 +7,7 @@ import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
 import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
 import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
 import 'package:personaltrainer_mobile/screens/image_upload_screen.dart';
+import 'package:personaltrainer_mobile/screens/personal_trainer_list_screen.dart';
 
 class ExerciseDetailsScreen extends StatefulWidget {
   ExerciseDetailsScreen({super.key});
@@ -54,7 +55,7 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Vježba uspješno spremljena!')));
+        ).showSnackBar(SnackBar(content: Text('Exercise saved!')));
         Navigator.of(context).pop();
       }
     }
@@ -75,9 +76,11 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
                   children: [
                     TextFormField(
                       controller: _nameController,
-                      decoration: InputDecoration(labelText: "Ime vježbe"),
+                      decoration: InputDecoration(
+                        labelText: "Name of the exercise",
+                      ),
                       validator: (value) => value == null || value.isEmpty
-                          ? 'Unesite ime vježbe'
+                          ? 'Enter the name of the exercise'
                           : null,
                     ),
                     SizedBox(height: 16),
@@ -98,7 +101,7 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
                         });
                       },
                       validator: (val) =>
-                          val == null ? 'Odaberite muscle group' : null,
+                          val == null ? 'Choose a muscle group' : null,
                     ),
                     SizedBox(height: 16),
                     DropdownButtonFormField<int>(
@@ -130,9 +133,25 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
                         );
                       },
                       icon: Icon(Icons.upload_file),
-                      label: Text('Upload sliku i kreiraj vježbu'),
+                      label: Text('Upload a photo and create a new exercise'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PersonalTrainerListScreen(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.person_outline),
+                      label: Text('Go to Personal Trainer'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -142,12 +161,12 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: Text('Otkaži'),
+                          child: Text('Cancel'),
                         ),
                         SizedBox(width: 12),
                         ElevatedButton(
                           onPressed: _saveExercise,
-                          child: Text('Spremi'),
+                          child: Text('Save'),
                         ),
                       ],
                     ),

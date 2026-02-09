@@ -54,5 +54,66 @@ namespace eCommerce.Services
 
             return tokenHandler.WriteToken(token);
         }
+
+        public string CreatePasswordResetToken(string email)
+        {
+            var tokenKey = config["TokenKey"] ?? throw new Exception("Cannot get token key");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
+
+            var claims = new List<Claim>
+            {
+                new (ClaimTypes.Email, email),
+                new ("TokenType", "PasswordReset")
+            };
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(1), // Token is valid for 1 hour
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+        public string ValidatePasswordResetToken(string token)
+        {
+            try
+            {
+                var tokenKey = config["TokenKey"] ?? throw new Exception("Cannot get token key");
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey));
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = key,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+                
+                var tokenType = principal.FindFirst("TokenType")?.Value;
+                if (tokenType != "PasswordReset")
+                    throw new SecurityTokenException("Invalid token type");
+
+                var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email))
+                    throw new SecurityTokenException("Email not found in token");
+
+                return email;
+            }
+            catch
+            {
+                throw new SecurityTokenException("Invalid or expired token");
+            }
+        }
     }
 }

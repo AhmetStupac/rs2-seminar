@@ -42,6 +42,9 @@ builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INutritionPlanService, NutritionPlanService>();
 builder.Services.AddTransient<IGymService, GymService>();
+builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHttpContextAccessor();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

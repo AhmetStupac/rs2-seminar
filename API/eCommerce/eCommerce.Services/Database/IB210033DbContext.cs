@@ -28,6 +28,7 @@ namespace eCommerce.Services.Database
         public DbSet<Group> Groups { get; set; }
         public DbSet<Connection> Connections { get; set; }
         public DbSet<Gym> Gyms { get; set; }
+        public DbSet<TrainingSession> TrainingSessions { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

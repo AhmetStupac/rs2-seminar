@@ -19,11 +19,13 @@ namespace eCommerce.Services
         private const int KeySize = 32;
         private const int Iterations = 10000;
         private readonly ITokenService _tokenService;
+        private readonly IEmailService _emailService;
 
-        public UserService(IB210033DbContext context, ITokenService tokenService)
+        public UserService(IB210033DbContext context, ITokenService tokenService, IEmailService emailService)
         {
             _context = context;
             _tokenService = tokenService;
+            _emailService = emailService;
         }
 
         public async Task<List<UserResponse>> GetAsync(UserSearchObject search)
@@ -394,6 +396,52 @@ namespace eCommerce.Services
                 .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == userId);
+        }
+
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
+
+            // Don't reveal if email exists in the system (security best practice)
+            if (user == null)
+                return true;
+
+            // Generate token
+            var resetToken = _tokenService.CreatePasswordResetToken(email);
+
+            // Send email
+            await _emailService.SendPasswordResetEmailAsync(email, resetToken, user.FirstName);
+
+            return true;
+        }
+
+        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        {
+            try
+            {
+                // Validate token and extract email
+                var email = _tokenService.ValidatePasswordResetToken(token);
+
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == email);
+
+                if (user == null)
+                    return false;
+
+                // Hash new password
+                byte[] salt;
+                var hash = HashPassword(newPassword, out salt);
+                user.PasswordHash = hash;
+                user.PasswordSalt = Convert.ToBase64String(salt);
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
     }

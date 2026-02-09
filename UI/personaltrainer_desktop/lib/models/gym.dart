@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:personaltrainer_mobile/models/image.dart';
 
 part 'gym.g.dart';
 
@@ -13,6 +14,8 @@ class Gym {
   String? phoneNumber;
   String? workTime;
   int? imageId;
+  Image? image;
+  String? imageUrl;
 
   Gym({
     this.id,
@@ -24,6 +27,8 @@ class Gym {
     this.phoneNumber,
     this.workTime,
     this.imageId,
+    this.image,
+    this.imageUrl,
   });
 
   factory Gym.fromJson(Map<String, dynamic> json) => _$GymFromJson(json);

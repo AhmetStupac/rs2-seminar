@@ -5,6 +5,7 @@ import 'package:personaltrainer_mobile/models/gym.dart';
 import 'package:personaltrainer_mobile/providers/gym_provider.dart';
 import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
 import 'package:personaltrainer_mobile/layouts/navBar.dart';
+import 'package:personaltrainer_mobile/widgets/network_image_loader.dart';
 
 class GymScreen extends StatefulWidget {
   final Gym? gym;
@@ -27,10 +28,12 @@ class _GymScreenState extends State<GymScreen> {
   late GymProvider _gymProvider;
   late BlobStorageProvider _blobStorageProvider;
 
-  Uint8List? _selectedImageBytes;
-  String? _selectedImageName;
+  PlatformFile? _selectedFile;
+  Uint8List? _fileBytes;
   int? _uploadedImageId;
+  String? _existingImageUrl;
   bool isLoading = false;
+  bool _isUploading = false;
   String? errorMessage;
 
   @override
@@ -48,6 +51,7 @@ class _GymScreenState extends State<GymScreen> {
       phoneNumberController.text = widget.gym!.phoneNumber ?? '';
       workTimeController.text = widget.gym!.workTime ?? '';
       _uploadedImageId = widget.gym!.imageId;
+      _existingImageUrl = widget.gym!.imageUrl;
     }
   }
 
@@ -68,45 +72,72 @@ class _GymScreenState extends State<GymScreen> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.image,
         allowMultiple: false,
+        withData: true,
       );
 
       if (result != null && result.files.isNotEmpty) {
         setState(() {
-          _selectedImageBytes = result.files.first.bytes;
-          _selectedImageName = result.files.first.name;
+          _selectedFile = result.files.first;
+          _fileBytes = result.files.first.bytes;
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri odabiru slike: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Greška pri odabiru slike: $e')));
     }
   }
 
+  void _removeFile() {
+    setState(() {
+      _selectedFile = null;
+      _fileBytes = null;
+    });
+  }
+
   Future<void> _uploadImage() async {
-    if (_selectedImageBytes == null || _selectedImageName == null) {
+    if (_selectedFile == null || _fileBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Molimo odaberite sliku prvo')),
+      );
       return;
     }
 
+    setState(() {
+      _isUploading = true;
+    });
+
     try {
       final result = await _blobStorageProvider.uploadFile(
-        _selectedImageBytes!,
-        _selectedImageName!,
+        _fileBytes!,
+        _selectedFile!.name,
         null,
         false,
       );
 
       setState(() {
         _uploadedImageId = result['imageId'];
+        _isUploading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Slika uspješno uploadovana')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Slika uspješno uploadovana (ID: ${result['imageId']})',
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri uploadu slike: $e')),
-      );
+      setState(() {
+        _isUploading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Greška pri uploadu slike: $e')));
+      }
     }
   }
 
@@ -124,8 +155,10 @@ class _GymScreenState extends State<GymScreen> {
     });
 
     try {
-      // Upload image if selected
-      if (_selectedImageBytes != null && _selectedImageName != null) {
+      // Upload image if selected but not yet uploaded
+      if (_selectedFile != null &&
+          _fileBytes != null &&
+          _uploadedImageId == null) {
         await _uploadImage();
       }
 
@@ -180,9 +213,7 @@ class _GymScreenState extends State<GymScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.gym == null
-                        ? 'Dodaj teretanu'
-                        : 'Uredi teretanu',
+                    widget.gym == null ? 'Dodaj teretanu' : 'Uredi teretanu',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -224,11 +255,7 @@ class _GymScreenState extends State<GymScreen> {
                               'Brace Kaljica',
                             ),
                             const SizedBox(height: 20),
-                            _buildTextField(
-                              'Grad',
-                              cityController,
-                              'Mostar',
-                            ),
+                            _buildTextField('Grad', cityController, 'Mostar'),
                             const SizedBox(height: 20),
                             _buildTextField(
                               'Država',
@@ -340,10 +367,7 @@ class _GymScreenState extends State<GymScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -377,64 +401,157 @@ class _GymScreenState extends State<GymScreen> {
 
   Widget _buildImageUpload() {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey[300]!),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_selectedImageBytes != null)
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(8)),
-                image: DecorationImage(
-                  image: MemoryImage(_selectedImageBytes!),
-                  fit: BoxFit.cover,
-                ),
+          // File selection button or file info
+          if (_selectedFile == null)
+            ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.upload_file),
+              label: const Text('Odaberi sliku'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                side: BorderSide(color: Colors.grey[300]!),
               ),
             )
           else
             Container(
-              height: 200,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.grey[100],
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(8)),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.image, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Nema odabrane slike',
-                      style: TextStyle(color: Colors.grey[600]),
+              child: Row(
+                children: [
+                  Icon(Icons.image, color: Colors.blue),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedFile!.name,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          '${(_selectedFile!.size / 1024).toStringAsFixed(2)} KB',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                  IconButton(
+                    onPressed: _removeFile,
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    tooltip: 'Ukloni sliku',
+                  ),
+                ],
+              ),
+            ),
+
+          // Image preview
+          if (_fileBytes != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(_fileBytes!, fit: BoxFit.contain),
+              ),
+            ),
+          ] else if (_existingImageUrl != null &&
+              _existingImageUrl!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: NetworkImageLoader(
+                  imageUrl: _existingImageUrl!,
+                  height: 200,
+                  fit: BoxFit.contain,
+                  errorWidget: Container(
+                    color: Colors.grey[100],
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Greška pri učitavanju slike',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _pickImage,
-                icon: const Icon(Icons.upload),
-                label: const Text('Odaberi sliku'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  side: BorderSide(color: Colors.grey[300]!),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
+          ],
+
+          // Upload button (separate from save)
+          if (_selectedFile != null) ...[
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _isUploading ? null : _uploadImage,
+              icon: _isUploading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.cloud_upload),
+              label: Text(_isUploading ? 'Uploading...' : 'Upload sliku'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
               ),
             ),
-          ),
+          ],
+
+          // Upload success indicator
+          if (_uploadedImageId != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Slika uploadovana (ID: $_uploadedImageId)',
+                    style: TextStyle(color: Colors.green[700], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

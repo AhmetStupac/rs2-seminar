@@ -88,7 +88,7 @@ namespace eCommerce.WebAPI.Controllers
             return NoContent();
         }
 
-        // Restore obrisanog korisnika
+        // Restore deleted user
        // [Authorize(Roles = "SuperAdmin")]
         [HttpPost("restore/{id}")]
         public async Task<ActionResult> RestoreUser(int id)
@@ -98,10 +98,10 @@ namespace eCommerce.WebAPI.Controllers
             if (!restored)
                 return NotFound();
                 
-            return Ok(new { message = "Korisnik je uspješno vraćen" });
+            return Ok(new { message = "User successfully restored" });
         }
 
-        // Pregled obrisanih korisnika
+        // View deleted users
         [Authorize(Roles = "SuperAdmin")]
         [HttpGet("deleted")]
         public async Task<ActionResult<List<UserResponse>>> GetDeletedUsers()
@@ -129,7 +129,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
 
-        // banovanje korisnika
+        // Ban user
         
         [Authorize(Roles = "SuperAdmin")]
         [HttpPost("ban-user")]
@@ -138,9 +138,9 @@ namespace eCommerce.WebAPI.Controllers
             var result = await _userService.BanUserAsync(dto.UserId, dto.Reason, dto.ExpiresAt);
 
             if (!result)
-                return NotFound(new { message = "Korisnik nije pronađen" });
+                return NotFound(new { message = "User not found" });
 
-            return Ok(new { message = "Korisnik je uspešno banovan" });
+            return Ok(new { message = "User successfully banned" });
         }
 
         [Authorize(Roles = "SuperAdmin")]
@@ -150,9 +150,9 @@ namespace eCommerce.WebAPI.Controllers
             var result = await _userService.UnbanUserAsync(userId);
 
             if (!result)
-                return NotFound(new { message = "Korisnik nije pronađen" });
+                return NotFound(new { message = "User not found" });
 
-            return Ok(new { message = "Korisnik je unbanovan" });
+            return Ok(new { message = "User successfully unbanned" });
         }
 
         [HttpGet("check-ban/{userId}")]
@@ -160,6 +160,34 @@ namespace eCommerce.WebAPI.Controllers
         {
             var isBanned = await _userService.IsUserBannedAsync(userId);
             return Ok(new { isBanned });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            await _userService.ForgotPasswordAsync(request.Email);
+
+            // Always return success message (don't reveal if email exists)
+            return Ok(new { message = "If the email exists in the system, a password reset link has been sent" });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var success = await _userService.ResetPasswordAsync(request.Token, request.NewPassword);
+
+            if (!success)
+                return BadRequest(new { message = "Invalid or expired token" });
+
+            return Ok(new { message = "Password successfully reset" });
         }
 
        

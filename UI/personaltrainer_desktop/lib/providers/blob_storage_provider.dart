@@ -56,7 +56,7 @@ class BlobStorageProvider with ChangeNotifier {
 
     if (response.statusCode < 299) {
       var data = jsonDecode(response.body);
-      
+
       // Vrati mapu sa podacima koje backend šalje
       return {
         'imageId': data['imageId'],
@@ -64,7 +64,35 @@ class BlobStorageProvider with ChangeNotifier {
         'blobName': data['blobName'],
       };
     } else {
-      throw Exception("Upload failed: ${response.statusCode} - ${response.body}");
+      throw Exception(
+        "Upload failed: ${response.statusCode} - ${response.body}",
+      );
+    }
+  }
+
+  // Metoda za preuzimanje slike sa URL-a kao bytes
+  Future<Uint8List?> downloadImageBytes(String imageUrl) async {
+    try {
+      print('📥 BlobStorageProvider: Downloading image from: $imageUrl');
+      final response = await http.get(Uri.parse(imageUrl));
+
+      print('📥 BlobStorageProvider: Response status: ${response.statusCode}');
+      print(
+        '📥 BlobStorageProvider: Content-Type: ${response.headers['content-type']}',
+      );
+      print(
+        '📥 BlobStorageProvider: Body length: ${response.bodyBytes.length}',
+      );
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes;
+      } else {
+        print('❌ Failed to download image: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('❌ Error downloading image: $e');
+      return null;
     }
   }
 

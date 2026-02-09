@@ -9,7 +9,7 @@ import 'package:personaltrainer_mobile/screens/banned_screen.dart'; // ⭐ Dodaj
 abstract class BaseProvider<T> with ChangeNotifier {
   static String? _baseUrl;
   String _endpoint = "";
-  
+
   // ⭐ SAMO navigator key (bez httpClient)
   static GlobalKey<NavigatorState>? navigatorKey;
 
@@ -46,7 +46,9 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var response = await http.get(uri, headers: headers);
 
     print("🔍 Response status: ${response.statusCode}");
-    print("🔍 Response body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}");
+    print(
+      "🔍 Response body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}",
+    );
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -96,6 +98,18 @@ abstract class BaseProvider<T> with ChangeNotifier {
     }
   }
 
+  Future<void> delete(int id) async {
+    var url = "$_baseUrl$_endpoint/$id";
+    var uri = Uri.parse(url);
+    var headers = createHeaders();
+
+    var response = await http.delete(uri, headers: headers);
+
+    if (!isValidResponse(response)) {
+      throw Exception("Unknown error");
+    }
+  }
+
   T fromJson(data) {
     throw Exception("Method not implemented");
   }
@@ -108,7 +122,9 @@ abstract class BaseProvider<T> with ChangeNotifier {
       print("❌ Request URL: ${response.request?.url}");
       print("❌ Response body: '${response.body}'");
       print("❌ Response headers: ${response.headers}");
-      print("❌ Current token set: ${AuthProvider.token != null && AuthProvider.token!.isNotEmpty}");
+      print(
+        "❌ Current token set: ${AuthProvider.token != null && AuthProvider.token!.isNotEmpty}",
+      );
       throw Exception("Unauthorized");
     } else if (response.statusCode == 403) {
       // ⭐ Proveri da li je ban
@@ -118,7 +134,8 @@ abstract class BaseProvider<T> with ChangeNotifier {
       print("❌ Error ${response.statusCode}: ${response.body}");
       try {
         var errorData = jsonDecode(response.body);
-        var errorMessage = errorData['message'] ?? errorData['title'] ?? errorData.toString();
+        var errorMessage =
+            errorData['message'] ?? errorData['title'] ?? errorData.toString();
         throw Exception("API Error (${response.statusCode}): $errorMessage");
       } catch (e) {
         if (e is Exception && e.toString().contains('API Error')) {
@@ -134,20 +151,20 @@ abstract class BaseProvider<T> with ChangeNotifier {
     try {
       final data = jsonDecode(response.body);
       final message = data['message']?.toString().toLowerCase() ?? '';
-      
+
       if (message.contains('banovan') || message.contains('banned')) {
         print('🚫 User is banned! Redirecting to BannedScreen...');
-        
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           navigatorKey?.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => BannedScreen(
                 reason: data['reason'] ?? 'Nije naveden razlog',
-                bannedAt: data['bannedAt'] != null 
-                    ? DateTime.parse(data['bannedAt']) 
+                bannedAt: data['bannedAt'] != null
+                    ? DateTime.parse(data['bannedAt'])
                     : null,
-                expiresAt: data['expiresAt'] != null 
-                    ? DateTime.parse(data['expiresAt']) 
+                expiresAt: data['expiresAt'] != null
+                    ? DateTime.parse(data['expiresAt'])
                     : null,
                 isPermanent: data['isPermanent'] ?? true,
               ),
@@ -165,15 +182,17 @@ abstract class BaseProvider<T> with ChangeNotifier {
     String token = AuthProvider.token ?? "";
 
     print("Creating headers with JWT Bearer token");
-    print("Token is ${token.isNotEmpty ? 'set (${token.length} chars)' : 'EMPTY'}");
+    print(
+      "Token is ${token.isNotEmpty ? 'set (${token.length} chars)' : 'EMPTY'}",
+    );
 
-    var headers = {
-      "Content-Type": "application/json",
-    };
+    var headers = {"Content-Type": "application/json"};
 
     if (token.isNotEmpty) {
       headers["Authorization"] = "Bearer $token";
-      print("Authorization header: Bearer ${token.substring(0, token.length > 20 ? 20 : token.length)}...");
+      print(
+        "Authorization header: Bearer ${token.substring(0, token.length > 20 ? 20 : token.length)}...",
+      );
     }
 
     return headers;

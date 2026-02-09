@@ -59,14 +59,9 @@ class UserProvider extends BaseProvider<User> {
     var url = "${BaseProvider.baseUrl}Users/login";
     var uri = Uri.parse(url);
 
-    var headers = {
-      "Content-Type": "application/json",
-    };
+    var headers = {"Content-Type": "application/json"};
 
-    var body = jsonEncode({
-      "username": username,
-      "password": password,
-    });
+    var body = jsonEncode({"username": username, "password": password});
 
     print("🔐 Attempting login to: $url");
     print("🔐 Username: $username");
@@ -82,10 +77,10 @@ class UserProvider extends BaseProvider<User> {
         return {"success": true};
       }
       var data = jsonDecode(response.body);
-      
+
       // Store the JWT token in AuthProvider
       AuthProvider.applyLoginResponse(data);
-      
+
       return data;
     } else if (response.statusCode == 401) {
       throw Exception("Invalid username or password");
@@ -105,5 +100,122 @@ class UserProvider extends BaseProvider<User> {
       return User.fromJson(data);
     }
     return null;
+  }
+
+  Future<bool> changePassword(int userId, String newPassword) async {
+    try {
+      // First, get the current user data
+      var currentUser = await getCurrentUser();
+      if (currentUser == null) {
+        throw Exception("User not found");
+      }
+
+      // Prepare the update request with current user data + new password
+      var url = "${BaseProvider.baseUrl}Users/update/$userId";
+      var uri = Uri.parse(url);
+      var headers = createHeaders();
+
+      var body = jsonEncode({
+        "firstName": currentUser.firstName,
+        "lastName": currentUser.lastName,
+        "email": currentUser.email,
+        "username": currentUser.username,
+        "phoneNumber": currentUser.phoneNumber,
+        "isActive": currentUser.isActive ?? true,
+        "password": newPassword,
+        "roleIds": [], // Empty array to maintain current roles
+      });
+
+      print("🔑 Changing password for user: $userId");
+      var response = await http.put(uri, headers: headers, body: body);
+      print("🔑 Change password response status: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        print("✅ Password changed successfully");
+        return true;
+      } else {
+        print("❌ Failed to change password: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Error changing password: $e");
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    try {
+      var url = "${BaseProvider.baseUrl}Users/forgot-password";
+      var uri = Uri.parse(url);
+
+      var headers = {"Content-Type": "application/json"};
+
+      var body = jsonEncode({"email": email});
+
+      print("📧 Sending password reset email to: $email");
+      print("📧 URL: $url");
+      print("📧 Request body: $body");
+
+      var response = await http.post(uri, headers: headers, body: body);
+
+      print("📧 Forgot password response status: ${response.statusCode}");
+      print("📧 Forgot password response body: ${response.body}");
+
+      // Backend returns 200 for both success and "email not found" cases for security
+      if (response.statusCode == 200) {
+        print("✅ Password reset email sent successfully");
+        return true;
+      } else {
+        print("❌ Failed to send password reset email: ${response.body}");
+        var errorMessage = "Unknown error";
+        try {
+          var errorData = jsonDecode(response.body);
+          errorMessage =
+              errorData['message'] ?? errorData['title'] ?? response.body;
+        } catch (e) {
+          errorMessage = response.body;
+        }
+        print("❌ Error details: $errorMessage");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Error sending password reset email: $e");
+      print("❌ Error type: ${e.runtimeType}");
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword(
+    String token,
+    String newPassword,
+    String confirmPassword,
+  ) async {
+    try {
+      var url = "${BaseProvider.baseUrl}Users/reset-password";
+      var uri = Uri.parse(url);
+
+      var headers = {"Content-Type": "application/json"};
+
+      var body = jsonEncode({
+        "token": token,
+        "newPassword": newPassword,
+        "confirmPassword": confirmPassword,
+      });
+
+      print("🔑 Resetting password with token");
+      var response = await http.post(uri, headers: headers, body: body);
+      print("🔑 Reset password response status: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        print("✅ Password reset successfully");
+        return true;
+      } else {
+        print("❌ Failed to reset password: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("❌ Error resetting password: $e");
+      return false;
+    }
   }
 }

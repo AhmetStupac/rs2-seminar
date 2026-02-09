@@ -22,5 +22,7 @@ namespace eCommerce.Services
         Task<bool> UnbanUserAsync(int userId);
         Task<bool> IsUserBannedAsync(int userId);
         Task<User> GetUserByIdAsync(int userId);
+        Task<bool> ForgotPasswordAsync(string email);
+        Task<bool> ResetPasswordAsync(string token, string newPassword);
     }
 } 
