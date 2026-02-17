@@ -109,6 +109,7 @@ class UserProvider extends BaseProvider<User> {
     String email,
     String username,
     String phoneNumber,
+    int? profileImageId,
   ) async {
     try {
       var url = "${BaseProvider.baseUrl}Users/update/$userId";
@@ -122,6 +123,7 @@ class UserProvider extends BaseProvider<User> {
         "username": username,
         "phoneNumber": phoneNumber,
         "isActive": true,
+        "profileImageId": profileImageId,
         "roleIds": [],
       });
 

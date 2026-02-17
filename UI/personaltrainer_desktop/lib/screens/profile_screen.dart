@@ -1,6 +1,11 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:personaltrainer_mobile/models/user.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
+import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_mobile/providers/auth_provider.dart'
+    as auth_provider;
 import 'package:personaltrainer_mobile/layouts/navBar.dart';
 import 'package:personaltrainer_mobile/screens/change_password_screen.dart';
 
@@ -15,12 +20,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   User? _user;
   bool _loading = true;
   bool _saving = false;
-  
+
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _usernameController = TextEditingController();
+
+  final BlobStorageProvider _blobStorageProvider = BlobStorageProvider();
+
+  // Image upload state
+  PlatformFile? _selectedFile;
+  Uint8List? _fileBytes;
+  Uint8List? _existingImageBytes; // For displaying existing profile image
+  int? _uploadedImageId;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -41,10 +55,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadUser() async {
     final provider = UserProvider();
     final user = await provider.getCurrentUser();
+
+    // Download existing profile image if available
+    Uint8List? existingImage;
+    if (user?.profileImage?.url != null &&
+        user!.profileImage!.url!.isNotEmpty) {
+      try {
+        existingImage = await _blobStorageProvider.downloadImageBytes(
+          user.profileImage!.url!,
+        );
+      } catch (e) {
+        print('Error loading profile image: $e');
+      }
+    }
+
     setState(() {
       _user = user;
       _loading = false;
-      
+      _existingImageBytes = existingImage;
+
       // Populate controllers
       if (user != null) {
         _firstNameController.text = user.firstName ?? '';
@@ -52,8 +81,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _emailController.text = user.email ?? '';
         _phoneController.text = user.phoneNumber ?? '';
         _usernameController.text = user.username ?? '';
+        _uploadedImageId = user.profileImageId;
       }
     });
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _selectedFile = result.files.first;
+          _fileBytes = result.files.first.bytes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _removeFile() {
+    setState(() {
+      _selectedFile = null;
+      _fileBytes = null;
+    });
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedFile == null || _fileBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an image first')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      int? userId = auth_provider.AuthProvider.userId;
+
+      final result = await _blobStorageProvider.uploadFile(
+        _fileBytes!,
+        _selectedFile!.name,
+        userId,
+        false, // isHeader
+      );
+
+      setState(() {
+        _uploadedImageId = result['imageId'];
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Image uploaded successfully! (ID: ${result['imageId']})',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+      }
+    }
   }
 
   Future<void> _saveChanges() async {
@@ -72,6 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _emailController.text,
         _usernameController.text,
         _phoneController.text,
+        _uploadedImageId, // Include profileImageId
       );
 
       if (mounted) {
@@ -190,7 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               duration: Duration(seconds: 3),
             ),
           );
-          
+
           // Navigate to change password screen
           Navigator.push(
             context,
@@ -201,9 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Failed to send reset email. Please try again.',
-              ),
+              content: Text('Failed to send reset email. Please try again.'),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
             ),
@@ -251,6 +364,135 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Profile Picture
+                          GestureDetector(
+                            onTap: _pickFile,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.grey[200],
+                                    border: Border.all(
+                                      color: Colors.blue,
+                                      width: 3,
+                                    ),
+                                  ),
+                                  child: ClipOval(
+                                    child: _fileBytes != null
+                                        ? Image.memory(
+                                            _fileBytes!,
+                                            fit: BoxFit.cover,
+                                            width: 120,
+                                            height: 120,
+                                          )
+                                        : _existingImageBytes != null
+                                        ? Image.memory(
+                                            _existingImageBytes!,
+                                            fit: BoxFit.cover,
+                                            width: 120,
+                                            height: 120,
+                                          )
+                                        : Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.grey[400],
+                                          ),
+                                  ),
+                                ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Upload button and status
+                          if (_selectedFile != null && _uploadedImageId == null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: ElevatedButton.icon(
+                                onPressed: _isUploadingImage
+                                    ? null
+                                    : _uploadImage,
+                                icon: _isUploadingImage
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : const Icon(Icons.cloud_upload, size: 18),
+                                label: Text(
+                                  _isUploadingImage
+                                      ? 'Uploading...'
+                                      : 'Upload Photo',
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          if (_uploadedImageId != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.green,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Profile photo uploaded',
+                                    style: TextStyle(
+                                      color: Colors.green[700],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 16),
+
                           TextField(
                             controller: _firstNameController,
                             decoration: const InputDecoration(
@@ -349,9 +591,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white,
-                                        ),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : const Text(

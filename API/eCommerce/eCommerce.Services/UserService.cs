@@ -79,6 +79,8 @@ namespace eCommerce.Services
             }
         }
 
+        // image upload koraci, prvo se upload slika na azure, azure vrati imageId na front end...
+
         public async Task<UserResponse> CreateAsync(UserUpsertRequest request)
         {
             // Check for duplicate email and username

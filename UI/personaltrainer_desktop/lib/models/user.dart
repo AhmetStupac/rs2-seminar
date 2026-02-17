@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:personaltrainer_mobile/models/image.dart';
 
 part 'user.g.dart';
 
@@ -13,6 +14,8 @@ class User {
   String? password;
   String? passwordConfirmation;
   bool? isActive;
+  int? profileImageId;
+  Image? profileImage;
   final bool isBanned;
   final DateTime? bannedAt;
   final String? banReason;
@@ -28,6 +31,8 @@ class User {
     this.password,
     this.passwordConfirmation,
     this.isActive = true,
+    this.profileImageId,
+    this.profileImage,
     this.isBanned = false,
     this.bannedAt,
     this.banReason,

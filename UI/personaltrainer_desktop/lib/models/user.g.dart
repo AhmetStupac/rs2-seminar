@@ -16,6 +16,10 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   password: json['password'] as String?,
   passwordConfirmation: json['passwordConfirmation'] as String?,
   isActive: json['isActive'] as bool? ?? true,
+  profileImageId: (json['profileImageId'] as num?)?.toInt(),
+  profileImage: json['profileImage'] == null
+      ? null
+      : Image.fromJson(json['profileImage'] as Map<String, dynamic>),
   isBanned: json['isBanned'] as bool? ?? false,
   bannedAt: json['bannedAt'] == null
       ? null
@@ -36,6 +40,8 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'password': instance.password,
   'passwordConfirmation': instance.passwordConfirmation,
   'isActive': instance.isActive,
+  'profileImageId': instance.profileImageId,
+  'profileImage': instance.profileImage,
   'isBanned': instance.isBanned,
   'bannedAt': instance.bannedAt?.toIso8601String(),
   'banReason': instance.banReason,

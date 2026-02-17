@@ -1,6 +1,11 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:personaltrainer_mobile/models/user.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
+import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_mobile/providers/auth_provider.dart'
+    as auth_provider;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -17,11 +22,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _passwordConfirmationController = TextEditingController();
+  final TextEditingController _passwordConfirmationController =
+      TextEditingController();
   final UserProvider _userProvider = UserProvider();
+  final BlobStorageProvider _blobStorageProvider = BlobStorageProvider();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscurePasswordConfirmation = true;
+
+  // Image upload state
+  PlatformFile? _selectedFile;
+  Uint8List? _fileBytes;
+  int? _uploadedImageId;
+  bool _isUploadingImage = false;
 
   @override
   void dispose() {
@@ -33,6 +46,91 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _passwordConfirmationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _selectedFile = result.files.first;
+          _fileBytes = result.files.first.bytes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _removeFile() {
+    setState(() {
+      _selectedFile = null;
+      _fileBytes = null;
+      _uploadedImageId = null;
+    });
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedFile == null || _fileBytes == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select an image first')));
+      return;
+    }
+
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      int? userId = auth_provider.AuthProvider.userId;
+
+      final result = await _blobStorageProvider.uploadFile(
+        _fileBytes!,
+        _selectedFile!.name,
+        userId,
+        false, // isHeader
+      );
+
+      setState(() {
+        _uploadedImageId = result['imageId'];
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Image uploaded successfully! (ID: ${result['imageId']})',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+      }
+    }
   }
 
   Future<void> _register() async {
@@ -51,21 +149,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text,
           passwordConfirmation: _passwordConfirmationController.text,
           isActive: true,
+          profileImageId: _uploadedImageId, // Include the uploaded image ID
         );
 
         await _userProvider.insert(user);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration successful!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Registration successful!')));
           Navigator.of(context).pop();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.toString()}')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
         }
       } finally {
         if (mounted) {
@@ -80,10 +179,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Register'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('Register'), centerTitle: true),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -111,7 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 32),
-                      
+
                       // First Name
                       TextFormField(
                         controller: _firstNameController,
@@ -220,6 +316,153 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       SizedBox(height: 16),
 
+                      // Profile Image Upload Section
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Profile Image (Optional)',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 12),
+
+                            if (_selectedFile == null)
+                              ElevatedButton.icon(
+                                onPressed: _pickFile,
+                                icon: Icon(Icons.upload_file),
+                                label: Text('Select Image'),
+                              )
+                            else
+                              Container(
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.image, color: Colors.blue),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _selectedFile!.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            '${(_selectedFile!.size / 1024).toStringAsFixed(2)} KB',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.close,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: _removeFile,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                            // Preview
+                            if (_fileBytes != null) ...[
+                              SizedBox(height: 12),
+                              Container(
+                                height: 150,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.memory(
+                                    _fileBytes!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            ],
+
+                            // Upload button
+                            if (_selectedFile != null &&
+                                _uploadedImageId == null) ...[
+                              SizedBox(height: 12),
+                              ElevatedButton.icon(
+                                onPressed: _isUploadingImage
+                                    ? null
+                                    : _uploadImage,
+                                icon: _isUploadingImage
+                                    ? SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : Icon(Icons.cloud_upload),
+                                label: Text(
+                                  _isUploadingImage
+                                      ? 'Uploading...'
+                                      : 'Upload Image',
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                ),
+                              ),
+                            ],
+
+                            // Show uploaded image ID
+                            if (_uploadedImageId != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Image uploaded (ID: $_uploadedImageId)',
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+
                       // Password
                       TextFormField(
                         controller: _passwordController,
@@ -311,8 +554,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
                                         Colors.white,
                                       ),
                                     ),
@@ -321,10 +563,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   Text('Registering...'),
                                 ],
                               )
-                            : Text(
-                                'Register',
-                                style: TextStyle(fontSize: 16),
-                              ),
+                            : Text('Register', style: TextStyle(fontSize: 16)),
                       ),
                       SizedBox(height: 16),
 
