@@ -28,6 +28,9 @@ namespace eCommerce.Model.Requests
         
         public bool IsActive { get; set; } = true;
         
+        // Profile image ID
+        public int? ProfileImageId { get; set; }
+        
         // Only used when creating a new user
         [MinLength(6)]
         public string? Password { get; set; }

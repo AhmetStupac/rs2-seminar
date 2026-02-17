@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace eCommerce.Services.Database
 {
@@ -48,6 +49,16 @@ namespace eCommerce.Services.Database
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAt { get; set; }
         public int? DeletedBy { get; set; }  // UserId ko je obrisao
+
+        // Password reset verification code properties
+        [MaxLength(6)]
+        public string? ResetCode { get; set; }
+        public DateTime? ResetCodeExpiry { get; set; }
+
+        // Profile image
+        [ForeignKey(nameof(ProfileImage))]
+        public int? ProfileImageId { get; set; }
+        public Image? ProfileImage { get; set; }
 
         // Navigation property for the many-to-many relationship with Role
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();

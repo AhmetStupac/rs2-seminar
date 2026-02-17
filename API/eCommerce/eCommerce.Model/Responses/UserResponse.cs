@@ -18,6 +18,10 @@ namespace eCommerce.Model.Responses
         public DateTime? BannedAt { get; set; }
         public string? BanReason { get; set; }
         public DateTime? BanExpiresAt { get; set; }
+        
+        // Profile image
+        public int? ProfileImageId { get; set; }
+        public string? ProfileImageUrl { get; set; }
      //   public string Token { get; set; }
 
         // Soft delete properties

@@ -14,11 +14,28 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   User? _user;
   bool _loading = true;
+  bool _saving = false;
+  
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _usernameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+  }
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _usernameController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUser() async {
@@ -27,7 +44,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _user = user;
       _loading = false;
+      
+      // Populate controllers
+      if (user != null) {
+        _firstNameController.text = user.firstName ?? '';
+        _lastNameController.text = user.lastName ?? '';
+        _emailController.text = user.email ?? '';
+        _phoneController.text = user.phoneNumber ?? '';
+        _usernameController.text = user.username ?? '';
+      }
     });
+  }
+
+  Future<void> _saveChanges() async {
+    if (_user == null) return;
+
+    setState(() {
+      _saving = true;
+    });
+
+    try {
+      final provider = UserProvider();
+      final success = await provider.updateUser(
+        _user!.id!,
+        _firstNameController.text,
+        _lastNameController.text,
+        _emailController.text,
+        _usernameController.text,
+        _phoneController.text,
+      );
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          // Reload user data
+          await _loadUser();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update profile'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _saving = false;
+        });
+      }
+    }
   }
 
   Future<void> _showResetPasswordDialog() async {
@@ -101,16 +185,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Password reset email sent! Check your inbox.'),
+              content: Text('Verification code sent! Check your email.'),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 5),
+              duration: Duration(seconds: 3),
+            ),
+          );
+          
+          // Navigate to change password screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChangePasswordScreen(email: _user!.email),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Failed to send reset email. Please check the console for details.',
+                'Failed to send reset email. Please try again.',
               ),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
@@ -134,122 +226,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
     }
-  }
-
-  Future<void> _showPasteResetLinkDialog() async {
-    final TextEditingController tokenController = TextEditingController();
-
-    final result = await showDialog<String?>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Paste Reset Link'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Paste the password reset link from your email here:',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: tokenController,
-              decoration: const InputDecoration(
-                hintText: 'personaltrainerapp://reset-password?token=...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'You can paste the full URL, scheme URL, or just the token.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final input = tokenController.text.trim();
-              if (input.isNotEmpty) {
-                Navigator.pop(context, input);
-              }
-            },
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      String? token;
-
-      // Try parsing as URI first
-      final uri = Uri.tryParse(result);
-      if (uri != null && uri.queryParameters.containsKey('token')) {
-        token = uri.queryParameters['token'];
-      } else {
-        // Try extracting token with regex
-        final regex = RegExp(r'token=([^&\s]+)');
-        final match = regex.firstMatch(result);
-        if (match != null) {
-          token = match.group(1);
-        } else {
-          // Assume the entire input is the token
-          token = result;
-        }
-      }
-
-      if (token != null && token.isNotEmpty && mounted) {
-        // Validate token format (JWT tokens have 3 parts separated by dots)
-        if (!_isValidTokenFormat(token)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid token format. Please check the reset link and try again.'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 5),
-            ),
-          );
-          return;
-        }
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChangePasswordScreen(resetToken: token),
-          ),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not extract token from the provided input.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  bool _isValidTokenFormat(String token) {
-    // JWT tokens have 3 parts separated by dots: header.payload.signature
-    final parts = token.split('.');
-    if (parts.length != 3) {
-      return false;
-    }
-
-    // Each part should be non-empty and contain valid base64url characters
-    final base64UrlPattern = RegExp(r'^[A-Za-z0-9_-]+$');
-    for (final part in parts) {
-      if (part.isEmpty || !base64UrlPattern.hasMatch(part)) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   @override
@@ -276,14 +252,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           TextField(
-                            controller: TextEditingController(
-                              text:
-                                  (_user!.firstName ?? '') +
-                                  ' ' +
-                                  (_user!.lastName ?? ''),
-                            ),
+                            controller: _firstNameController,
                             decoration: const InputDecoration(
-                              labelText: 'Full Name',
+                              labelText: 'First Name',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -294,14 +265,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               alignLabelWithHint: true,
                               border: OutlineInputBorder(),
                             ),
-                            textAlign: TextAlign.center,
-                            readOnly: true,
                           ),
                           const SizedBox(height: 16),
                           TextField(
-                            controller: TextEditingController(
-                              text: _user!.email ?? '',
+                            controller: _lastNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Last Name',
+                              labelStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black,
+                                letterSpacing: 0.5,
+                                height: 1.2,
+                              ),
+                              alignLabelWithHint: true,
+                              border: OutlineInputBorder(),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _emailController,
                             decoration: const InputDecoration(
                               labelText: 'Email',
                               labelStyle: TextStyle(
@@ -314,14 +297,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               alignLabelWithHint: true,
                               border: OutlineInputBorder(),
                             ),
-                            textAlign: TextAlign.center,
-                            readOnly: true,
                           ),
                           const SizedBox(height: 16),
                           TextField(
-                            controller: TextEditingController(
-                              text: _user!.phoneNumber ?? '',
-                            ),
+                            controller: _phoneController,
                             decoration: const InputDecoration(
                               labelText: 'Phone',
                               labelStyle: TextStyle(
@@ -334,14 +313,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               alignLabelWithHint: true,
                               border: OutlineInputBorder(),
                             ),
-                            textAlign: TextAlign.center,
-                            readOnly: true,
                           ),
                           const SizedBox(height: 16),
                           TextField(
-                            controller: TextEditingController(
-                              text: _user!.username ?? '',
-                            ),
+                            controller: _usernameController,
                             decoration: const InputDecoration(
                               labelText: 'Username',
                               labelStyle: TextStyle(
@@ -354,14 +329,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               alignLabelWithHint: true,
                               border: OutlineInputBorder(),
                             ),
-                            textAlign: TextAlign.center,
-                            readOnly: true,
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _showResetPasswordDialog,
+                              onPressed: _saving ? null : _saveChanges,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
@@ -370,17 +343,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: const Text(
-                                'Send Reset Email',
-                                style: TextStyle(fontSize: 16),
-                              ),
+                              child: _saving
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Save Changes',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
                             ),
                           ),
                           const SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton(
-                              onPressed: _showPasteResetLinkDialog,
+                              onPressed: _showResetPasswordDialog,
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
@@ -390,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               child: const Text(
-                                'Paste Reset Link',
+                                'Reset Password',
                                 style: TextStyle(fontSize: 16),
                               ),
                             ),

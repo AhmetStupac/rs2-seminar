@@ -230,8 +230,6 @@ namespace eCommerce.Services.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("Images");
                 });
 
@@ -486,7 +484,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1162),
+                            CreatedAt = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4298),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -494,7 +492,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1165),
+                            CreatedAt = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4300),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -502,7 +500,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1167),
+                            CreatedAt = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4301),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -700,6 +698,16 @@ namespace eCommerce.Services.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("ProfileImageId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ResetCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<DateTime?>("ResetCodeExpiry")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -710,6 +718,10 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("ProfileImageId")
+                        .IsUnique()
+                        .HasFilter("[ProfileImageId] IS NOT NULL");
+
                     b.HasIndex("Username")
                         .IsUnique();
 
@@ -719,7 +731,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1293),
+                            CreatedAt = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4467),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -732,7 +744,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1296),
+                            CreatedAt = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4468),
                             Email = "denis@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -775,21 +787,21 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1262),
+                            DateAssigned = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4445),
                             RoleId = 1,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1263),
+                            DateAssigned = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4447),
                             RoleId = 2,
                             UserId = 2
                         },
                         new
                         {
                             Id = 3,
-                            DateAssigned = new DateTime(2026, 2, 9, 9, 39, 25, 574, DateTimeKind.Utc).AddTicks(1265),
+                            DateAssigned = new DateTime(2026, 2, 16, 20, 52, 34, 915, DateTimeKind.Utc).AddTicks(4448),
                             RoleId = 3,
                             UserId = 1
                         });
@@ -868,15 +880,6 @@ namespace eCommerce.Services.Migrations
                         .HasForeignKey("ImageId");
 
                     b.Navigation("Image");
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.Image", b =>
-                {
-                    b.HasOne("eCommerce.Services.Database.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Meal", b =>
@@ -1016,6 +1019,15 @@ namespace eCommerce.Services.Migrations
                     b.Navigation("PersonalTrainer");
                 });
 
+            modelBuilder.Entity("eCommerce.Services.Database.User", b =>
+                {
+                    b.HasOne("eCommerce.Services.Database.Image", "ProfileImage")
+                        .WithOne("User")
+                        .HasForeignKey("eCommerce.Services.Database.User", "ProfileImageId");
+
+                    b.Navigation("ProfileImage");
+                });
+
             modelBuilder.Entity("eCommerce.Services.Database.UserRole", b =>
                 {
                     b.HasOne("eCommerce.Services.Database.Role", "Role")
@@ -1042,6 +1054,11 @@ namespace eCommerce.Services.Migrations
             modelBuilder.Entity("eCommerce.Services.Database.Group", b =>
                 {
                     b.Navigation("Connections");
+                });
+
+            modelBuilder.Entity("eCommerce.Services.Database.Image", b =>
+                {
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Role", b =>

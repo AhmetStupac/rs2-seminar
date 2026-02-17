@@ -30,7 +30,9 @@ namespace eCommerce.Services
 
         public async Task<List<UserResponse>> GetAsync(UserSearchObject search)
         {
-            var query = _context.Users.AsQueryable();
+            var query = _context.Users
+                .Include(u => u.ProfileImage)
+                .AsQueryable();
             
             if (!string.IsNullOrEmpty(search.Username))
             {
@@ -57,7 +59,9 @@ namespace eCommerce.Services
 
         public async Task<UserResponse?> GetByIdAsync(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .Include(u => u.ProfileImage)
+                .FirstOrDefaultAsync(u => u.Id == id);
             return user != null ? MapToResponse(user) : null;
         }
 
@@ -96,6 +100,7 @@ namespace eCommerce.Services
                 Username = request.Username,
                 PhoneNumber = request.PhoneNumber,
                 IsActive = request.IsActive,
+                ProfileImageId = request.ProfileImageId,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -157,6 +162,7 @@ namespace eCommerce.Services
             user.Username = request.Username;
             user.PhoneNumber = request.PhoneNumber;
             user.IsActive = request.IsActive;
+            user.ProfileImageId = request.ProfileImageId;
 
             // Handle password if provided
             if (!string.IsNullOrEmpty(request.Password))
@@ -270,6 +276,8 @@ namespace eCommerce.Services
                 BanExpiresAt = user.BanExpiresAt,
                 IsDeleted = user.IsDeleted,
                 DeletedAt = user.DeletedAt,
+                ProfileImageId = user.ProfileImageId,
+                ProfileImageUrl = user.ProfileImage?.Url
                 //Token = _tokenService.CreateToken(user)
             };
         }
@@ -407,41 +415,55 @@ namespace eCommerce.Services
             if (user == null)
                 return true;
 
-            // Generate token
-            var resetToken = _tokenService.CreatePasswordResetToken(email);
+            // Generate 6-digit verification code
+            var resetCode = GenerateVerificationCode();
+            
+            // Save code and expiry to database (expires in 15 minutes)
+            user.ResetCode = resetCode;
+            user.ResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
+            await _context.SaveChangesAsync();
 
-            // Send email
-            await _emailService.SendPasswordResetEmailAsync(email, resetToken, user.FirstName);
+            // Send email with code
+            await _emailService.SendPasswordResetEmailAsync(email, resetCode, user.FirstName);
 
             return true;
         }
 
-        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        public async Task<bool> ResetPasswordAsync(string email, string code, string newPassword)
         {
-            try
-            {
-                // Validate token and extract email
-                var email = _tokenService.ValidatePasswordResetToken(token);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return false;
 
-                if (user == null)
-                    return false;
-
-                // Hash new password
-                byte[] salt;
-                var hash = HashPassword(newPassword, out salt);
-                user.PasswordHash = hash;
-                user.PasswordSalt = Convert.ToBase64String(salt);
-
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
+            // Validate code
+            if (string.IsNullOrEmpty(user.ResetCode) || 
+                user.ResetCode != code || 
+                user.ResetCodeExpiry == null || 
+                user.ResetCodeExpiry < DateTime.UtcNow)
             {
                 return false;
             }
+
+            // Hash new password
+            byte[] salt;
+            var hash = HashPassword(newPassword, out salt);
+            user.PasswordHash = hash;
+            user.PasswordSalt = Convert.ToBase64String(salt);
+
+            // Clear reset code
+            user.ResetCode = null;
+            user.ResetCodeExpiry = null;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private string GenerateVerificationCode()
+        {
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
         }
 
     }

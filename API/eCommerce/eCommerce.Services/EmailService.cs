@@ -16,7 +16,7 @@ namespace eCommerce.Services
             _configuration = configuration;
         }
 
-        public async Task SendPasswordResetEmailAsync(string toEmail, string resetToken, string userName)
+        public async Task SendPasswordResetEmailAsync(string toEmail, string resetCode, string userName)
         {
             var smtpHost = _configuration["EmailSettings:SmtpHost"];
             var smtpPort = int.Parse(_configuration["EmailSettings:SmtpPort"] ?? "587");
@@ -24,20 +24,12 @@ namespace eCommerce.Services
             var smtpPassword = _configuration["EmailSettings:SmtpPassword"];
             var fromEmail = _configuration["EmailSettings:FromEmail"];
             var fromName = _configuration["EmailSettings:FromName"] ?? "PersonalTrainerApp";
-            var frontendUrl = _configuration["EmailSettings:FrontendUrl"] ?? "http://localhost:8080/#";
-            var appScheme = _configuration["EmailSettings:AppScheme"]; // e.g. "personaltrainerapp://"
-
-            // Create both web and app reset links. Use web link as primary (most email clients make it clickable).
-            var webResetLink = $"{frontendUrl}/reset-password?token={resetToken}";
-            var appResetLink = !string.IsNullOrEmpty(appScheme)
-                ? $"{appScheme}reset-password?token={resetToken}"
-                : null;
 
             var mailMessage = new MailMessage
             {
                 From = new MailAddress(fromEmail, fromName),
-                Subject = "Password Reset - PersonalTrainerApp",
-                Body = GetEmailBody(userName, webResetLink, appResetLink),
+                Subject = "Password Reset Verification Code - PersonalTrainerApp",
+                Body = GetEmailBody(userName, resetCode),
                 IsBodyHtml = true
             };
 
@@ -60,7 +52,7 @@ namespace eCommerce.Services
             }
         }
 
-        private string GetEmailBody(string userName, string webResetLink, string? appResetLink)
+        private string GetEmailBody(string userName, string resetCode)
         {
             return $@"
 <!DOCTYPE html>
@@ -71,14 +63,20 @@ namespace eCommerce.Services
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
         .header {{ background-color: #007bff; color: white; padding: 20px; text-align: center; }}
         .content {{ padding: 20px; background-color: #f9f9f9; }}
-        .button {{ 
-            display: inline-block; 
-            padding: 12px 30px; 
-            background-color: #007bff; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 5px;
+        .code-box {{ 
+            background-color: #f0f8ff;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
             margin: 20px 0;
+            text-align: center;
+        }}
+        .code {{ 
+            font-size: 32px;
+            font-weight: bold;
+            color: #007bff;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
         }}
         .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
     </style>
@@ -86,24 +84,25 @@ namespace eCommerce.Services
 <body>
     <div class='container'>
         <div class='header'>
-            <h1>Password Reset</h1>
+            <h1>Password Reset Verification</h1>
         </div>
-            <div class='content'>
+        <div class='content'>
             <p>Dear {userName},</p>
-            <p>We received a request to reset your password. Click the button below to reset your password:</p>
-            <center>
-                <a href='{webResetLink}' class='button' target='_blank' rel='noopener noreferrer'>Reset Password</a>
-            </center>
-            <p style='margin-top:10px;font-size:14px;'>
-                If you prefer to open the native app (if installed), try this link: 
-                <br/>{(string.IsNullOrEmpty(appResetLink) ? string.Empty : $"<a href='{appResetLink}'>Open in app</a>")}
-            </p>
-            <p style='font-size:12px;color:#666;margin-top:20px;'>
-                Or paste this URL into your browser:
-                <br/>{webResetLink}
-            </p>
-            <p>This link will be active for the next 1 hour.</p>
-            <p>If you did not request a password reset, please ignore this email.</p>
+            <p>We received a request to reset your password. Please use the verification code below to reset your password:</p>
+            
+            <div class='code-box'>
+                <p style='margin: 0; font-size: 14px; color: #666;'>Your verification code:</p>
+                <p class='code'>{resetCode}</p>
+            </div>
+            
+            <p><strong>Important:</strong></p>
+            <ul style='color: #666;'>
+                <li>This code will expire in <strong>15 minutes</strong></li>
+                <li>Enter this code in your application to reset your password</li>
+                <li>Do not share this code with anyone</li>
+            </ul>
+            
+            <p>If you did not request a password reset, please ignore this email and your password will remain unchanged.</p>
             <p>Best regards,<br>PersonalTrainerApp Team</p>
         </div>
         <div class='footer'>

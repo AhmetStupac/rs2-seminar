@@ -3,9 +3,9 @@ import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
-  final String? resetToken;
+  final String? email;
 
-  const ChangePasswordScreen({Key? key, this.resetToken}) : super(key: key);
+  const ChangePasswordScreen({Key? key, this.email}) : super(key: key);
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -13,6 +13,7 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _verificationCodeController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
@@ -21,9 +22,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   void dispose() {
+    _verificationCodeController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  String? _validateVerificationCode(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Verification code is required';
+    }
+    if (value.length < 4) {
+      return 'Please enter a valid verification code';
+    }
+    return null;
   }
 
   String? _validatePassword(String? value) {
@@ -57,36 +69,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     try {
       final provider = UserProvider();
-      bool success;
-
-      // Check if this is a token-based reset (from email) or regular password change
-      if (widget.resetToken != null) {
-        // Reset password using token from email
-        success = await provider.resetPassword(
-          widget.resetToken!,
-          _newPasswordController.text,
-          _confirmPasswordController.text,
-        );
-      } else {
-        // Regular password change (requires login)
-        final userId = AuthProvider.userId;
-
-        if (userId == null) {
-          throw Exception('User not logged in');
-        }
-
-        success = await provider.changePassword(
-          userId,
-          _newPasswordController.text,
-        );
-      }
+      
+      // Reset password using verification code from email
+      final success = await provider.resetPasswordWithCode(
+        widget.email ?? '',
+        _verificationCodeController.text,
+        _newPasswordController.text,
+        _confirmPasswordController.text,
+      );
 
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Password successfully changed'),
+              content: Text('Password successfully reset'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
             ),
           );
           Navigator.pop(context);
@@ -94,13 +92,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                widget.resetToken != null
-                    ? 'Invalid or expired reset link'
-                    : 'Failed to change password',
-              ),
+            const SnackBar(
+              content: Text('Invalid or expired verification code'),
               backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -111,6 +106,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           SnackBar(
             content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -127,9 +123,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.resetToken != null ? 'Reset Password' : 'Change Password',
-        ),
+        title: const Text('Reset Password'),
         centerTitle: true,
       ),
       body: Center(
@@ -150,28 +144,36 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        widget.resetToken != null
-                            ? 'Reset Your Password'
-                            : 'Change Password',
-                        style: const TextStyle(
+                      const Text(
+                        'Reset Your Password',
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        widget.resetToken != null
-                            ? 'Enter your new password below'
-                            : 'Enter your new password',
-                        style: const TextStyle(
+                      const Text(
+                        'Enter the verification code from your email and your new password',
+                        style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
+                      TextFormField(
+                        controller: _verificationCodeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Verification Code',
+                          hintText: 'Enter code from email',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.verified_user),
+                        ),
+                        keyboardType: TextInputType.text,
+                        validator: _validateVerificationCode,
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _newPasswordController,
                         obscureText: _obscureNewPassword,
@@ -240,11 +242,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                   ),
                                 ),
                               )
-                            : Text(
-                                widget.resetToken != null
-                                    ? 'Reset Password'
-                                    : 'Change Password',
-                                style: const TextStyle(fontSize: 16),
+                            : const Text(
+                                'Reset Password',
+                                style: TextStyle(fontSize: 16),
                               ),
                       ),
                       const SizedBox(height: 16),

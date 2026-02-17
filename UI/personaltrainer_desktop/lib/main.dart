@@ -168,26 +168,29 @@ class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
       final token = uri.queryParameters['token'];
       print('📱 Reset token: ${token?.substring(0, 30)}...');
       
-      if (token != null && token.isNotEmpty && mounted) {
+      final email = uri.queryParameters['email'];
+      print('📱 Email from deep link: $email');
+      
+      if (email != null && email.isNotEmpty && mounted) {
         print('✅ Navigating to password reset screen');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => ChangePasswordScreen(resetToken: token),
+            builder: (context) => ChangePasswordScreen(email: email),
           ),
         );
       }
     }
-    // Handle HTTP/HTTPS: http://localhost:8080/reset-password?token=xxx
+    // Handle HTTP/HTTPS: http://localhost:8080/reset-password?email=xxx
     else if ((uri.scheme == 'http' || uri.scheme == 'https') && 
              uri.path.contains('reset-password')) {
-      final token = uri.queryParameters['token'];
-      print('📱 Reset token from HTTP: ${token?.substring(0, 30)}...');
+      final email = uri.queryParameters['email'];
+      print('📱 Email from HTTP: $email');
       
-      if (token != null && token.isNotEmpty && mounted) {
+      if (email != null && email.isNotEmpty && mounted) {
         print('✅ Navigating to password reset screen');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => ChangePasswordScreen(resetToken: token),
+            builder: (context) => ChangePasswordScreen(email: email),
           ),
         );
       }
@@ -258,12 +261,13 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
               
               if (token.isNotEmpty) {
                 print('✅ All checks passed - Navigating to password reset screen');
+                final email = uri.queryParameters['email'];
                 
                 Future.delayed(Duration(milliseconds: 100), () {
                   if (mounted) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (context) => ChangePasswordScreen(resetToken: token),
+                        builder: (context) => ChangePasswordScreen(email: email),
                       ),
                     );
                   }
@@ -456,17 +460,23 @@ class LoginPage extends StatelessWidget {
               }
               
               String? token;
+              String? email;
               
               // Try to extract token from URL
-              if (input.contains('token=')) {
-                final uri = Uri.tryParse(input);
-                if (uri != null) {
-                  token = uri.queryParameters['token'];
+              if (input.contains('token=') || input.contains('email=')) {
+                final parsedUri = Uri.tryParse(input);
+                if (parsedUri != null) {
+                  token = parsedUri.queryParameters['token'];
+                  email = parsedUri.queryParameters['email'];
                 } else {
                   // Try to extract from plain string
-                  final match = RegExp(r'token=([^&\s]+)').firstMatch(input);
-                  if (match != null) {
-                    token = match.group(1);
+                  final tokenMatch = RegExp(r'token=([^&\s]+)').firstMatch(input);
+                  if (tokenMatch != null) {
+                    token = tokenMatch.group(1);
+                  }
+                  final emailMatch = RegExp(r'email=([^&\s]+)').firstMatch(input);
+                  if (emailMatch != null) {
+                    email = emailMatch.group(1);
                   }
                 }
               } else {
@@ -478,7 +488,7 @@ class LoginPage extends StatelessWidget {
                 Navigator.pop(context); // Close dialog
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ChangePasswordScreen(resetToken: token),
+                    builder: (context) => ChangePasswordScreen(email: email),
                   ),
                 );
               } else {

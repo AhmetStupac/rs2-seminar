@@ -182,10 +182,10 @@ namespace eCommerce.WebAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var success = await _userService.ResetPasswordAsync(request.Token, request.NewPassword);
+            var success = await _userService.ResetPasswordAsync(request.Email, request.Code, request.NewPassword);
 
             if (!success)
-                return BadRequest(new { message = "Invalid or expired token" });
+                return BadRequest(new { message = "Invalid or expired verification code" });
 
             return Ok(new { message = "Password successfully reset" });
         }
