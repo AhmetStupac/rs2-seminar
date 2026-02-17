@@ -35,6 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Uint8List? _existingImageBytes; // For displaying existing profile image
   int? _uploadedImageId;
   bool _isUploadingImage = false;
+  bool _newImageUploaded =
+      false; // Track if a new image was uploaded this session
 
   @override
   void initState() {
@@ -98,6 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _selectedFile = result.files.first;
           _fileBytes = result.files.first.bytes;
+          _newImageUploaded = false; // Reset flag when new file is picked
         });
       }
     } catch (e) {
@@ -113,6 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _selectedFile = null;
       _fileBytes = null;
+      _newImageUploaded = false;
     });
   }
 
@@ -140,6 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() {
         _uploadedImageId = result['imageId'];
+        _newImageUploaded = true; // Mark that a new image was uploaded
       });
 
       if (mounted) {
@@ -199,6 +204,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           );
           // Reload user data
+          setState(() {
+            _newImageUploaded = false; // Reset flag after successful save
+            _selectedFile = null;
+            _fileBytes = null;
+          });
           await _loadUser();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -430,7 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 8),
 
                           // Upload button and status
-                          if (_selectedFile != null && _uploadedImageId == null)
+                          if (_selectedFile != null && !_newImageUploaded)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: ElevatedButton.icon(
@@ -465,7 +475,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
 
-                          if (_uploadedImageId != null)
+                          if (_newImageUploaded)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: Row(

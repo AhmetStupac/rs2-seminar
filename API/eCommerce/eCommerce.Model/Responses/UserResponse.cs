@@ -21,7 +21,7 @@ namespace eCommerce.Model.Responses
         
         // Profile image
         public int? ProfileImageId { get; set; }
-        public string? ProfileImageUrl { get; set; }
+        public ImageResponse? ProfileImage { get; set; }
      //   public string Token { get; set; }
 
         // Soft delete properties

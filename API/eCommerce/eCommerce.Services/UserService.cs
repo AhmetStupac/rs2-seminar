@@ -279,8 +279,20 @@ namespace eCommerce.Services
                 IsDeleted = user.IsDeleted,
                 DeletedAt = user.DeletedAt,
                 ProfileImageId = user.ProfileImageId,
-                ProfileImageUrl = user.ProfileImage?.Url
+                ProfileImage = user.ProfileImage != null ? MapToImageResponse(user.ProfileImage) : null
                 //Token = _tokenService.CreateToken(user)
+            };
+        }
+
+        private ImageResponse MapToImageResponse(Image image)
+        {
+            return new ImageResponse
+            {
+                Id = image.Id,
+                Name = image.Name,
+                Url = image.Url,
+                Size = image.Size,
+                IsHeader = image.IsHeader
             };
         }
 
