@@ -4,6 +4,7 @@ import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_rating_provider.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_detail_screen.dart';
+import 'package:personaltrainer_mobile/layouts/mobile_navbar.dart';
 
 class PersonalTrainerSearchScreen extends StatefulWidget {
   const PersonalTrainerSearchScreen({super.key});
@@ -180,7 +181,7 @@ class _PersonalTrainerSearchScreenState
         ),
         centerTitle: true,
       ),
-      drawer: _buildDrawer(),
+      drawer: const MobileNavBar(currentRoute: 'search'),
       body: Column(
         children: [
           // Search bar
@@ -453,89 +454,6 @@ class _PersonalTrainerSearchScreenState
           ),
         ],
       ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.orange.shade400,
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40, color: Colors.orange),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Personal Trainer',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Početna'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.search),
-            title: const Text('Pretraga trenera'),
-            selected: true,
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.calendar_today),
-            title: const Text('Moji treninzi'),
-            onTap: () {
-              Navigator.pop(context);
-              // TODO: Navigate to trainings screen
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Profil'),
-            onTap: () {
-              Navigator.pop(context);
-              // TODO: Navigate to profile screen
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Postavke'),
-            onTap: () {
-              Navigator.pop(context);
-              // TODO: Navigate to settings screen
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Odjava'),
-            onTap: () {
-              Navigator.pop(context);
-              // TODO: Implement logout
-            },
-          ),
-        ],
       ),
     );
   }

@@ -18,5 +18,7 @@ namespace eCommerce.Services.Database
         public float BasePrice { get; set; }
         public DateTime CreatedAt { get; set; }
         
+        // Navigation property to access exercises in this plan
+        public ICollection<ExercisePlan> ExercisePlans { get; set; } = new List<ExercisePlan>();
     }
 }

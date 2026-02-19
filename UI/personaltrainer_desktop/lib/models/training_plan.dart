@@ -1,8 +1,9 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:personaltrainer_mobile/models/exercise_plan.dart';
 
 part 'training_plan.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class TrainingPlan {
   int? id;
   int? personalTrainerId;
@@ -11,6 +12,7 @@ class TrainingPlan {
   String? description;
   double? basePrice;
   String? createdAt;
+  List<ExercisePlan>? exercises;
 
 
   // 1. korak preimenovati part dio, naziv klase, ctor itd.
@@ -26,6 +28,7 @@ class TrainingPlan {
     this.description,
     this.basePrice,
     this.createdAt,
+    this.exercises,
   });
 
   factory TrainingPlan.fromJson(Map<String, dynamic> json) =>

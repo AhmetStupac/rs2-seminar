@@ -14,6 +14,9 @@ TrainingPlan _$TrainingPlanFromJson(Map<String, dynamic> json) => TrainingPlan(
   description: json['description'] as String?,
   basePrice: (json['basePrice'] as num?)?.toDouble(),
   createdAt: json['createdAt'] as String?,
+  exercises: (json['exercises'] as List<dynamic>?)
+      ?.map((e) => ExercisePlan.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$TrainingPlanToJson(TrainingPlan instance) =>
@@ -25,4 +28,5 @@ Map<String, dynamic> _$TrainingPlanToJson(TrainingPlan instance) =>
       'description': instance.description,
       'basePrice': instance.basePrice,
       'createdAt': instance.createdAt,
+      'exercises': instance.exercises?.map((e) => e.toJson()).toList(),
     };

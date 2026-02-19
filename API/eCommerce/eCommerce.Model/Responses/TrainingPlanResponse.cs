@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace eCommerce.Model.Responses
 {
@@ -12,5 +13,8 @@ namespace eCommerce.Model.Responses
         public string Description { get; set; }
         public float BasePrice { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        
+        // List of exercises in this training plan
+        public List<ExercisePlanResponse> Exercises { get; set; } = new List<ExercisePlanResponse>();
     }
 }

@@ -50,11 +50,28 @@ namespace eCommerce.Services
 
             response.Id = entity.Id;
 
-            if(entity.PersonalTrainer.User != null)
+            if(entity.PersonalTrainer?.User != null)
                 response.PersonalTrainerUserFirstName = entity.PersonalTrainer.User.FirstName;
 
-            return response;
+            // Map exercises to response
+            if (entity.ExercisePlans != null && entity.ExercisePlans.Any())
+            {
+                response.Exercises = entity.ExercisePlans.Select(ep => new ExercisePlanResponse
+                {
+                    Id = ep.Id,
+                    TrainingPlanId = ep.TrainingPlanId,
+                    TrainingPlanName = entity.Title,
+                    ExerciseId = ep.ExerciseId,
+                    ExerciseName = ep.Exercise?.Name,
+                    Sets = ep.Sets,
+                    Reps = ep.Reps,
+                    Duration = ep.Duration,
+                    CustomPrice = ep.CustomPrice,
+                    Note = ep.Note
+                }).ToList();
+            }
 
+            return response;
         }
 
         protected override Task BeforeInsert(TrainingPlan entity, TrainingPlanUpsertRequest insertRequest)

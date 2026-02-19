@@ -401,7 +401,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     ..._availablePlans.map((plan) {
                       bool isSelected = _selectedTrainingPlanId == plan.id;
                       return GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           print('Plan clicked: ${plan.toJson()}');
                           if (plan.id == null) {
                             print('WARNING: Selected plan has no ID set!');
@@ -415,19 +415,77 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                             );
                             return;
                           }
+                          
+                          // Show loading indicator
                           setState(() {
-                            _selectedTrainingPlanId = plan.id;
-                            for (var ep in exercisePlans) {
-                              ep.trainingPlanId = plan.id;
-                            }
+                            isLoading = true;
+                            errorMessage = null;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Training plan "${plan.title}" selected!',
+                          
+                          try {
+                            // Fetch full training plan details with exercises from API
+                            final fullPlan = await _trainingPlanProvider.getById(plan.id!);
+                            
+                            setState(() {
+                              _selectedTrainingPlanId = fullPlan.id;
+                              
+                              // Populate form fields from training plan
+                              if (fullPlan.basePrice != null) {
+                                PriceController.text = fullPlan.basePrice.toString();
+                              } else {
+                                PriceController.clear();
+                              }
+                              
+                              // Clear existing exercise plans and load from selected plan
+                              exercisePlans.clear();
+                              if (fullPlan.exercises != null && fullPlan.exercises!.isNotEmpty) {
+                                // Load all exercises from the training plan
+                                for (var ep in fullPlan.exercises!) {
+                                  // Update trainingPlanId to current plan
+                                  ep.trainingPlanId = fullPlan.id;
+                                  exercisePlans.add(ep);
+                                }
+                                
+                                // Optionally populate Duration and Note from first exercise
+                                if (fullPlan.exercises!.first.duration != null) {
+                                  DurationController.text = fullPlan.exercises!.first.duration.toString();
+                                } else {
+                                  DurationController.clear();
+                                }
+                                if (fullPlan.exercises!.first.note != null && fullPlan.exercises!.first.note!.isNotEmpty) {
+                                  NoteController.text = fullPlan.exercises!.first.note!;
+                                } else {
+                                  NoteController.clear();
+                                }
+                              } else {
+                                // Clear fields if no exercises
+                                DurationController.clear();
+                                NoteController.clear();
+                              }
+                              
+                              isLoading = false;
+                            });
+                            
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Training plan "${fullPlan.title}" selected! Loaded ${fullPlan.exercises?.length ?? 0} exercises.',
+                                ),
+                                backgroundColor: Colors.green,
                               ),
-                            ),
-                          );
+                            );
+                          } catch (e) {
+                            setState(() {
+                              isLoading = false;
+                              errorMessage = 'Failed to load training plan details: $e';
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error loading plan: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                         child: Card(
                           margin: EdgeInsets.symmetric(vertical: 6),
