@@ -8,5 +8,6 @@ namespace eCommerce.Model.Requests
         public int YearsOfExperience { get; set; }
         public bool? IsActive { get; set; }
         public string? Certifications { get; set; }
+        public string? Sport { get; set; }
     }
 }

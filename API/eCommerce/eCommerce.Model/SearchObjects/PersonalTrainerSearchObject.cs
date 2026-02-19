@@ -7,5 +7,6 @@ namespace eCommerce.Model.SearchObjects
     public class PersonalTrainerSearchObject : BaseSearchObject
     {
         public string? Name { get; set; }
+        public string? Sport { get; set; }
     }
 }

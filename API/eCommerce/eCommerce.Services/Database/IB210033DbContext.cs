@@ -29,6 +29,7 @@ namespace eCommerce.Services.Database
         public DbSet<Connection> Connections { get; set; }
         public DbSet<Gym> Gyms { get; set; }
         public DbSet<TrainingSession> TrainingSessions { get; set; }
+        public DbSet<PersonalTrainerRating> PersonalTrainerRatings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -172,6 +173,10 @@ namespace eCommerce.Services.Database
             // Global query filter za soft delete - User
             modelBuilder.Entity<User>()
                 .HasQueryFilter(u => !u.IsDeleted);
+
+            // Global query filter for PersonalTrainerRating - exclude ratings from deleted users
+            modelBuilder.Entity<PersonalTrainerRating>()
+                .HasQueryFilter(r => r.User == null || !r.User.IsDeleted);
 
             // Configure UserRole join entity
             modelBuilder.Entity<UserRole>()

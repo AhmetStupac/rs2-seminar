@@ -44,6 +44,7 @@ builder.Services.AddScoped<INutritionPlanService, NutritionPlanService>();
 builder.Services.AddTransient<IGymService, GymService>();
 builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IPersonalTrainerRatingService, PersonalTrainerRatingService>();
 builder.Services.AddHttpContextAccessor();
 
 

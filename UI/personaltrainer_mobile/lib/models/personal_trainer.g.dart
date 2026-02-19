@@ -14,6 +14,7 @@ PersonalTrainer _$PersonalTrainerFromJson(Map<String, dynamic> json) =>
       yearsOfExperience: (json['yearsOfExperience'] as num?)?.toInt(),
       isActive: json['isActive'] as bool?,
       certifications: json['certifications'] as String?,
+      sport: json['sport'] as String?,
     );
 
 Map<String, dynamic> _$PersonalTrainerToJson(PersonalTrainer instance) =>
@@ -24,4 +25,5 @@ Map<String, dynamic> _$PersonalTrainerToJson(PersonalTrainer instance) =>
       'yearsOfExperience': instance.yearsOfExperience,
       'isActive': instance.isActive,
       'certifications': instance.certifications,
+      'sport': instance.sport,
     };

@@ -1,21 +1,35 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:http/io_client.dart';
 import 'package:personaltrainer_mobile/models/search_result.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 
 abstract class BaseProvider<T> with ChangeNotifier {
   static String? _baseUrl;
   String _endpoint = "";
+  static http.Client? _client;
 
-  static String get baseUrl => _baseUrl ?? "https://localhost:7093/api/";
+  static String get baseUrl => _baseUrl ?? "https://10.0.2.2:7093/api/";
+
+  static http.Client get client {
+    if (_client == null) {
+      // Create HttpClient that accepts self-signed certificates for development
+      final ioClient = HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+      _client = IOClient(ioClient);
+    }
+    return _client!;
+  }
 
   BaseProvider(String endpoint) {
     _endpoint = endpoint;
     _baseUrl = const String.fromEnvironment(
       "baseUrl",
-      defaultValue: "https://localhost:7093/api/",
+      defaultValue: "https://10.0.2.2:7093/api/",
     );
   }
 
@@ -34,7 +48,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
     print("🔍 Headers: ${headers.keys.join(', ')}");
     print("🔍 Auth header value: ${headers['Authorization']}");
 
-    var response = await http.get(uri, headers: headers);
+    var response = await client.get(uri, headers: headers);
 
     print("🔍 Response status: ${response.statusCode}");
     print(
@@ -63,7 +77,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var headers = createHeaders();
 
     var jsonRequest = jsonEncode(request);
-    var response = await http.post(uri, headers: headers, body: jsonRequest);
+    var response = await client.post(uri, headers: headers, body: jsonRequest);
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -79,7 +93,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var headers = createHeaders();
 
     var jsonRequest = jsonEncode(request);
-    var response = await http.put(uri, headers: headers, body: jsonRequest);
+    var response = await client.put(uri, headers: headers, body: jsonRequest);
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -94,7 +108,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    var response = await http.delete(uri, headers: headers);
+    var response = await client.delete(uri, headers: headers);
 
     if (!isValidResponse(response)) {
       throw Exception("Unknown error");

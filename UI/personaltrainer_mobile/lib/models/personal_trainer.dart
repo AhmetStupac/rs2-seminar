@@ -10,6 +10,7 @@ class PersonalTrainer {
   int? yearsOfExperience;
   bool? isActive;
   String? certifications;
+  String? sport;
 
   PersonalTrainer({
     this.id,
@@ -18,6 +19,7 @@ class PersonalTrainer {
     this.yearsOfExperience,
     this.isActive,
     this.certifications,
+    this.sport,
   });
 
   factory PersonalTrainer.fromJson(Map<String, dynamic> json) =>
