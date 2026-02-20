@@ -30,15 +30,11 @@ namespace eCommerce.Services
 
         protected override IQueryable<Database.TrainingPlan> ApplyFilter(IQueryable<Database.TrainingPlan> query, NameSearchObject search)
         {
-
-
-            var result = query.Include(t=> t.PersonalTrainer).ThenInclude(pt=> pt.User);
-
-            var firstTrainer = result.FirstOrDefault();
-            if (firstTrainer?.User == null)
-            {
-                // User is not being included
-            }
+            var result = query
+                .Include(t => t.PersonalTrainer)
+                    .ThenInclude(pt => pt.User)
+                .Include(t => t.ExercisePlans)
+                    .ThenInclude(ep => ep.Exercise);
 
             return result;
         }

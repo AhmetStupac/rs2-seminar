@@ -31,6 +31,8 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   bool _loadingPlans = false;
   String? _plansError;
   int? _selectedTrainingPlanId;
+  bool _isEditMode = false;
+  Set<int> _originalExercisePlanIds = {};
 
   @override
   void dispose() {
@@ -109,6 +111,36 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Edit mode indicator
+            if (_isEditMode && _selectedTrainingPlanId != null)
+              Container(
+                padding: EdgeInsets.all(12),
+                margin: EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[300]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      color: Colors.orange[700],
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'EDIT MODE: You are editing an existing training plan. Click "Update Plan" to save changes or "Create New" to start fresh.',
+                        style: TextStyle(
+                          color: Colors.orange[900],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             // ...Naziv plana polje uklonjeno...
             SizedBox(height: 16),
             Container(
@@ -330,6 +362,11 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       itemCount: exercisePlans.length,
                       itemBuilder: (context, index) {
                         final plan = exercisePlans[index];
+                        // Only render if exercise is populated
+                        if (plan.exercise == null ||
+                            plan.exercise!.id == null) {
+                          return SizedBox.shrink();
+                        }
                         return _buildExerciseCard(plan.exercise!, plan);
                       },
                     ),
@@ -415,77 +452,99 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                             );
                             return;
                           }
-                          
-                          // Show loading indicator
+
+                          // Use the plan data we already have instead of fetching again
                           setState(() {
-                            isLoading = true;
-                            errorMessage = null;
-                          });
-                          
-                          try {
-                            // Fetch full training plan details with exercises from API
-                            final fullPlan = await _trainingPlanProvider.getById(plan.id!);
-                            
-                            setState(() {
-                              _selectedTrainingPlanId = fullPlan.id;
-                              
-                              // Populate form fields from training plan
-                              if (fullPlan.basePrice != null) {
-                                PriceController.text = fullPlan.basePrice.toString();
-                              } else {
-                                PriceController.clear();
+                            _selectedTrainingPlanId = plan.id;
+                            _isEditMode = true;
+                            _originalExercisePlanIds.clear();
+
+                            // Populate form fields from training plan
+                            if (plan.basePrice != null) {
+                              PriceController.text = plan.basePrice.toString();
+                            } else {
+                              PriceController.clear();
+                            }
+
+                            // Clear existing exercise plans and load from selected plan
+                            exercisePlans.clear();
+                            if (plan.exercises != null &&
+                                plan.exercises!.isNotEmpty) {
+                              print(
+                                'Loading ${plan.exercises!.length} exercises from plan',
+                              );
+                              print(
+                                'Available exercises in memory: ${exercises.length}',
+                              );
+
+                              // Load all exercises from the training plan
+                              for (var ep in plan.exercises!) {
+                                // Update trainingPlanId to current plan
+                                ep.trainingPlanId = plan.id;
+
+                                // Find and populate the full Exercise object from the exercises list
+                                if (ep.exerciseId != null) {
+                                  print(
+                                    'Looking for exercise with ID: ${ep.exerciseId}',
+                                  );
+                                  final matchingExercise = exercises.firstWhere(
+                                    (ex) => ex.id == ep.exerciseId,
+                                    orElse: () => Exercise(),
+                                  );
+
+                                  if (matchingExercise.id != null) {
+                                    print(
+                                      'Found matching exercise: ${matchingExercise.name} (ID: ${matchingExercise.id})',
+                                    );
+                                    ep.exercise = matchingExercise;
+                                  } else {
+                                    print(
+                                      'WARNING: No matching exercise found for ID: ${ep.exerciseId}',
+                                    );
+                                  }
+                                }
+
+                                exercisePlans.add(ep);
+                                if (ep.id != null) {
+                                  _originalExercisePlanIds.add(ep.id!);
+                                }
+                                print(
+                                  'Added exercise plan. Total plans: ${exercisePlans.length}',
+                                );
                               }
-                              
-                              // Clear existing exercise plans and load from selected plan
-                              exercisePlans.clear();
-                              if (fullPlan.exercises != null && fullPlan.exercises!.isNotEmpty) {
-                                // Load all exercises from the training plan
-                                for (var ep in fullPlan.exercises!) {
-                                  // Update trainingPlanId to current plan
-                                  ep.trainingPlanId = fullPlan.id;
-                                  exercisePlans.add(ep);
-                                }
-                                
-                                // Optionally populate Duration and Note from first exercise
-                                if (fullPlan.exercises!.first.duration != null) {
-                                  DurationController.text = fullPlan.exercises!.first.duration.toString();
-                                } else {
-                                  DurationController.clear();
-                                }
-                                if (fullPlan.exercises!.first.note != null && fullPlan.exercises!.first.note!.isNotEmpty) {
-                                  NoteController.text = fullPlan.exercises!.first.note!;
-                                } else {
-                                  NoteController.clear();
-                                }
+
+                              // Optionally populate Duration and Note from first exercise
+                              if (plan.exercises!.first.duration != null) {
+                                DurationController.text = plan
+                                    .exercises!
+                                    .first
+                                    .duration
+                                    .toString();
                               } else {
-                                // Clear fields if no exercises
                                 DurationController.clear();
+                              }
+                              if (plan.exercises!.first.note != null &&
+                                  plan.exercises!.first.note!.isNotEmpty) {
+                                NoteController.text =
+                                    plan.exercises!.first.note!;
+                              } else {
                                 NoteController.clear();
                               }
-                              
-                              isLoading = false;
-                            });
-                            
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Training plan "${fullPlan.title}" selected! Loaded ${fullPlan.exercises?.length ?? 0} exercises.',
-                                ),
-                                backgroundColor: Colors.green,
+                            } else {
+                              // Clear fields if no exercises
+                              DurationController.clear();
+                              NoteController.clear();
+                            }
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Training plan "${plan.title}" selected! Loaded ${plan.exercises?.length ?? 0} exercises.',
                               ),
-                            );
-                          } catch (e) {
-                            setState(() {
-                              isLoading = false;
-                              errorMessage = 'Failed to load training plan details: $e';
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error loading plan: $e'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
+                              backgroundColor: Colors.green,
+                            ),
+                          );
                         },
                         child: Card(
                           margin: EdgeInsets.symmetric(vertical: 6),
@@ -558,24 +617,66 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               ),
             ),
 
-            // Dugme za slanje plana na API
+            // Buttons for API operations
             SizedBox(height: 24),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: isLoading ? null : posaljiNaAPI,
-                icon: Icon(Icons.send),
-                label: Text('Send plan to API'),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  textStyle: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (_isEditMode) ...[
+                  ElevatedButton.icon(
+                    onPressed: isLoading ? null : _clearForm,
+                    icon: Icon(Icons.add),
+                    label: Text('Create New'),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      backgroundColor: Colors.grey[600],
+                      foregroundColor: Colors.white,
+                      textStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                  SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: isLoading ? null : updatePlan,
+                    icon: Icon(Icons.edit),
+                    label: Text('Update Plan'),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      textStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ] else
+                  ElevatedButton.icon(
+                    onPressed: isLoading ? null : posaljiNaAPI,
+                    icon: Icon(Icons.send),
+                    label: Text('Send plan to API'),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      textStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -807,17 +908,144 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       for (var plan in exercisePlans) {
         await provider.insert(plan);
       }
+
+      // Clear all fields and exercises after successful submission
       setState(() {
+        PriceController.clear();
+        DurationController.clear();
+        NoteController.clear();
+        exercisePlans.clear();
+        _selectedExercise = null;
+        _selectedTrainingPlanId = null;
+        _isEditMode = false;
+        _originalExercisePlanIds.clear();
         isLoading = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Plan successfully sent to API!')));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Plan successfully sent to API! Form cleared.')),
+      );
     } catch (e) {
       setState(() {
         isLoading = false;
         errorMessage = 'Error sending to API: ' + e.toString();
       });
+    }
+  }
+
+  void _clearForm() {
+    setState(() {
+      PriceController.clear();
+      DurationController.clear();
+      NoteController.clear();
+      exercisePlans.clear();
+      _selectedExercise = null;
+      _selectedTrainingPlanId = null;
+      _isEditMode = false;
+      _originalExercisePlanIds.clear();
+      errorMessage = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Form cleared. Ready to create new plan.'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void updatePlan() async {
+    // Validate inputs
+    final String cijenaText = PriceController.text.trim();
+    final String trajanjeText = DurationController.text.trim();
+    final String napomena = NoteController.text.trim();
+
+    double? cijena = double.tryParse(cijenaText);
+    int? trajanje = int.tryParse(trajanjeText);
+
+    if (cijena == null || trajanje == null || exercisePlans.isEmpty) {
+      setState(() {
+        errorMessage =
+            'Please fill in all fields and add at least one exercise.';
+      });
+      return;
+    }
+
+    if (_selectedTrainingPlanId == null) {
+      setState(() {
+        errorMessage = 'No training plan selected for update!';
+      });
+      return;
+    }
+
+    // Update all exercise plans with current values
+    for (var plan in exercisePlans) {
+      plan.customPrice = cijena;
+      plan.duration = trajanje;
+      plan.note = napomena;
+      plan.trainingPlanId = _selectedTrainingPlanId;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final provider = Provider.of<ExercisePlanProvider>(
+        context,
+        listen: false,
+      );
+
+      // Track which exercises to delete (removed from original list)
+      Set<int> currentExercisePlanIds = exercisePlans
+          .where((ep) => ep.id != null)
+          .map((ep) => ep.id!)
+          .toSet();
+      Set<int> deletedIds = _originalExercisePlanIds.difference(currentExercisePlanIds);
+
+      // Delete removed exercises
+      for (var deletedId in deletedIds) {
+        print('Deleting exercise plan ID: $deletedId');
+        await provider.delete(deletedId);
+      }
+
+      // Update existing and insert new exercises
+      for (var plan in exercisePlans) {
+        if (plan.id != null) {
+          // Update existing exercise plan
+          print('Updating exercise plan ID: ${plan.id}');
+          await provider.update(plan.id!, plan);
+        } else {
+          // Insert new exercise plan
+          print('Inserting new exercise plan for exercise ID: ${plan.exerciseId}');
+          await provider.insert(plan);
+        }
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Training plan updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Refresh the training plans list to show updated data
+      await _fetchAvailablePlans();
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error updating plan: ' + e.toString();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating plan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }

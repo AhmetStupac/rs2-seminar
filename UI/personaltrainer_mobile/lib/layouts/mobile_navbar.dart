@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
+import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/main.dart';
 
 class MobileNavBar extends StatelessWidget {
   final String currentRoute;
 
-  const MobileNavBar({
-    super.key,
-    this.currentRoute = '',
-  });
+  const MobileNavBar({super.key, this.currentRoute = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +16,7 @@ class MobileNavBar extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.orange.shade400,
-            ),
+            decoration: BoxDecoration(color: Colors.orange.shade400),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
@@ -49,7 +46,12 @@ class MobileNavBar extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               if (currentRoute != 'home') {
-                Navigator.pushReplacementNamed(context, '/');
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PersonalTrainerSearchScreen(),
+                  ),
+                );
               }
             },
           ),
@@ -61,7 +63,12 @@ class MobileNavBar extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               if (currentRoute != 'search') {
-                Navigator.pushReplacementNamed(context, '/search');
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PersonalTrainerSearchScreen(),
+                  ),
+                );
               }
             },
           ),
@@ -90,7 +97,9 @@ class MobileNavBar extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Moji treninzi - uskoro dostupno')),
+                const SnackBar(
+                  content: Text('Moji treninzi - uskoro dostupno'),
+                ),
               );
             },
           ),
@@ -130,7 +139,9 @@ class MobileNavBar extends StatelessWidget {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Odjava'),
-                  content: const Text('Da li ste sigurni da želite da se odjavite?'),
+                  content: const Text(
+                    'Da li ste sigurni da želite da se odjavite?',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
@@ -150,7 +161,12 @@ class MobileNavBar extends StatelessWidget {
               if (confirmed == true) {
                 AuthProvider.logout();
                 if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                    (route) => false,
+                  );
                 }
               }
             },

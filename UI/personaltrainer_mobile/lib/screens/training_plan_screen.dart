@@ -17,11 +17,11 @@ class TrainingPlanScreen extends StatefulWidget {
 class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
   final _trainingPlanProvider = TrainingPlanProvider();
   final _exercisePlanProvider = ExercisePlanProvider();
-  
+
   List<TrainingPlan> _trainingPlans = [];
   TrainingPlan? _selectedPlan;
   List<ExercisePlan> _exercisePlans = [];
-  
+
   bool _isLoadingPlans = false;
   bool _isLoadingExercises = false;
   String? _errorMessage;
@@ -47,24 +47,22 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
 
     try {
       // Get training plans for the logged-in user
-      final result = await _trainingPlanProvider.get(filter: {
-        'userId': AuthProvider.userId.toString(),
-      });
-      
-      print('📋 Loaded ${result.result.length} training plans for user ${AuthProvider.userId}');
+      final result = await _trainingPlanProvider.get(
+        filter: {'userId': AuthProvider.userId.toString()},
+      );
+
+      print(
+        '📋 Loaded ${result.result.length} training plans for user ${AuthProvider.userId}',
+      );
       for (var plan in result.result) {
-        print('  - Plan ID: ${plan.id}, Title: ${plan.title}, UserId: ${plan.userId}');
+        print(
+          '  - Plan ID: ${plan.id}, Title: ${plan.title}, UserId: ${plan.userId}',
+        );
       }
-      
+
       setState(() {
         _trainingPlans = result.result;
         _isLoadingPlans = false;
-        
-        // Auto-select first plan if available
-        if (_trainingPlans.isNotEmpty && _selectedPlan == null) {
-          _selectedPlan = _trainingPlans.first;
-          _loadExercisePlans(_selectedPlan!.id!);
-        }
       });
     } catch (e) {
       setState(() {
@@ -83,36 +81,46 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
 
     try {
       // First try with includeProperties
-      var result = await _exercisePlanProvider.get(filter: {
-        'trainingPlanId': trainingPlanId.toString(),
-        'includeProperties': 'Exercise,Exercise.Equipment,Exercise.Image',
-      });
-      
-      print('📋 Loaded ${result.result.length} exercise plans with includeProperties');
-      
+      var result = await _exercisePlanProvider.get(
+        filter: {
+          'trainingPlanId': trainingPlanId.toString(),
+          'includeProperties': 'Exercise,Exercise.Equipment,Exercise.Image',
+        },
+      );
+
+      print(
+        '📋 Loaded ${result.result.length} exercise plans with includeProperties',
+      );
+
       // If no results, try without includeProperties
       if (result.result.isEmpty) {
         print('🔄 Trying without includeProperties...');
-        result = await _exercisePlanProvider.get(filter: {
-          'trainingPlanId': trainingPlanId.toString(),
-        });
-        print('📋 Loaded ${result.result.length} exercise plans without includeProperties');
+        result = await _exercisePlanProvider.get(
+          filter: {'trainingPlanId': trainingPlanId.toString()},
+        );
+        print(
+          '📋 Loaded ${result.result.length} exercise plans without includeProperties',
+        );
       }
-      
+
       // If still no results, try getting ALL exercise plans to debug
       if (result.result.isEmpty) {
         print('🔄 Getting ALL exercise plans to debug...');
         final allPlans = await _exercisePlanProvider.get();
         print('📋 Total exercise plans in system: ${allPlans.result.length}');
         for (var plan in allPlans.result) {
-          print('  - Plan ID: ${plan.id}, TrainingPlanId: ${plan.trainingPlanId}, ExerciseId: ${plan.exerciseId}');
+          print(
+            '  - Plan ID: ${plan.id}, TrainingPlanId: ${plan.trainingPlanId}, ExerciseId: ${plan.exerciseId}',
+          );
         }
       }
-      
+
       for (var plan in result.result) {
-        print('  ✓ Exercise Plan ID: ${plan.id}, Exercise: ${plan.exercise?.name ?? "NULL"}, ExerciseId: ${plan.exerciseId}');
+        print(
+          '  ✓ Exercise Plan ID: ${plan.id}, Exercise: ${plan.exercise?.name ?? "NULL"}, ExerciseId: ${plan.exerciseId}',
+        );
       }
-      
+
       setState(() {
         _exercisePlans = result.result;
         _isLoadingExercises = false;
@@ -123,11 +131,13 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
         _exercisePlans = [];
         _isLoadingExercises = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Greška pri učitavanju vježbi: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'Greška pri učitavanju vježbi: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -202,319 +212,79 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       );
     }
 
-    return Row(
-      children: [
-        // Left side - Training plans list
-        Container(
-          width: 300,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(2, 0),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Planovi (${_trainingPlans.length})',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: _trainingPlans.length,
-                  itemBuilder: (context, index) {
-                    final plan = _trainingPlans[index];
-                    final isSelected = _selectedPlan?.id == plan.id;
-                    
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      color: isSelected ? Colors.blue.shade50 : Colors.white,
-                      child: ListTile(
-                        title: Text(
-                          plan.title ?? 'Bez naziva',
-                          style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
-                        subtitle: Text(
-                          plan.description ?? 'Nema opisa',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: plan.basePrice != null
-                            ? Text(
-                                '${plan.basePrice?.toStringAsFixed(2)} KM',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              )
-                            : null,
-                        onTap: () {
-                          setState(() {
-                            _selectedPlan = plan;
-                          });
-                          if (plan.id != null) {
-                            _loadExercisePlans(plan.id!);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+    // Show exercise detail view if a plan is selected
+    if (_selectedPlan != null) {
+      return _buildExerciseListView();
+    }
 
-        // Right side - Exercise plans
-        Expanded(
-          child: _buildExercisePlansList(),
-        ),
-      ],
+    // Show list of training plans
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _trainingPlans.length,
+      itemBuilder: (context, index) {
+        final plan = _trainingPlans[index];
+        return _buildTrainingPlanCard(plan);
+      },
     );
   }
 
-  Widget _buildExercisePlansList() {
-    if (_selectedPlan == null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.arrow_back, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'Izaberite plan treninga',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_isLoadingExercises) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_exercisePlans.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.fitness_center, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              'Nema vježbi u ovom planu',
-              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'ID plana: ${_selectedPlan?.id}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Plan header
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _selectedPlan!.title ?? 'Bez naziva',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (_selectedPlan!.description != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _selectedPlan!.description!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildInfoChip(
-                    Icons.fitness_center,
-                    '${_exercisePlans.length} vježbi',
-                    Colors.blue,
-                  ),
-                  const SizedBox(width: 12),
-                  if (_selectedPlan!.basePrice != null)
-                    _buildInfoChip(
-                      Icons.attach_money,
-                      '${_selectedPlan!.basePrice?.toStringAsFixed(2)} KM',
-                      Colors.green,
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        // Exercise list
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: _exercisePlans.length,
-            itemBuilder: (context, index) {
-              final exercisePlan = _exercisePlans[index];
-              return _buildExerciseCard(exercisePlan, index + 1);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoChip(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExerciseCard(ExercisePlan exercisePlan, int index) {
+  Widget _buildTrainingPlanCard(TrainingPlan plan) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          if (exercisePlan.exercise != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ExerciseDetailScreen(
-                  exercise: exercisePlan.exercise!,
-                ),
-              ),
-            );
-          }
+          setState(() {
+            _selectedPlan = plan;
+            if (plan.id != null) {
+              _loadExercisePlans(plan.id!);
+            }
+          });
         },
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Number badge
               Container(
-                width: 40,
-                height: 40,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
                   color: Colors.orange.shade100,
                   shape: BoxShape.circle,
                 ),
-                child: Center(
-                  child: Text(
-                    '$index',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade700,
-                      fontSize: 16,
-                    ),
-                  ),
+                child: Icon(
+                  Icons.fitness_center,
+                  color: Colors.orange.shade700,
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 16),
-
-              // Exercise info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      exercisePlan.exercise?.name ?? 'Bez naziva',
+                      plan.title ?? 'Bez naziva',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        if (exercisePlan.sets != null) ...[
-                          _buildDetailTag('${exercisePlan.sets}x setova'),
-                          const SizedBox(width: 8),
-                        ],
-                        if (exercisePlan.reps != null) ...[
-                          _buildDetailTag('${exercisePlan.reps} ponavljanja'),
-                          const SizedBox(width: 8),
-                        ],
-                        if (exercisePlan.duration != null)
-                          _buildDetailTag('${exercisePlan.duration} min'),
-                      ],
-                    ),
-                    if (exercisePlan.note != null && exercisePlan.note!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                    if (plan.description != null) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        exercisePlan.note!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                        ),
+                        plan.description!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ],
                 ),
               ),
-
-              // Arrow icon
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 20,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
             ],
           ),
         ),
@@ -522,20 +292,226 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
     );
   }
 
-  Widget _buildDetailTag(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+  Widget _buildExerciseListView() {
+    return Column(
+      children: [
+        // Custom header
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.only(top: 40, bottom: 16),
+          child: Column(
+            children: [
+              // Header with back button, title, and menu
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black87),
+                      onPressed: () {
+                        setState(() {
+                          _selectedPlan = null;
+                          _exercisePlans = [];
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: Text(
+                        _selectedPlan?.title ?? 'Plan treninga',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert, color: Colors.black87),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+              ),
+              // Plan icon
+              const SizedBox(height: 16),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade400,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.fitness_center,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Base price
+              if (_selectedPlan?.basePrice != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${_selectedPlan?.basePrice?.toStringAsFixed(2)} KM',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ],
+          ),
+        ),
+        // Exercise list
+        Expanded(
+          child: Container(
+            color: Colors.white,
+            child: _isLoadingExercises
+                ? const Center(child: CircularProgressIndicator())
+                : _exercisePlans.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.fitness_center,
+                          size: 64,
+                          color: Colors.grey[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Nema vježbi u ovom planu',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: _exercisePlans.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1, indent: 72),
+                    itemBuilder: (context, index) {
+                      final exercisePlan = _exercisePlans[index];
+                      return _buildExerciseListItem(exercisePlan);
+                    },
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExerciseListItem(ExercisePlan exercisePlan) {
+    return InkWell(
+      onTap: () {
+        if (exercisePlan.exercise != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ExerciseDetailScreen(exercise: exercisePlan.exercise!),
+            ),
+          );
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Exercise icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E8),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getExerciseIcon(exercisePlan.exercise?.name),
+                color: Colors.black87,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Exercise name
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    exercisePlan.exercise?.name ?? 'Bez naziva',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                  if (exercisePlan.sets != null ||
+                      exercisePlan.reps != null ||
+                      exercisePlan.duration != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      _buildExerciseSubtitle(exercisePlan),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // Chevron
+            Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+          ],
         ),
       ),
     );
+  }
+
+  IconData _getExerciseIcon(String? exerciseName) {
+    if (exerciseName == null) return Icons.fitness_center;
+
+    final name = exerciseName.toLowerCase();
+    if (name.contains('zgib') || name.contains('pull')) {
+      return Icons.accessibility_new;
+    } else if (name.contains('vesla') || name.contains('row')) {
+      return Icons.rowing;
+    } else if (name.contains('bicep') || name.contains('curl')) {
+      return Icons.fitness_center;
+    } else if (name.contains('preacher')) {
+      return Icons.self_improvement;
+    } else if (name.contains('dead') || name.contains('mrtv')) {
+      return Icons.align_vertical_bottom;
+    } else if (name.contains('squat') || name.contains('čučanj')) {
+      return Icons.airline_seat_recline_normal;
+    } else if (name.contains('bench') || name.contains('klupa')) {
+      return Icons.airline_seat_flat;
+    } else if (name.contains('chest') || name.contains('prsa')) {
+      return Icons.favorite;
+    } else if (name.contains('shoulder') || name.contains('rame')) {
+      return Icons.man;
+    } else {
+      return Icons.fitness_center;
+    }
+  }
+
+  String _buildExerciseSubtitle(ExercisePlan plan) {
+    final parts = <String>[];
+    if (plan.sets != null) parts.add('${plan.sets}x setova');
+    if (plan.reps != null) parts.add('${plan.reps} ponavljanja');
+    if (plan.duration != null) parts.add('${plan.duration} min');
+    return parts.join(' • ');
   }
 }

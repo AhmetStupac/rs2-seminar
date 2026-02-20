@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
+import 'package:personaltrainer_mobile/screens/forgot_password_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -119,16 +120,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Personal Trainer',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Sign in to continue',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 48),
 
@@ -200,9 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text(
                               'Login',
@@ -218,9 +217,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Forgot password
                   TextButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Forgot password feature coming soon'),
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen(),
                         ),
                       );
                     },
@@ -269,9 +268,7 @@ class HomeScreen extends StatelessWidget {
             onPressed: () {
               AuthProvider.logout();
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const LoginScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
               );
             },
           ),
@@ -292,22 +289,16 @@ class HomeScreen extends StatelessWidget {
             const Text(
               'Welcome!',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'User ID: ${AuthProvider.userId ?? "Unknown"}',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 48),
-            
+
             // Search Personal Trainers Card
             Card(
               elevation: 4,
@@ -344,10 +335,7 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         'Find and connect with professional trainers',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                     ],
                   ),
