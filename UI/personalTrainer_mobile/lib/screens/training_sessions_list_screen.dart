@@ -3,8 +3,10 @@ import 'package:intl/intl.dart';
 import 'package:personaltrainer_mobile/models/training_session.dart';
 import 'package:personaltrainer_mobile/providers/training_session_provider.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/messages_provider.dart';
 import 'package:personaltrainer_mobile/screens/training_session_booking_screen.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class TrainingSessionsListScreen extends StatefulWidget {
   const TrainingSessionsListScreen({super.key});
@@ -17,14 +19,24 @@ class TrainingSessionsListScreen extends StatefulWidget {
 class _TrainingSessionsListScreenState
     extends State<TrainingSessionsListScreen> {
   final _trainingSessionProvider = TrainingSessionProvider();
+  final _messagesProvider = MessagesProvider();
 
   List<TrainingSession> _sessions = [];
   bool _isLoading = false;
   String? _error;
+  bool _isLocaleInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeLocale();
+  }
+
+  Future<void> _initializeLocale() async {
+    await initializeDateFormatting('bs', null);
+    setState(() {
+      _isLocaleInitialized = true;
+    });
     _loadTrainingSessions();
   }
 
@@ -86,22 +98,57 @@ class _TrainingSessionsListScreenState
 
     if (confirmed != true) return;
 
+    setState(() => _isLoading = true);
+
     try {
       await _trainingSessionProvider.cancel(
         session.id!,
         TrainingSessionCancelRequest(cancellationReason: 'Cancelled by client'),
       );
 
+      // Send cancellation notification message to the trainer
+      bool messageSent = false;
+      if (session.personalTrainerId != null &&
+          session.scheduledDateTime != null) {
+        try {
+          final trainerId = session.personalTrainerId.toString();
+          final dateTime = DateFormat(
+            'dd.MM.yyyy HH:mm',
+          ).format(session.scheduledDateTime!);
+          final cancellationMessage =
+              'Trening sesija za $dateTime je otkazana od strane klijenta.';
+
+          // Connect to messaging hub and send message
+          await _messagesProvider.connect(trainerId);
+          await _messagesProvider.sendMessage(cancellationMessage);
+          await _messagesProvider.disconnect();
+
+          messageSent = true;
+          print('✅ Cancellation notification sent to trainer');
+        } catch (e) {
+          print('⚠️ Failed to send cancellation notification: $e');
+          // Don't show error to user, as cancellation was successful
+        }
+      }
+
+      setState(() => _isLoading = false);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Training session cancelled successfully'),
+          SnackBar(
+            content: Text(
+              messageSent
+                  ? 'Trening sesija otkazana. Trener je obaviješten.'
+                  : 'Training session cancelled successfully',
+            ),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
           ),
         );
         _loadTrainingSessions();
       }
     } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -124,6 +171,12 @@ class _TrainingSessionsListScreenState
         ),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _messagesProvider.dispose();
+    super.dispose();
   }
 
   @override
@@ -177,6 +230,12 @@ class _TrainingSessionsListScreenState
   }
 
   Widget _buildBody() {
+    if (!_isLocaleInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFE8B44A)),
+      );
+    }
+
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFFE8B44A)),
@@ -524,13 +583,18 @@ class _TrainingSessionsListScreenState
   }
 
   String _getStatusText(TrainingSession session) {
+    // Check cancelled status first, regardless of statusDisplay from backend
+    if (session.isCancelled) {
+      return 'Otkazan';
+    }
+
+    // Use backend statusDisplay if available
     if (session.statusDisplay != null && session.statusDisplay!.isNotEmpty) {
       return session.statusDisplay!;
     }
 
-    if (session.isCancelled) {
-      return 'Otkazan';
-    } else if (session.isCompleted) {
+    // Fallback to local status determination
+    if (session.isCompleted) {
       return 'Završen';
     } else if (session.isConfirmed) {
       return 'Potvrđen';

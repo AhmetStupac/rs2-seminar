@@ -59,7 +59,7 @@ class TrainingSession {
   bool get isPending => status == 0;
   bool get isConfirmed => status == 1;
   bool get isCompleted => status == 2;
-  bool get isCancelled => status == 3;
+  bool get isCancelled => status == 3 || cancelledAt != null;
   bool get isNoShow => status == 4;
 }
 

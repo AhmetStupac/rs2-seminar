@@ -59,9 +59,6 @@ namespace eCommerce.Services
             if (search.Status.HasValue)
                 query = query.Where(ts => ts.Status == (TrainingSessionStatus)search.Status);
 
-            if (!search.IncludeCancelled.GetValueOrDefault())
-                query = query.Where(ts => ts.Status != TrainingSessionStatus.Cancelled);
-
             return query.OrderBy(ts => ts.ScheduledDateTime);
         }
 
