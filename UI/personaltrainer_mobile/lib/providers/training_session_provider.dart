@@ -17,7 +17,7 @@ class TrainingSessionProvider extends BaseProvider<TrainingSession> {
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    var response = await http.put(uri, headers: headers);
+    var response = await BaseProvider.client.put(uri, headers: headers);
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -37,7 +37,11 @@ class TrainingSessionProvider extends BaseProvider<TrainingSession> {
     var headers = createHeaders();
 
     var jsonRequest = jsonEncode(request.toJson());
-    var response = await http.put(uri, headers: headers, body: jsonRequest);
+    var response = await BaseProvider.client.put(
+      uri,
+      headers: headers,
+      body: jsonRequest,
+    );
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -58,7 +62,7 @@ class TrainingSessionProvider extends BaseProvider<TrainingSession> {
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    var response = await http.get(uri, headers: headers);
+    var response = await BaseProvider.client.get(uri, headers: headers);
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body) as List;
@@ -79,7 +83,7 @@ class TrainingSessionProvider extends BaseProvider<TrainingSession> {
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    var response = await http.get(uri, headers: headers);
+    var response = await BaseProvider.client.get(uri, headers: headers);
 
     if (isValidResponse(response)) {
       return jsonDecode(response.body) as bool;

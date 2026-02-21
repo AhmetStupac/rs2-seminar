@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/training_session.dart';
 import 'package:personaltrainer_mobile/providers/training_session_provider.dart';
@@ -26,10 +27,19 @@ class _TrainingSessionBookingScreenState
   bool _isBooking = false;
   List<DateTime> _availableSlots = [];
   bool _isLoadingSlots = false;
+  bool _isLocaleInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeLocale();
+  }
+
+  Future<void> _initializeLocale() async {
+    await initializeDateFormatting('bs', null);
+    setState(() {
+      _isLocaleInitialized = true;
+    });
     _loadAvailableSlots();
   }
 
@@ -180,97 +190,105 @@ class _TrainingSessionBookingScreenState
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Date display
-              Center(
-                child: Text(
-                  DateFormat('EEEE, dd MMMM', 'bs').format(_selectedDate),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Calendar grid
-              _buildCalendar(),
-              const SizedBox(height: 32),
-
-              // Day labels
-              _buildDayLabels(),
-              const SizedBox(height: 24),
-
-              // Time slot selector
-              _buildTimeSlotSelector(),
-              const SizedBox(height: 16),
-
-              // Availability status
-              if (_isCheckingAvailability)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(color: Color(0xFFE8B44A)),
-                  ),
-                )
-              else if (_isAvailable != null)
-                Center(
-                  child: Text(
-                    _isAvailable! ? 'Slobodan termin' : 'Termin nije dostupan',
-                    style: TextStyle(
-                      color: _isAvailable!
-                          ? const Color(0xFF4CAF50)
-                          : Colors.red,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 24),
-
-              // Book button
-              if (_isAvailable == true)
-                Center(
-                  child: ElevatedButton(
-                    onPressed: _isBooking ? null : _bookTrainingSession,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE8B44A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 48,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+      body: !_isLocaleInitialized
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFE8B44A)),
+            )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Date display
+                    Center(
+                      child: Text(
+                        DateFormat('EEEE, dd MMMM', 'bs').format(_selectedDate),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                    child: _isBooking
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                    const SizedBox(height: 24),
+
+                    // Calendar grid
+                    _buildCalendar(),
+                    const SizedBox(height: 32),
+
+                    // Day labels
+                    _buildDayLabels(),
+                    const SizedBox(height: 24),
+
+                    // Time slot selector
+                    _buildTimeSlotSelector(),
+                    const SizedBox(height: 16),
+
+                    // Availability status
+                    if (_isCheckingAvailability)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFE8B44A),
+                          ),
+                        ),
+                      )
+                    else if (_isAvailable != null)
+                      Center(
+                        child: Text(
+                          _isAvailable!
+                              ? 'Slobodan termin'
+                              : 'Termin nije dostupan',
+                          style: TextStyle(
+                            color: _isAvailable!
+                                ? const Color(0xFF4CAF50)
+                                : Colors.red,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+
+                    // Book button
+                    if (_isAvailable == true)
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _isBooking ? null : _bookTrainingSession,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE8B44A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 48,
+                              vertical: 16,
                             ),
-                          )
-                        : const Text(
-                            'Zakaži termin',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                  ),
+                          child: _isBooking
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Zakaži termin',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-        ),
-      ),
+              ),
+            ),
     );
   }
 
