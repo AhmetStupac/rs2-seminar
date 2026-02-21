@@ -66,7 +66,11 @@ class UserProvider extends BaseProvider<User> {
     print("🔐 Attempting login to: $url");
     print("🔐 Username: $username");
 
-    var response = await BaseProvider.client.post(uri, headers: headers, body: body);
+    var response = await BaseProvider.client.post(
+      uri,
+      headers: headers,
+      body: body,
+    );
 
     print("🔐 Login response status: ${response.statusCode}");
     print("🔐 Login response body: ${response.body}");
@@ -87,6 +91,29 @@ class UserProvider extends BaseProvider<User> {
     } else {
       throw Exception("Login failed: ${response.body}");
     }
+  }
+
+  Future<User> register({
+    required String firstName,
+    required String lastName,
+    required String username,
+    required String email,
+    required String phoneNumber,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    var request = {
+      "firstName": firstName,
+      "lastName": lastName,
+      "username": username,
+      "email": email,
+      "phoneNumber": phoneNumber,
+      "password": password,
+      "passwordConfirmation": passwordConfirmation,
+      "isActive": true,
+    };
+
+    return await insert(request);
   }
 
   Future<User?> getCurrentUser() async {
@@ -127,7 +154,11 @@ class UserProvider extends BaseProvider<User> {
 
       print("🔄 Updating user: $userId");
       print("🔄 URL: $url");
-      var response = await BaseProvider.client.put(uri, headers: headers, body: body);
+      var response = await BaseProvider.client.put(
+        uri,
+        headers: headers,
+        body: body,
+      );
       print("🔄 Update user response status: ${response.statusCode}");
       print("🔄 Update user response body: ${response.body}");
 
@@ -170,7 +201,11 @@ class UserProvider extends BaseProvider<User> {
       });
 
       print("🔑 Changing password for user: $userId");
-      var response = await BaseProvider.client.put(uri, headers: headers, body: body);
+      var response = await BaseProvider.client.put(
+        uri,
+        headers: headers,
+        body: body,
+      );
       print("🔑 Change password response status: ${response.statusCode}");
 
       if (response.statusCode == 200) {
@@ -199,7 +234,11 @@ class UserProvider extends BaseProvider<User> {
       print("📧 URL: $url");
       print("📧 Request body: $body");
 
-      var response = await BaseProvider.client.post(uri, headers: headers, body: body);
+      var response = await BaseProvider.client.post(
+        uri,
+        headers: headers,
+        body: body,
+      );
 
       print("📧 Forgot password response status: ${response.statusCode}");
       print("📧 Forgot password response body: ${response.body}");
@@ -246,7 +285,11 @@ class UserProvider extends BaseProvider<User> {
       });
 
       print("🔑 Resetting password with token");
-      var response = await BaseProvider.client.post(uri, headers: headers, body: body);
+      var response = await BaseProvider.client.post(
+        uri,
+        headers: headers,
+        body: body,
+      );
       print("🔑 Reset password response status: ${response.statusCode}");
 
       if (response.statusCode == 200) {
@@ -283,7 +326,11 @@ class UserProvider extends BaseProvider<User> {
 
       print("🔑 Resetting password with verification code for: $email");
       print("🔑 URL: $url");
-      var response = await BaseProvider.client.post(uri, headers: headers, body: body);
+      var response = await BaseProvider.client.post(
+        uri,
+        headers: headers,
+        body: body,
+      );
       print("🔑 Reset password response status: ${response.statusCode}");
       print("🔑 Reset password response body: ${response.body}");
 

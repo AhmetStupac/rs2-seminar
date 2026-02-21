@@ -41,7 +41,7 @@ namespace eCommerce.WebAPI.Controllers
                 
             return user;
         }
-
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<UserResponse>> Create(UserUpsertRequest request)
         {

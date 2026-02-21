@@ -6,10 +6,12 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,21 +22,50 @@ namespace eCommerce.Services
     {
 
         private readonly IValidator<TrainingPlanUpsertRequest> _validator;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TrainingPlanService(IB210033DbContext context, IMapper mapper, IValidator<TrainingPlanUpsertRequest> validator)
+        public TrainingPlanService(
+            IB210033DbContext context,
+            IMapper mapper,
+            IValidator<TrainingPlanUpsertRequest> validator,
+            IHttpContextAccessor httpContextAccessor)
             : base(context, mapper)
         {
             _validator = validator;
+            _httpContextAccessor = httpContextAccessor;
         }
 
 
         protected override IQueryable<Database.TrainingPlan> ApplyFilter(IQueryable<Database.TrainingPlan> query, NameSearchObject search)
         {
-            var result = query
+            // Keep the result as IQueryable<Database.TrainingPlan> to avoid type mismatch
+            IQueryable<Database.TrainingPlan> result = query
                 .Include(t => t.PersonalTrainer)
                     .ThenInclude(pt => pt.User)
                 .Include(t => t.ExercisePlans)
                     .ThenInclude(ep => ep.Exercise);
+
+            // Filter by authenticated user
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            {
+                // Check if user is a personal trainer
+                var personalTrainerId = _context.PersonalTrainers
+                    .Where(pt => pt.UserId == userId)
+                    .Select(pt => pt.Id)
+                    .FirstOrDefault();
+
+                if (personalTrainerId > 0)
+                {
+                    // User is a personal trainer - show only their created training plans
+                    result = result.Where(t => t.PersonalTrainerId == personalTrainerId);
+                }
+                else
+                {
+                    // User is a regular user - show only training plans assigned to them
+                    result = result.Where(t => t.UserId == userId);
+                }
+            }
 
             return result;
         }
@@ -86,9 +117,8 @@ namespace eCommerce.Services
 
 
 
-        protected override Task BeforeUpdate(TrainingPlan entity, TrainingPlanUpsertRequest insertRequest)
+        protected override async Task BeforeUpdate(TrainingPlan entity, TrainingPlanUpsertRequest insertRequest)
         {
-
             var result = _validator.Validate(insertRequest);
 
             if (!result.IsValid)
@@ -97,7 +127,96 @@ namespace eCommerce.Services
                 throw new ArgumentException($"Validation failed: {errors}");
             }
 
-            return Task.CompletedTask;
+            // Get current user ID from claims
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated");
+            }
+
+            // Get personal trainer ID for this user
+            var personalTrainer = await _context.PersonalTrainers
+                .FirstOrDefaultAsync(pt => pt.UserId == userId);
+
+            if (personalTrainer == null)
+            {
+                throw new UnauthorizedAccessException("User is not a personal trainer");
+            }
+
+            // Verify the training plan belongs to this personal trainer
+            if (entity.PersonalTrainerId != personalTrainer.Id)
+            {
+                throw new UnauthorizedAccessException("You can only update your own training plans");
+            }
+        }
+
+        public override async Task<TrainingPlanResponse?> GetByIdAsync(int id)
+        {
+            // Get the entity with includes
+            var entity = await _context.TrainingPlans
+                .Include(t => t.PersonalTrainer)
+                    .ThenInclude(pt => pt.User)
+                .Include(t => t.ExercisePlans)
+                    .ThenInclude(ep => ep.Exercise)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (entity == null)
+                return null;
+
+            // Get current user ID from claims
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            {
+                // Check if user is a personal trainer
+                var personalTrainerId = _context.PersonalTrainers
+                    .Where(pt => pt.UserId == userId)
+                    .Select(pt => pt.Id)
+                    .FirstOrDefault();
+
+                if (personalTrainerId > 0)
+                {
+                    // User is a personal trainer - verify they own this training plan
+                    if (entity.PersonalTrainerId != personalTrainerId)
+                    {
+                        throw new UnauthorizedAccessException("You can only view your own training plans");
+                    }
+                }
+                else
+                {
+                    // User is a regular user - verify the plan is assigned to them
+                    if (entity.UserId != userId)
+                    {
+                        throw new UnauthorizedAccessException("You can only view training plans assigned to you");
+                    }
+                }
+            }
+
+            return MapToResponse(entity);
+        }
+
+        protected override async Task BeforeDelete(TrainingPlan entity)
+        {
+            // Get current user ID from claims
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated");
+            }
+
+            // Get personal trainer ID for this user
+            var personalTrainer = await _context.PersonalTrainers
+                .FirstOrDefaultAsync(pt => pt.UserId == userId);
+
+            if (personalTrainer == null)
+            {
+                throw new UnauthorizedAccessException("User is not a personal trainer");
+            }
+
+            // Verify the training plan belongs to this personal trainer
+            if (entity.PersonalTrainerId != personalTrainer.Id)
+            {
+                throw new UnauthorizedAccessException("You can only delete your own training plans");
+            }
         }
     }
 }

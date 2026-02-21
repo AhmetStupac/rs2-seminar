@@ -42,6 +42,7 @@ dependencies:
   signalr_netcore: ^1.4.4
   go_router: ^14.6.2
   app_links: ^6.3.2
+  intl: ^0.20.0
 
 dev_dependencies:
   flutter_test:

@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_rating_provider.dart';
+import 'package:personaltrainer_mobile/screens/training_session_booking_screen.dart';
 
 class PersonalTrainerDetailScreen extends StatefulWidget {
   final PersonalTrainer trainer;
 
-  const PersonalTrainerDetailScreen({
-    super.key,
-    required this.trainer,
-  });
+  const PersonalTrainerDetailScreen({super.key, required this.trainer});
 
   @override
   State<PersonalTrainerDetailScreen> createState() =>
@@ -20,7 +18,7 @@ class _PersonalTrainerDetailScreenState
     extends State<PersonalTrainerDetailScreen> {
   final _ratingProvider = PersonalTrainerRatingProvider();
   final _commentController = TextEditingController();
-  
+
   double _userRating = 0.0;
   PersonalTrainerRatingResponse? _myRating;
   PersonalTrainerRatingStats? _ratingStats;
@@ -48,12 +46,16 @@ class _PersonalTrainerDetailScreenState
     try {
       // Load user's own rating
       final myRating = await _ratingProvider.getMyRating(widget.trainer.id!);
-      
+
       // Load rating statistics
-      final stats = await _ratingProvider.getTrainerRatingStats(widget.trainer.id!);
-      
+      final stats = await _ratingProvider.getTrainerRatingStats(
+        widget.trainer.id!,
+      );
+
       // Load all ratings
-      final allRatings = await _ratingProvider.getRatingsForTrainer(widget.trainer.id!);
+      final allRatings = await _ratingProvider.getRatingsForTrainer(
+        widget.trainer.id!,
+      );
 
       setState(() {
         _myRating = myRating;
@@ -78,7 +80,9 @@ class _PersonalTrainerDetailScreenState
       final request = PersonalTrainerRatingUpsertRequest(
         personalTrainerId: widget.trainer.id!,
         rating: _userRating.toInt(),
-        comment: _commentController.text.trim().isEmpty ? null : _commentController.text.trim(),
+        comment: _commentController.text.trim().isEmpty
+            ? null
+            : _commentController.text.trim(),
       );
 
       if (_myRating == null) {
@@ -108,7 +112,6 @@ class _PersonalTrainerDetailScreenState
       // Reload all rating data
       await _loadRatingData();
       setState(() => _showCommentField = false);
-      
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +132,9 @@ class _PersonalTrainerDetailScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Obriši ocjenu'),
-        content: const Text('Da li ste sigurni da želite obrisati vašu ocjenu?'),
+        content: const Text(
+          'Da li ste sigurni da želite obrisati vašu ocjenu?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -150,17 +155,17 @@ class _PersonalTrainerDetailScreenState
 
     try {
       final success = await _ratingProvider.deleteRating(_myRating!.id!);
-      
+
       if (success) {
         setState(() {
           _userRating = 0.0;
           _commentController.clear();
           _showCommentField = false;
         });
-        
+
         // Reload all rating data
         await _loadRatingData();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -259,7 +264,8 @@ class _PersonalTrainerDetailScreenState
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.trainer.certifications ?? 'Samo jako, nema lagano',
+                            widget.trainer.certifications ??
+                                'Samo jako, nema lagano',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 14,
@@ -316,10 +322,15 @@ class _PersonalTrainerDetailScreenState
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.star, color: Colors.amber, size: 32),
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                        size: 32,
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        _ratingStats!.averageRating.toStringAsFixed(1),
+                                        _ratingStats!.averageRating
+                                            .toStringAsFixed(1),
                                         style: const TextStyle(
                                           fontSize: 28,
                                           fontWeight: FontWeight.bold,
@@ -361,14 +372,18 @@ class _PersonalTrainerDetailScreenState
                               ),
                               if (_myRating != null && !_isLoadingRating)
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red, size: 20),
+                                  icon: Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
                                   onPressed: _deleteRating,
                                   tooltip: 'Obriši ocjenu',
                                 ),
                             ],
                           ),
                           const SizedBox(height: 16),
-                          
+
                           if (_isLoadingRating)
                             const CircularProgressIndicator()
                           else
@@ -394,7 +409,7 @@ class _PersonalTrainerDetailScreenState
                                     );
                                   }),
                                 ),
-                                
+
                                 if (_userRating > 0) ...[
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
@@ -406,18 +421,23 @@ class _PersonalTrainerDetailScreenState
                                       ),
                                     ),
                                   ),
-                                  
+
                                   if (_showCommentField) ...[
                                     const SizedBox(height: 16),
                                     TextField(
                                       controller: _commentController,
                                       maxLines: 3,
                                       decoration: InputDecoration(
-                                        hintText: 'Dodajte komentar (opcionalno)',
+                                        hintText:
+                                            'Dodajte komentar (opcionalno)',
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
-                                        contentPadding: const EdgeInsets.all(12),
+                                        contentPadding: const EdgeInsets.all(
+                                          12,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 12),
@@ -443,7 +463,11 @@ class _PersonalTrainerDetailScreenState
                                             backgroundColor: Colors.blue,
                                             foregroundColor: Colors.white,
                                           ),
-                                          child: Text(_myRating == null ? 'Dodaj ocjenu' : 'Ažuriraj'),
+                                          child: Text(
+                                            _myRating == null
+                                                ? 'Dodaj ocjenu'
+                                                : 'Ažuriraj',
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -472,12 +496,51 @@ class _PersonalTrainerDetailScreenState
                               ),
                             ),
                             const SizedBox(height: 16),
-                            ..._allRatings.map((rating) => _buildRatingCard(rating)),
+                            ..._allRatings.map(
+                              (rating) => _buildRatingCard(rating),
+                            ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
                     ],
+
+                    // Book Training Session Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    TrainingSessionBookingScreen(
+                                      trainer: widget.trainer,
+                                    ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.calendar_today, size: 20),
+                          label: const Text(
+                            'Zakaži trening',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE8B44A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
 
                     const SizedBox(height: 40),
                   ],
@@ -526,19 +589,13 @@ class _PersonalTrainerDetailScreenState
               const SizedBox(height: 8),
               Text(
                 rating.comment!,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
               ),
             ],
             const SizedBox(height: 4),
             Text(
               _formatDate(rating.createdAt),
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -550,7 +607,7 @@ class _PersonalTrainerDetailScreenState
     if (date == null) return '';
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
         return '${difference.inMinutes}m ago';
@@ -573,19 +630,13 @@ class _PersonalTrainerDetailScreenState
             width: 100,
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
         ],

@@ -3,6 +3,7 @@ import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
 import 'package:personaltrainer_mobile/screens/forgot_password_screen.dart';
+import 'package:personaltrainer_mobile/screens/register_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -234,9 +235,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text("Don't have an account? "),
                       TextButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Registration feature coming soon'),
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
                             ),
                           );
                         },

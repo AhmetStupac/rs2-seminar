@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
+import 'package:personaltrainer_mobile/screens/nutrition_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
+import 'package:personaltrainer_mobile/screens/training_sessions_list_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/main.dart';
 
@@ -91,16 +93,36 @@ class MobileNavBar extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
+            icon: Icons.restaurant_menu,
+            title: 'Planovi ishrane',
+            routeName: 'nutrition_plan',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != 'nutrition_plan') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NutritionPlanScreen(),
+                  ),
+                );
+              }
+            },
+          ),
+          _buildMenuItem(
+            context,
             icon: Icons.calendar_today,
             title: 'Moji treninzi',
             routeName: 'trainings',
             onTap: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Moji treninzi - uskoro dostupno'),
-                ),
-              );
+              if (currentRoute != 'trainings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TrainingSessionsListScreen(),
+                  ),
+                );
+              }
             },
           ),
           _buildMenuItem(
@@ -134,21 +156,20 @@ class MobileNavBar extends StatelessWidget {
             title: 'Odjava',
             routeName: 'logout',
             onTap: () async {
-              Navigator.pop(context);
               final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('Odjava'),
                   content: const Text(
                     'Da li ste sigurni da želite da se odjavite?',
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(false),
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
                       child: const Text('Odustani'),
                     ),
                     ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -158,16 +179,13 @@ class MobileNavBar extends StatelessWidget {
                   ],
                 ),
               );
-              if (confirmed == true) {
+              if (confirmed == true && context.mounted) {
                 AuthProvider.logout();
-                if (context.mounted) {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                    (route) => false,
-                  );
-                }
+                Navigator.of(context).pop(); // Close drawer
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
               }
             },
           ),

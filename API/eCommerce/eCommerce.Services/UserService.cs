@@ -103,7 +103,8 @@ namespace eCommerce.Services
                 PhoneNumber = request.PhoneNumber,
                 IsActive = request.IsActive,
                 ProfileImageId = request.ProfileImageId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsDeleted = false  // Explicitly set to false to ensure query filters don't exclude it
             };
 
             // Handle password if provided

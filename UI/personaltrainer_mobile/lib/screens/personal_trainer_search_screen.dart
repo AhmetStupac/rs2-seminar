@@ -51,10 +51,10 @@ class _PersonalTrainerSearchScreenState
         _trainers = result.result;
         _filteredTrainers = result.result;
       });
-      
+
       // Load ratings for all trainers
       await _loadRatings();
-      
+
       setState(() {
         _isLoading = false;
       });
@@ -68,11 +68,13 @@ class _PersonalTrainerSearchScreenState
 
   Future<void> _loadRatings() async {
     final Map<int, PersonalTrainerRatingStats> ratingsMap = {};
-    
+
     for (var trainer in _trainers) {
       if (trainer.id != null) {
         try {
-          final stats = await _ratingProvider.getTrainerRatingStats(trainer.id!);
+          final stats = await _ratingProvider.getTrainerRatingStats(
+            trainer.id!,
+          );
           ratingsMap[trainer.id!] = stats;
         } catch (e) {
           print('Error loading rating for trainer ${trainer.id}: $e');
@@ -80,7 +82,7 @@ class _PersonalTrainerSearchScreenState
         }
       }
     }
-    
+
     setState(() {
       _ratingsMap = ratingsMap;
     });
@@ -96,9 +98,10 @@ class _PersonalTrainerSearchScreenState
         final matchesName = query.isEmpty || name.contains(query);
 
         // Filter by sport
-        final matchesSport = _selectedSport == null || 
-                             _selectedSport == 'Svi sportovi' ||
-                             trainer.sport == _selectedSport;
+        final matchesSport =
+            _selectedSport == null ||
+            _selectedSport == 'Svi sportovi' ||
+            trainer.sport == _selectedSport;
 
         return matchesName && matchesSport;
       }).toList();
@@ -271,9 +274,7 @@ class _PersonalTrainerSearchScreenState
           if (_selectedSport != null) const SizedBox(height: 12),
 
           // Results list
-          Expanded(
-            child: _buildContent(),
-          ),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
@@ -281,9 +282,7 @@ class _PersonalTrainerSearchScreenState
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
@@ -291,11 +290,7 @@ class _PersonalTrainerSearchScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
@@ -317,20 +312,13 @@ class _PersonalTrainerSearchScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               _searchController.text.isEmpty
                   ? 'Nema dostupnih trenera'
                   : 'Nema rezultata za "${_searchController.text}"',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -372,88 +360,91 @@ class _PersonalTrainerSearchScreenState
           ],
         ),
         child: Row(
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: Colors.grey[300],
-            child: Text(
-              _getInitials(trainer.userFirstName ?? ''),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Name
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trainer.userFirstName ?? 'Unknown',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                if (trainer.sport != null && trainer.sport!.isNotEmpty)
-                  Container(
-                    margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      trainer.sport!,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                if (trainer.yearsOfExperience != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${trainer.yearsOfExperience} godina iskustva',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Rating stars
-          Row(
-            children: [
-              Text(
-                _ratingsMap[trainer.id]?.averageRating.toStringAsFixed(1) ?? '0.0',
+          children: [
+            // Avatar
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.grey[300],
+              child: Text(
+                _getInitials(trainer.userFirstName ?? ''),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
               ),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.star,
-                color: Colors.amber,
-                size: 20,
+            ),
+            const SizedBox(width: 12),
+
+            // Name
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    trainer.userFirstName ?? 'Unknown',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  if (trainer.sport != null && trainer.sport!.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        trainer.sport!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  if (trainer.yearsOfExperience != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '${trainer.yearsOfExperience} godina iskustva',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+
+            // Rating stars
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      _ratingsMap[trainer.id]?.averageRating.toStringAsFixed(
+                            1,
+                          ) ??
+                          '0.0',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
