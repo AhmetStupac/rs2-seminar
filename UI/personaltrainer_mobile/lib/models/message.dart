@@ -88,7 +88,19 @@ class OnlineUser {
   @JsonKey(name: 'connectionId')
   String? connectionId;
 
-  OnlineUser({required this.userId, this.email, this.connectionId});
+  @JsonKey(name: 'firstName')
+  String? firstName;
+
+  @JsonKey(name: 'lastName')
+  String? lastName;
+
+  OnlineUser({
+    required this.userId,
+    this.email,
+    this.connectionId,
+    this.firstName,
+    this.lastName,
+  });
 
   factory OnlineUser.fromJson(Map<String, dynamic> json) {
     // Handle both PascalCase (C# backend) and camelCase
@@ -97,7 +109,25 @@ class OnlineUser {
       email: json['email']?.toString() ?? json['Email']?.toString(),
       connectionId:
           json['connectionId']?.toString() ?? json['ConnectionId']?.toString(),
+      firstName:
+          json['firstName']?.toString() ??
+          json['FirstName']?.toString() ??
+          json['firstname']?.toString(),
+      lastName:
+          json['lastName']?.toString() ??
+          json['LastName']?.toString() ??
+          json['lastname']?.toString(),
     );
+  }
+
+  String get displayName {
+    if (firstName != null && firstName!.isNotEmpty) {
+      if (lastName != null && lastName!.isNotEmpty) {
+        return '$firstName $lastName';
+      }
+      return firstName!;
+    }
+    return email ?? 'User $userId';
   }
 
   Map<String, dynamic> toJson() => _$OnlineUserToJson(this);

@@ -30,6 +30,7 @@ namespace eCommerce.Services.Database
         public DbSet<Gym> Gyms { get; set; }
         public DbSet<TrainingSession> TrainingSessions { get; set; }
         public DbSet<PersonalTrainerRating> PersonalTrainerRatings { get; set; }
+        public DbSet<MonthlyTrainingStatistics> MonthlyTrainingStatistics { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -245,6 +246,18 @@ namespace eCommerce.Services.Database
             modelBuilder.Entity<UserRole>()
                 .HasIndex(ur => new { ur.UserId, ur.RoleId })
                 .IsUnique();
+
+            // Configure MonthlyTrainingStatistics - ensure unique constraint per user/year/month
+            modelBuilder.Entity<MonthlyTrainingStatistics>()
+                .HasIndex(mts => new { mts.UserId, mts.Year, mts.Month })
+                .IsUnique();
+
+            modelBuilder.Entity<MonthlyTrainingStatistics>()
+                .HasOne(mts => mts.User)
+                .WithMany()
+                .HasForeignKey(mts => mts.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
 
             modelBuilder.Entity<Role>().HasData(
                new Role { Id = 1, Name = "Administrator", Description = "Administrator", IsActive = true, CreatedAt = DateTime.UtcNow },

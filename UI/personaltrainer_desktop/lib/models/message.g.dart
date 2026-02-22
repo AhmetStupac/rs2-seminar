@@ -35,6 +35,7 @@ Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
 OnlineUser _$OnlineUserFromJson(Map<String, dynamic> json) => OnlineUser(
   userId: json['userId'] as String? ?? '',
   email: json['email'] as String?,
+  firstName: json['firstName'] as String?,
   connectionId: json['connectionId'] as String?,
 );
 
@@ -42,5 +43,6 @@ Map<String, dynamic> _$OnlineUserToJson(OnlineUser instance) =>
     <String, dynamic>{
       'userId': instance.userId,
       'email': instance.email,
+      'firstName': instance.firstName,
       'connectionId': instance.connectionId,
     };

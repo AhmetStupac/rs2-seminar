@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/nutrition_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_sessions_list_screen.dart';
+import 'package:personaltrainer_mobile/screens/training_statistics_screen.dart';
+import 'package:personaltrainer_mobile/screens/online_users_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
+import 'package:personaltrainer_mobile/providers/messages_provider.dart';
 import 'package:personaltrainer_mobile/main.dart';
 
 class MobileNavBar extends StatelessWidget {
@@ -127,6 +132,40 @@ class MobileNavBar extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
+            icon: Icons.bar_chart,
+            title: 'Statistics',
+            routeName: 'statistics',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != 'statistics') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TrainingStatisticsScreen(),
+                  ),
+                );
+              }
+            },
+          ),
+          _buildMenuItem(
+            context,
+            icon: Icons.chat,
+            title: 'Chat',
+            routeName: 'chat',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != 'chat') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OnlineUsersScreen(),
+                  ),
+                );
+              }
+            },
+          ),
+          _buildMenuItem(
+            context,
             icon: Icons.person,
             title: 'Profil',
             routeName: 'profile',
@@ -180,6 +219,18 @@ class MobileNavBar extends StatelessWidget {
                 ),
               );
               if (confirmed == true && context.mounted) {
+                // Disconnect from SignalR before logout
+                final signalRProvider = Provider.of<SignalRProvider>(
+                  context,
+                  listen: false,
+                );
+                final messagesProvider = Provider.of<MessagesProvider>(
+                  context,
+                  listen: false,
+                );
+                await signalRProvider.disconnect();
+                await messagesProvider.disconnect();
+
                 AuthProvider.logout();
                 Navigator.of(context).pop(); // Close drawer
                 Navigator.of(context).pushAndRemoveUntil(

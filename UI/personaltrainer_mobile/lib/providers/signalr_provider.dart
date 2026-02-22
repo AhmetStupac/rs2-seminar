@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:personaltrainer_mobile/models/message.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/base_provider.dart';
 import 'package:http/http.dart' as http;
 
 class SignalRProvider with ChangeNotifier {
@@ -18,6 +19,13 @@ class SignalRProvider with ChangeNotifier {
   bool get isConnected => _isConnected;
   String? get error => _error;
 
+  // Get base URL for SignalR hubs
+  // Use dedicated HTTP port for SignalR to avoid SSL cert issues
+  String get _hubBaseUrl {
+    // Use HTTP on port 7094 specifically for SignalR hubs
+    return "http://10.0.2.2:7094";
+  }
+
   Future<void> connect() async {
     try {
       final token = AuthProvider.token;
@@ -30,7 +38,7 @@ class SignalRProvider with ChangeNotifier {
       //Configure the SignalR connection with JWT Bearer token
       _hubConnection = HubConnectionBuilder()
           .withUrl(
-            "https://localhost:7093/hubs/presence",
+            "$_hubBaseUrl/hubs/presence",
             options: HttpConnectionOptions(
               accessTokenFactory: () async => token,
               skipNegotiation: true,
@@ -50,6 +58,22 @@ class SignalRProvider with ChangeNotifier {
 
       print("✅ SignalR Connected successfully");
       print("🔍 Connection ID: ${_hubConnection!.connectionId}");
+      print("🔍 Connection State: ${_hubConnection!.state}");
+
+      // Wait for backend to send initial OnlineUsers list
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      print("⏰ Waited for initial online users list");
+      print("👥 Current online users count: ${_onlineUsers.length}");
+      if (_onlineUsers.isEmpty) {
+        print(
+          "⚠️ No online users received yet - this might be normal if no one else is online",
+        );
+      } else {
+        print(
+          "👥 Online user IDs: ${_onlineUsers.map((u) => u.userId).toList()}",
+        );
+      }
 
       notifyListeners();
     } catch (e) {
@@ -63,8 +87,16 @@ class SignalRProvider with ChangeNotifier {
   void _registerHandlers() {
     print("🔍 DEBUG: Registering SignalR event handlers...");
 
-    // Handle user coming online
-    _hubConnection!.on("UserOnline", (arguments) {
+    // Add onclose handler
+    _hubConnection!.onclose(({error}) {
+      print("🔌 SignalR connection closed: $error");
+      _isConnected = false;
+      _onlineUsers.clear();
+      notifyListeners();
+    });
+
+    // Handle user coming online - try multiple event name variations
+    void handleUserOnline(List<dynamic>? arguments) {
       print("🔍 DEBUG: UserOnline event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
@@ -85,16 +117,23 @@ class SignalRProvider with ChangeNotifier {
               print("👤 User online: ${onlineUser.userId}");
               print("👥 Total online users now: ${_onlineUsers.length}");
               notifyListeners();
+            } else {
+              print("ℹ️ User ${onlineUser.userId} already in online list");
             }
           }
         } catch (e) {
           print("❌ Error parsing UserOnline: $e");
         }
       }
-    });
+    }
 
-    // Handle user going offline
-    _hubConnection!.on("UserOffline", (arguments) {
+    // Register with multiple possible event names
+    _hubConnection!.on("UserOnline", handleUserOnline);
+    _hubConnection!.on("userOnline", handleUserOnline);
+    _hubConnection!.on("useronline", handleUserOnline);
+
+    // Handle user going offline - try multiple event name variations
+    void handleUserOffline(List<dynamic>? arguments) {
       print("🔍 DEBUG: UserOffline event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
@@ -120,7 +159,12 @@ class SignalRProvider with ChangeNotifier {
           print("❌ Error parsing UserOffline: $e");
         }
       }
-    });
+    }
+
+    // Register with multiple possible event names
+    _hubConnection!.on("UserOffline", handleUserOffline);
+    _hubConnection!.on("userOffline", handleUserOffline);
+    _hubConnection!.on("useroffline", handleUserOffline);
 
     // Handle receiving a private message
     _hubConnection!.on("ReceivePrivateMessage", (arguments) {
@@ -138,8 +182,8 @@ class SignalRProvider with ChangeNotifier {
       }
     });
 
-    // Handle initial list of online users
-    _hubConnection!.on("OnlineUsers", (arguments) {
+    // Handle initial list of online users - try multiple event name variations
+    void handleOnlineUsers(List<dynamic>? arguments) {
       print("🔍 DEBUG: OnlineUsers event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
@@ -165,9 +209,18 @@ class SignalRProvider with ChangeNotifier {
         } catch (e) {
           print("❌ Error parsing OnlineUsers: $e");
         }
+      } else {
+        print("⚠️ OnlineUsers called with empty or null arguments");
       }
-    });
-    // Implement message polling if needed
+    }
+
+    // Register with multiple possible event names
+    _hubConnection!.on("OnlineUsers", handleOnlineUsers);
+    _hubConnection!.on("onlineUsers", handleOnlineUsers);
+    _hubConnection!.on("onlineusers", handleOnlineUsers);
+    _hubConnection!.on("GetOnlineUsers", handleOnlineUsers);
+
+    print("✅ All SignalR event handlers registered");
   }
 
   Future<void> sendMessage(String message) async {
@@ -198,7 +251,7 @@ class SignalRProvider with ChangeNotifier {
     }
 
     try {
-      final url = Uri.parse('https://localhost:7093/api/MessageTest/broadcast');
+      final url = Uri.parse('${BaseProvider.baseUrl}MessageTest/broadcast');
 
       final response = await http.post(
         url,
@@ -235,9 +288,7 @@ class SignalRProvider with ChangeNotifier {
     }
 
     try {
-      final url = Uri.parse(
-        'https://localhost:7093/hubs/presence/SendPrivateMessage',
-      );
+      final url = Uri.parse('$_hubBaseUrl/hubs/presence/SendPrivateMessage');
 
       final response = await http.post(
         url,
@@ -276,10 +327,37 @@ class SignalRProvider with ChangeNotifier {
 
   Future<void> refreshOnlineUsers() async {
     if (!_isConnected) {
+      print("⚠️ Cannot refresh - not connected");
       return;
     }
+
+    print("🔄 Manually refreshing online users...");
     print("🔄 Current online users: ${_onlineUsers.length} users online");
     print("🔄 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
+
+    // Try to invoke GetOnlineUsers method if backend supports it
+    try {
+      final result = await _hubConnection!.invoke("GetOnlineUsers");
+      print("📥 GetOnlineUsers result: $result");
+      if (result is List) {
+        _onlineUsers.clear();
+        for (var item in result) {
+          if (item is String) {
+            _onlineUsers.add(OnlineUser(userId: item));
+          } else if (item is Map<String, dynamic>) {
+            _onlineUsers.add(OnlineUser.fromJson(item));
+          } else if (item is int) {
+            _onlineUsers.add(OnlineUser(userId: item.toString()));
+          }
+        }
+        print("✅ Manually fetched ${_onlineUsers.length} online users");
+        notifyListeners();
+      }
+    } catch (e) {
+      print("⚠️ GetOnlineUsers method not available or failed: $e");
+      print("ℹ️ This is normal if backend doesn't support this method");
+    }
+
     notifyListeners();
   }
 

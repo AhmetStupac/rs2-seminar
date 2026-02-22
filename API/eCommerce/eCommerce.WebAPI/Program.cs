@@ -45,6 +45,7 @@ builder.Services.AddTransient<IGymService, GymService>();
 builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPersonalTrainerRatingService, PersonalTrainerRatingService>();
+builder.Services.AddScoped<IMonthlyTrainingStatisticsService, MonthlyTrainingStatisticsService>();
 builder.Services.AddHttpContextAccessor();
 
 
@@ -104,6 +105,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -134,17 +136,28 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("SignalRCors", builder =>
+//    {
+//        builder.WithOrigins("http://localhost:3000",
+//            "http://10.0.2.2:7093") // Your client URL
+//               .AllowAnyHeader()
+//               .AllowAnyMethod()
+//               .AllowCredentials();
+//    });
+//});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("SignalRCors", builder =>
     {
-        builder.WithOrigins("http://localhost:3000") // Your client URL
+        builder.SetIsOriginAllowed(_ => true)  // Allow all origins in dev
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
     });
 });
-
 
 var app = builder.Build();
 
@@ -156,13 +169,20 @@ var app = builder.Build();
 // }
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.Urls.Clear();
+    app.Urls.Add("https://localhost:7093");  // HTTPS for API/Swagger
+    app.Urls.Add("http://localhost:7094");   // HTTP for SignalR
+}
+
+//app.UseHttpsRedirection();
 app.UseCors("SignalRCors");
 
 app.UseAuthentication();

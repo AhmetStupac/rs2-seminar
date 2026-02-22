@@ -171,7 +171,10 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                       leading: CircleAvatar(
                                         backgroundColor: Colors.blue,
                                         child: Text(
-                                          user.email
+                                          user.firstName
+                                                  ?.substring(0, 1)
+                                                  .toUpperCase() ??
+                                              user.email
                                                   ?.substring(0, 1)
                                                   .toUpperCase() ??
                                               'U',
@@ -181,7 +184,9 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                         ),
                                       ),
                                       title: Text(
-                                        user.email ?? 'User ${user.userId}',
+                                        user.firstName ??
+                                            user.email ??
+                                            'User ${user.userId}',
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       subtitle: Text(
@@ -239,7 +244,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Chat with ${recipient?.email ?? "User ${provider.currentRecipientId}"}',
+                                    'Chat with ${recipient?.firstName ?? recipient?.email ?? "User ${provider.currentRecipientId}"}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using eCommerce.Services.Interface;
+using eCommerce.Services.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using System.Security.Claims;
@@ -9,26 +11,53 @@ namespace eCommerce.Services.SignalR
     public class PresenceHub : Hub
     {
         private static readonly ConcurrentDictionary<string, string> _userConnections = new();
+        private readonly IUserRepository _userRepository;
+
+        public PresenceHub(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
 
         public override async Task OnConnectedAsync()
         {
             var userEmail = Context.User?.FindFirst(ClaimTypes.Email)?.Value;
-            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (!string.IsNullOrEmpty(userEmail) && !string.IsNullOrEmpty(userId))
+            var userIdString = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!string.IsNullOrEmpty(userEmail) && !string.IsNullOrEmpty(userIdString)
+                && int.TryParse(userIdString, out var userId))
             {
-                _userConnections.TryAdd(userId, Context.ConnectionId);
-                
+                _userConnections.TryAdd(userIdString, Context.ConnectionId);
+
+                // Fetch user details from database
+                var user = await _userRepository.GetUserByIdAsync(userId);
+
                 // Notify others that this user is online
-                await Clients.Others.SendAsync("UserOnline", new 
-                { 
-                    UserId = userId,
+                await Clients.Others.SendAsync("UserOnline", new
+                {
+                    UserId = userIdString,
                     Email = userEmail,
+                    FirstName = user?.FirstName,
+                    LastName = user?.LastName,
                     ConnectionId = Context.ConnectionId
                 });
 
                 // Send list of currently online users to the new connection
-                await Clients.Caller.SendAsync("OnlineUsers", _userConnections.Keys.ToList());
+                var onlineUsers = new List<object>();
+                foreach (var onlineUserId in _userConnections.Keys)
+                {
+                    if (int.TryParse(onlineUserId, out var id))
+                    {
+                        var onlineUser = await _userRepository.GetUserByIdAsync(id);
+                        onlineUsers.Add(new
+                        {
+                            UserId = onlineUserId,
+                            Email = onlineUser?.Email,
+                            FirstName = onlineUser?.FirstName,
+                            LastName = onlineUser?.LastName
+                        });
+                    }
+                }
+                await Clients.Caller.SendAsync("OnlineUsers", onlineUsers);
             }
 
             await base.OnConnectedAsync();
@@ -41,9 +70,8 @@ namespace eCommerce.Services.SignalR
 
             if (!string.IsNullOrEmpty(userId) && _userConnections.TryRemove(userId, out _))
             {
-                // Notify others that this user is offline
-                await Clients.Others.SendAsync("UserOffline", new 
-                { 
+                await Clients.Others.SendAsync("UserOffline", new
+                {
                     UserId = userId,
                     Email = userEmail,
                     ConnectionId = Context.ConnectionId
@@ -53,7 +81,6 @@ namespace eCommerce.Services.SignalR
             await base.OnDisconnectedAsync(exception);
         }
 
-        // Custom methods that clients can invoke
         public async Task SendMessage(string message)
         {
             var userEmail = Context.User?.FindFirst(ClaimTypes.Email)?.Value;
@@ -76,10 +103,8 @@ namespace eCommerce.Services.SignalR
             var fromUserEmail = Context.User?.FindFirst(ClaimTypes.Email)?.Value;
             var fromUserName = Context.User?.FindFirst(ClaimTypes.Name)?.Value;
 
-            // Find the connection ID for the target user
             if (_userConnections.TryGetValue(toUserId, out var connectionId))
             {
-                // Send to recipient
                 await Clients.Client(connectionId).SendAsync("ReceivePrivateMessage", new
                 {
                     FromUserId = fromUserId,
@@ -89,7 +114,6 @@ namespace eCommerce.Services.SignalR
                     Timestamp = DateTime.UtcNow
                 });
 
-                // Send confirmation to sender
                 await Clients.Caller.SendAsync("MessageSent", new
                 {
                     ToUserId = toUserId,
@@ -99,16 +123,29 @@ namespace eCommerce.Services.SignalR
             }
             else
             {
-                // Send error to caller if user is not online
                 await Clients.Caller.SendAsync("MessageError", $"User {toUserId} is not online");
             }
         }
-        // moguce staviti string[]
-        public async Task<List<string>> GetOnlineUsers()
-        {
-            return _userConnections.Keys.ToList();
-        }
 
+        public async Task<List<object>> GetOnlineUsers()
+        {
+            var onlineUsers = new List<object>();
+            foreach (var userId in _userConnections.Keys)
+            {
+                if (int.TryParse(userId, out var id))
+                {
+                    var user = await _userRepository.GetUserByIdAsync(id);
+                    onlineUsers.Add(new
+                    {
+                        UserId = userId,
+                        Email = user?.Email,
+                        FirstName = user?.FirstName,
+                        LastName = user?.LastName
+                    });
+                }
+            }
+            return onlineUsers;
+        }
 
         public static ConcurrentDictionary<string, string> GetUserConnections()
         {

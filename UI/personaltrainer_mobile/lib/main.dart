@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
+import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
+import 'package:personaltrainer_mobile/providers/messages_provider.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
 import 'package:personaltrainer_mobile/screens/forgot_password_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
@@ -14,13 +17,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Personal Trainer Mobile',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SignalRProvider()),
+        ChangeNotifierProvider(create: (_) => MessagesProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Personal Trainer Mobile',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: const LoginScreen(),
       ),
-      home: const LoginScreen(),
     );
   }
 }
@@ -63,6 +72,13 @@ class _LoginScreenState extends State<LoginScreen> {
       await userProvider.login(username, password);
 
       if (mounted) {
+        // Connect to SignalR presence hub immediately after login
+        final signalRProvider = Provider.of<SignalRProvider>(
+          context,
+          listen: false,
+        );
+        await signalRProvider.connect();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Login successful!'),
@@ -266,7 +282,19 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
+            onPressed: () async {
+              // Disconnect from SignalR before logout
+              final signalRProvider = Provider.of<SignalRProvider>(
+                context,
+                listen: false,
+              );
+              final messagesProvider = Provider.of<MessagesProvider>(
+                context,
+                listen: false,
+              );
+              await signalRProvider.disconnect();
+              await messagesProvider.disconnect();
+
               AuthProvider.logout();
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
