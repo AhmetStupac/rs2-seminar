@@ -332,8 +332,6 @@ class SignalRProvider with ChangeNotifier {
     }
 
     print("🔄 Manually refreshing online users...");
-    print("🔄 Current online users: ${_onlineUsers.length} users online");
-    print("🔄 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
 
     // Try to invoke GetOnlineUsers method if backend supports it
     try {

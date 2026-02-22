@@ -267,9 +267,15 @@ class _ChatScreenState extends State<ChatScreen> {
                   CircleAvatar(
                     backgroundColor: Colors.orange,
                     child: Text(
-                      widget.selectedUser.firstName?.substring(0, 1).toUpperCase() ??
-                          widget.selectedUser.email?.substring(0, 1).toUpperCase() ??
-                          widget.selectedUser.userId.substring(0, 1).toUpperCase(),
+                      widget.selectedUser.firstName
+                              ?.substring(0, 1)
+                              .toUpperCase() ??
+                          widget.selectedUser.email
+                              ?.substring(0, 1)
+                              .toUpperCase() ??
+                          widget.selectedUser.userId
+                              .substring(0, 1)
+                              .toUpperCase(),
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
