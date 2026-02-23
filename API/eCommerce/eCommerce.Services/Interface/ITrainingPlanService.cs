@@ -1,4 +1,4 @@
-﻿using eCommerce.Model.Requests;
+using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using System;
@@ -11,6 +11,6 @@ namespace eCommerce.Services.Interface
 {
     public interface ITrainingPlanService : ICRUDService<TrainingPlanResponse,NameSearchObject,TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
     {
-
+        Task<IEnumerable<TrainingPlanCatalogResponse>> GetCatalogAsync();
     }
 }

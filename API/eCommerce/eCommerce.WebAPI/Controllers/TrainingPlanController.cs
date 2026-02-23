@@ -1,4 +1,4 @@
-﻿using eCommerce.Model.Requests;
+using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
@@ -12,9 +12,18 @@ namespace eCommerce.WebAPI.Controllers
     public class TrainingPlanController : BaseCRUDController
         <TrainingPlanResponse, NameSearchObject, TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
     {
+        private readonly ITrainingPlanService _trainingPlanService;
+
         public TrainingPlanController(ITrainingPlanService service) : base(service)
         {
-            
+            _trainingPlanService = service;
+        }
+
+        [HttpGet("catalog")]
+        public async Task<IActionResult> GetCatalog()
+        {
+            var result = await _trainingPlanService.GetCatalogAsync();
+            return Ok(result);
         }
     }
 }

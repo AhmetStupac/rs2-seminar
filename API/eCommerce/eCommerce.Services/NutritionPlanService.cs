@@ -1,4 +1,4 @@
-﻿using eCommerce.Model.Requests;
+using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Model.Validators;
@@ -133,6 +133,19 @@ namespace eCommerce.Services
             }
 
             return query;
+        }
+
+        public async Task<IEnumerable<NutritionPlanCatalogResponse>> GetCatalogAsync()
+        {
+            return await _context.NutritionPlans
+                .Select(np => new NutritionPlanCatalogResponse
+                {
+                    Id = np.Id,
+                    Title = np.Title,
+                    Price = np.Price,
+                    TotalCalories = np.TotalCalories
+                })
+                .ToListAsync();
         }
 
         protected override NutritionPlanResponse MapToResponse(Database.NutritionPlan entity)

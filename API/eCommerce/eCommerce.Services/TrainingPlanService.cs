@@ -1,4 +1,4 @@
-﻿using eCommerce.Model.Requests;
+using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Model.Validators;
@@ -192,6 +192,17 @@ namespace eCommerce.Services
             }
 
             return MapToResponse(entity);
+        }
+
+        public async Task<IEnumerable<TrainingPlanCatalogResponse>> GetCatalogAsync()
+        {
+            return await _context.TrainingPlans
+                .Select(t => new TrainingPlanCatalogResponse
+                {
+                    Id = t.Id,
+                    Title = t.Title
+                })
+                .ToListAsync();
         }
 
         protected override async Task BeforeDelete(TrainingPlan entity)
