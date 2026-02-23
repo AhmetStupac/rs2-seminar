@@ -6,6 +6,7 @@ import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.da
 import 'package:personaltrainer_mobile/screens/training_sessions_list_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_statistics_screen.dart';
 import 'package:personaltrainer_mobile/screens/online_users_screen.dart';
+import 'package:personaltrainer_mobile/screens/group_training_sessions_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
@@ -125,6 +126,23 @@ class MobileNavBar extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const TrainingSessionsListScreen(),
+                  ),
+                );
+              }
+            },
+          ),
+          _buildMenuItem(
+            context,
+            icon: Icons.group_work_outlined,
+            title: 'Group Sessions',
+            routeName: 'group_sessions',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != 'group_sessions') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const GroupTrainingSessionsScreen(),
                   ),
                 );
               }

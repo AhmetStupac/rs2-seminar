@@ -46,6 +46,8 @@ builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPersonalTrainerRatingService, PersonalTrainerRatingService>();
 builder.Services.AddScoped<IMonthlyTrainingStatisticsService, MonthlyTrainingStatisticsService>();
+builder.Services.AddScoped<IGroupTrainingSessionService, GroupTrainingSessionService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddHttpContextAccessor();
 
 
@@ -89,6 +91,7 @@ builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
 //builder.Services.AddValidatorsFromAssemblyContaining<TrainingPlanValidator>();
 //builder.Services.AddValidatorsFromAssemblyContaining<ExercisePlanValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<GymValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<PaymentValidator>();
 
 
 

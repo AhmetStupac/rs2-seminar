@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_rating_provider.dart';
+import 'package:personaltrainer_mobile/screens/purchase_options_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_session_booking_screen.dart';
 
 class PersonalTrainerDetailScreen extends StatefulWidget {
@@ -532,6 +533,44 @@ class _PersonalTrainerDetailScreenState
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE8B44A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Purchase Plans / Membership Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PurchaseOptionsScreen(
+                                  trainer: widget.trainer,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+                          label: const Text(
+                            'Kupi plan / Članarinu',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2D3748),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(

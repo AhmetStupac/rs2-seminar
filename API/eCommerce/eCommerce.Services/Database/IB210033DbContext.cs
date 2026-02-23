@@ -31,6 +31,9 @@ namespace eCommerce.Services.Database
         public DbSet<TrainingSession> TrainingSessions { get; set; }
         public DbSet<PersonalTrainerRating> PersonalTrainerRatings { get; set; }
         public DbSet<MonthlyTrainingStatistics> MonthlyTrainingStatistics { get; set; }
+        public DbSet<GroupTrainingSession> GroupTrainingSessions { get; set; }
+        public DbSet<GroupTrainingSessionParticipant> GroupTrainingSessionParticipants { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -258,6 +261,29 @@ namespace eCommerce.Services.Database
                 .HasForeignKey(mts => mts.UserId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
+
+            // Configure GroupTrainingSession relationships
+            modelBuilder.Entity<GroupTrainingSession>()
+                .HasOne(g => g.Creator)
+                .WithMany()
+                .HasForeignKey(g => g.CreatorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupTrainingSessionParticipant>()
+                .HasOne(p => p.GroupTrainingSession)
+                .WithMany(g => g.Participants)
+                .HasForeignKey(p => p.GroupTrainingSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GroupTrainingSessionParticipant>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupTrainingSessionParticipant>()
+                .HasIndex(p => new { p.GroupTrainingSessionId, p.UserId })
+                .IsUnique();
 
             modelBuilder.Entity<Role>().HasData(
                new Role { Id = 1, Name = "Administrator", Description = "Administrator", IsActive = true, CreatedAt = DateTime.UtcNow },

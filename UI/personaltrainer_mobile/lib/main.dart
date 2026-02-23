@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
@@ -8,7 +9,11 @@ import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.da
 import 'package:personaltrainer_mobile/screens/forgot_password_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Replace with your Stripe test publishable key from https://dashboard.stripe.com/test/apikeys
+  Stripe.publishableKey = 'pk_test_51T3mm2J0jiiSNJ3blaJUkoD6Wb3vlb7TXbuaVPRvZcqcnR97wbKE9SUGS6zFy6Zo39yYKTxT9Ak8SvuOBe0pyqqK00qlBz8Evl';
+  await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
 
