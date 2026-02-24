@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart' hide Image;
 import 'package:http/http.dart' as http;
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 import '../models/image.dart';
 

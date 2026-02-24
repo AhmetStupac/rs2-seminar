@@ -3,7 +3,7 @@ import 'dart:convert';
 class AuthProvider {
   static int? userId;
   static String? token;
-  static bool _isBanned = false;
+  static final bool _isBanned = false;
   
   static bool get isBanned => _isBanned;
 

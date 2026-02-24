@@ -1,21 +1,21 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/exercise.dart';
-import 'package:personaltrainer_mobile/models/muscleGroup.dart';
-import 'package:personaltrainer_mobile/models/equipment.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart'
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/exercise.dart';
+import 'package:personaltrainer_desktop/models/muscleGroup.dart';
+import 'package:personaltrainer_desktop/models/equipment.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart'
     as auth_provider;
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
-import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
-import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/providers/muscle_group_provider.dart';
+import 'package:personaltrainer_desktop/providers/equipment_provider.dart';
+import 'package:personaltrainer_desktop/providers/exerciseProvider.dart';
 
 class ImageUploadScreen extends StatefulWidget {
   final int? trainingId;
 
-  ImageUploadScreen({Key? key, this.trainingId}) : super(key: key);
+  const ImageUploadScreen({super.key, this.trainingId});
 
   @override
   State<ImageUploadScreen> createState() => _ImageUploadScreenState();
@@ -107,7 +107,7 @@ Future<void> _uploadImageOnly() async {
     );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error uploading image: ${e.toString()}')),
+      SnackBar(content: Text('Failed to upload image.')),
     );
   } finally {
     setState(() {
@@ -133,7 +133,7 @@ Future<void> _uploadImageOnly() async {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+          SnackBar(content: Text('Failed to select file.')),
         );
       }
     }
@@ -214,7 +214,7 @@ Future<void> _uploadImageOnly() async {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          ).showSnackBar(SnackBar(content: Text('Failed to create exercise.')));
         }
       } finally {
         if (mounted) {
@@ -372,7 +372,7 @@ Future<void> _uploadImageOnly() async {
                     SizedBox(height: 12),
 
                     DropdownButtonFormField<int>(
-                      value:
+                      initialValue:
                           _muscleGroups.any(
                             (mg) =>
                                 mg.id != null &&

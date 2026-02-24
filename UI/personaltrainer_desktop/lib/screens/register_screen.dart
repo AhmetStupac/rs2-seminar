@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:personaltrainer_mobile/models/user.dart';
-import 'package:personaltrainer_mobile/providers/user_provider.dart';
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart'
+import 'package:personaltrainer_desktop/models/user.dart';
+import 'package:personaltrainer_desktop/providers/user_provider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart'
     as auth_provider;
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -65,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+          SnackBar(content: Text('Failed to select file.')),
         );
       }
     }
@@ -119,7 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error uploading image: ${e.toString()}'),
+            content: Text('Failed to upload image.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -164,7 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          ).showSnackBar(SnackBar(content: Text('Registration failed. Please try again.')));
         }
       } finally {
         if (mounted) {

@@ -1,16 +1,16 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:personaltrainer_mobile/models/user.dart';
-import 'package:personaltrainer_mobile/providers/user_provider.dart';
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart'
+import 'package:personaltrainer_desktop/models/user.dart';
+import 'package:personaltrainer_desktop/providers/user_provider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart'
     as auth_provider;
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/screens/change_password_screen.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/screens/change_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -106,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+          SnackBar(content: Text('Failed to select file.')),
         );
       }
     }
@@ -161,7 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error uploading image: ${e.toString()}'),
+            content: Text('Failed to upload image.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -224,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Failed to update profile.'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -342,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Failed to send reset email. Please try again.'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),

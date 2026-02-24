@@ -1,16 +1,24 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/models/nutrition_plan.dart';
-import 'package:personaltrainer_mobile/models/user.dart';
-import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/providers/nutrition_plan_provider.dart';
-import 'package:personaltrainer_mobile/providers/user_provider.dart';
-import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/models/nutrition_plan.dart';
+import 'package:personaltrainer_desktop/models/user.dart';
+import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/providers/nutrition_plan_provider.dart';
+import 'package:personaltrainer_desktop/providers/user_provider.dart';
+import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class NutritionPlanMainArea extends StatefulWidget {
+  const NutritionPlanMainArea({super.key});
+
   @override
   _NutritionPlanMainAreaState createState() => _NutritionPlanMainAreaState();
+}
+
+String _errorReason(Object e) {
+  final msg = e.toString();
+  if (msg.startsWith('Exception: ')) return msg.replaceFirst('Exception: ', '');
+  return msg;
 }
 
 class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
@@ -67,7 +75,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     } catch (e) {
       print('Error fetching users: $e');
       setState(() {
-        _usersError = e.toString();
+        _usersError = _errorReason(e);
         _loadingUsers = false;
       });
     }
@@ -98,7 +106,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
       print('❌ Error type: ${e.runtimeType}');
       print('❌ Stack trace: $stackTrace');
       setState(() {
-        _trainersError = 'Failed to load trainers: ${e.toString()}';
+        _trainersError = _errorReason(e);
         _loadingTrainers = false;
       });
     }
@@ -137,7 +145,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
       });
     } catch (e) {
       setState(() {
-        _plansError = e.toString();
+        _plansError = _errorReason(e);
         _loadingPlans = false;
       });
     }
@@ -188,8 +196,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
         fatsInt == null ||
         priceDouble == null) {
       setState(() {
-        errorMessage =
-            'Please fill Title and enter numeric values for Total Calories, Protein, Carbs, Fats and Price.';
+        errorMessage = 'Please fill all required fields.';
       });
       return;
     }
@@ -200,7 +207,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     });
 
     print(
-      '📋 Creating nutrition plan with personalTrainerId: ${_selectedPersonalTrainerId}',
+      '📋 Creating nutrition plan with personalTrainerId: $_selectedPersonalTrainerId',
     );
     print('📋 Current token: ${AuthProvider.token?.substring(0, 20)}...');
 
@@ -257,7 +264,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Error sending to API: ${e.toString()}';
+        errorMessage = _errorReason(e);
       });
     }
   }
@@ -312,7 +319,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Error loading users',
+                      _usersError!,
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -321,7 +328,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
               )
             else
               DropdownButtonFormField<int>(
-                value:
+                initialValue:
                     _users.isNotEmpty &&
                         _users.any((u) => u.id == _selectedUserId)
                     ? _selectedUserId
@@ -376,7 +383,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
               )
             else
               DropdownButtonFormField<int>(
-                value: () {
+                initialValue: () {
                   final trainersWithIds = _personalTrainers
                       .where((t) => t.id != null)
                       .toList();
@@ -568,7 +575,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Error loading plans: $_plansError',
+                      'Failed to load plans.',
                       style: TextStyle(color: Colors.red),
                     ),
                   ),

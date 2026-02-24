@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/providers/user_provider.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/providers/user_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   final String? email;
 
-  const ChangePasswordScreen({Key? key, this.email}) : super(key: key);
+  const ChangePasswordScreen({super.key, this.email});
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -104,7 +104,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Failed to reset password. Please try again.'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),

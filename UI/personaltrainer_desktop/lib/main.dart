@@ -3,23 +3,22 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
-import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
-import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
-import 'package:personaltrainer_mobile/providers/gym_provider.dart';
-import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
-import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
-import 'package:personaltrainer_mobile/providers/training_provider.dart';
-import 'package:personaltrainer_mobile/providers/user_provider.dart';
-import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
-import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
-import 'package:personaltrainer_mobile/screens/register_screen.dart';
-import 'package:personaltrainer_mobile/screens/change_password_screen.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/providers/equipment_provider.dart';
+import 'package:personaltrainer_desktop/providers/exerciseProvider.dart';
+import 'package:personaltrainer_desktop/providers/exercise_plan.dart';
+import 'package:personaltrainer_desktop/providers/gym_provider.dart';
+import 'package:personaltrainer_desktop/providers/muscle_group_provider.dart';
+import 'package:personaltrainer_desktop/providers/training_plan_provider.dart';
+import 'package:personaltrainer_desktop/providers/training_provider.dart';
+import 'package:personaltrainer_desktop/providers/user_provider.dart';
+import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
+import 'package:personaltrainer_desktop/screens/training_plan_screen.dart';
+import 'package:personaltrainer_desktop/screens/register_screen.dart';
+import 'package:personaltrainer_desktop/screens/change_password_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:personaltrainer_mobile/providers/messages_provider.dart';
+import 'package:personaltrainer_desktop/providers/messages_provider.dart';
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -384,7 +383,7 @@ class LoginPage extends StatelessWidget {
                                 child: Text("Ok"),
                               ),
                             ],
-                            content: Text(e.toString()),
+                            content: Text('Login failed. Please check your credentials.'),
                           ),
                         );
                       }

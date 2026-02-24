@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/providers/admin_provider.dart';
+import 'package:personaltrainer_desktop/providers/admin_provider.dart';
 
 class BanUserScreen extends StatefulWidget {
   final int userId;
   final String username;
 
-  const BanUserScreen({Key? key, required this.userId, required this.username})
-    : super(key: key);
+  const BanUserScreen({super.key, required this.userId, required this.username});
 
   @override
   State<BanUserScreen> createState() => _BanUserScreenState();
@@ -101,7 +100,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Greška pri unbanovanju.'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) {
@@ -151,7 +150,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška: $e'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Greška pri banovanju.'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) {
@@ -419,7 +418,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
                       title: const Text('Permanentno banovanje'),
                       subtitle: const Text('Ban bez vremenskog ograničenja'),
                       value: _isPermanent,
-                      activeColor: Colors.red.shade700,
+                      activeThumbColor: Colors.red.shade700,
                       onChanged: (value) {
                         setState(() => _isPermanent = value);
                       },

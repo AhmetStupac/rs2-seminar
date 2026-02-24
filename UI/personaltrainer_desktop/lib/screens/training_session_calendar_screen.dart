@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:personaltrainer_mobile/models/training_session.dart';
-import 'package:personaltrainer_mobile/models/gym.dart';
-import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/providers/training_session_provider.dart';
-import 'package:personaltrainer_mobile/providers/gym_provider.dart';
-import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/training_session.dart';
+import 'package:personaltrainer_desktop/models/gym.dart';
+import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/providers/training_session_provider.dart';
+import 'package:personaltrainer_desktop/providers/gym_provider.dart';
+import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
 class TrainingSessionCalendarScreen extends StatefulWidget {
-  const TrainingSessionCalendarScreen({Key? key}) : super(key: key);
+  const TrainingSessionCalendarScreen({super.key});
 
   @override
   State<TrainingSessionCalendarScreen> createState() =>
@@ -64,10 +64,10 @@ class _TrainingSessionCalendarScreenState
 
       print('🔍 Loading sessions with filter: $filter');
       final result = await _trainingSessionProvider.get(filter: filter);
-      print('🔍 Loaded ${result?.result?.length ?? 0} sessions');
+      print('🔍 Loaded ${result.result.length ?? 0} sessions');
 
       setState(() {
-        _sessions = result?.result ?? [];
+        _sessions = result.result ?? [];
         _isLoading = false;
       });
     } catch (e) {
@@ -76,7 +76,7 @@ class _TrainingSessionCalendarScreenState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading sessions: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to load sessions.')));
       }
     }
   }
@@ -365,7 +365,7 @@ class _TrainingSessionCalendarScreenState
                 ),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -427,7 +427,7 @@ class _TrainingSessionCalendarScreenState
           // Sessions
           ...daySessions.map((session) {
             return _buildSessionCard(session, dayStart);
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -637,7 +637,7 @@ class _TrainingSessionCalendarScreenState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error confirming session: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to confirm session.')));
       }
     }
   }
@@ -686,7 +686,7 @@ class _TrainingSessionCalendarScreenState
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error cancelling session: $e')),
+            SnackBar(content: Text('Failed to cancel session.')),
           );
         }
       }
@@ -964,8 +964,7 @@ class _TrainingSessionCalendarScreenState
 class AddTrainingSessionDialog extends StatefulWidget {
   final Function(TrainingSession) onSave;
 
-  const AddTrainingSessionDialog({Key? key, required this.onSave})
-    : super(key: key);
+  const AddTrainingSessionDialog({super.key, required this.onSave});
 
   @override
   State<AddTrainingSessionDialog> createState() =>
@@ -1005,8 +1004,8 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
       final trainersResult = await _personalTrainerProvider.get();
 
       setState(() {
-        _gyms = gymsResult?.result ?? [];
-        _trainers = trainersResult?.result ?? [];
+        _gyms = gymsResult.result ?? [];
+        _trainers = trainersResult.result ?? [];
         _isLoading = false;
       });
     } catch (e) {
@@ -1015,7 +1014,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to load data.')));
       }
     }
   }
@@ -1075,7 +1074,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error creating session: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to create session.')));
       }
     }
   }
@@ -1155,7 +1154,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
                       const SizedBox(height: 24),
                       // Personal Trainer Dropdown
                       DropdownButtonFormField<int>(
-                        value: _selectedPersonalTrainerId,
+                        initialValue: _selectedPersonalTrainerId,
                         decoration: const InputDecoration(
                           labelText: 'Personal Trainer *',
                           border: OutlineInputBorder(),
@@ -1181,7 +1180,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
                       const SizedBox(height: 16),
                       // Gym Dropdown
                       DropdownButtonFormField<int>(
-                        value: _selectedGymId,
+                        initialValue: _selectedGymId,
                         decoration: const InputDecoration(
                           labelText: 'Gym (Optional)',
                           border: OutlineInputBorder(),
@@ -1259,7 +1258,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
                       const SizedBox(height: 16),
                       // Status Dropdown
                       DropdownButtonFormField<int>(
-                        value: _status,
+                        initialValue: _status,
                         decoration: const InputDecoration(
                           labelText: 'Status',
                           border: OutlineInputBorder(),

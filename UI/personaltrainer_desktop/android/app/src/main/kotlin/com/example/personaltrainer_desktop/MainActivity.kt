@@ -1,4 +1,4 @@
-package com.example.personaltrainer_mobile
+package com.example.personaltrainer_desktop
 
 import io.flutter.embedding.android.FlutterActivity
 

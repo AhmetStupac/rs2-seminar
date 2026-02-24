@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
 
 class NetworkImageLoader extends StatefulWidget {
   final String imageUrl;
@@ -10,13 +10,13 @@ class NetworkImageLoader extends StatefulWidget {
   final Widget? errorWidget;
 
   const NetworkImageLoader({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.width,
     this.height,
     this.fit = BoxFit.cover,
     this.errorWidget,
-  }) : super(key: key);
+  });
 
   @override
   State<NetworkImageLoader> createState() => _NetworkImageLoaderState();

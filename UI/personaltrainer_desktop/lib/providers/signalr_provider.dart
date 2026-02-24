@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/signalr_client.dart';
-import 'package:personaltrainer_mobile/models/message.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/models/message.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:http/http.dart' as http;
 
 class SignalRProvider with ChangeNotifier {

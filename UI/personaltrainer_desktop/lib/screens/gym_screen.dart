@@ -1,16 +1,16 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:personaltrainer_mobile/models/gym.dart';
-import 'package:personaltrainer_mobile/providers/gym_provider.dart';
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/widgets/network_image_loader.dart';
+import 'package:personaltrainer_desktop/models/gym.dart';
+import 'package:personaltrainer_desktop/providers/gym_provider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/widgets/network_image_loader.dart';
 
 class GymScreen extends StatefulWidget {
   final Gym? gym;
 
-  const GymScreen({Key? key, this.gym}) : super(key: key);
+  const GymScreen({super.key, this.gym});
 
   @override
   _GymScreenState createState() => _GymScreenState();
@@ -84,7 +84,7 @@ class _GymScreenState extends State<GymScreen> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Greška pri odabiru slike: $e')));
+      ).showSnackBar(SnackBar(content: Text('Greška pri odabiru slike.')));
     }
   }
 
@@ -136,7 +136,7 @@ class _GymScreenState extends State<GymScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Greška pri uploadu slike: $e')));
+        ).showSnackBar(SnackBar(content: Text('Greška pri uploadu slike.')));
       }
     }
   }
@@ -189,7 +189,7 @@ class _GymScreenState extends State<GymScreen> {
       Navigator.of(context).pop(true);
     } catch (e) {
       setState(() {
-        errorMessage = 'Greška pri spremanju: $e';
+        errorMessage = 'Greška pri spremanju.';
       });
     } finally {
       setState(() {

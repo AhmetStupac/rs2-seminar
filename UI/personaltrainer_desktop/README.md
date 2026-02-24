@@ -1,4 +1,4 @@
-# personaltrainer_mobile
+# personaltrainer_desktop
 
 A Flutter desktop/web application for personal trainer management.
 

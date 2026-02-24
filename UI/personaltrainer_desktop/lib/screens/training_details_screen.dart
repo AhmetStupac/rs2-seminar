@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/training_plan.dart';
-import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
-import 'package:personaltrainer_mobile/screens/image_upload_screen.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/training_plan.dart';
+import 'package:personaltrainer_desktop/providers/training_plan_provider.dart';
+import 'package:personaltrainer_desktop/screens/image_upload_screen.dart';
 
 class TrainingDetailsScreen extends StatefulWidget {
   final TrainingPlan? trainingPlan;
 
-  TrainingDetailsScreen({Key? key, this.trainingPlan}) : super(key: key);
+  const TrainingDetailsScreen({super.key, this.trainingPlan});
 
   @override
   State<TrainingDetailsScreen> createState() => _TrainingDetailsScreenState();
@@ -64,7 +64,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
       });
     } catch (e) {
       setState(() {
-        _plansError = e.toString();
+        _plansError = 'Failed to load plans.';
         _loadingPlans = false;
       });
     }
@@ -104,7 +104,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+          ).showSnackBar(SnackBar(content: Text('Failed to save training plan.')));
         }
       }
     }
@@ -264,7 +264,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                             ),
                           ),
                         )
-                        .toList(),
+                        ,
                 ],
               ),
             ),

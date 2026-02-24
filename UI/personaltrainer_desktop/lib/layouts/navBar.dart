@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/screens/exercise_details_screen.dart';
-import 'package:personaltrainer_mobile/screens/gym_list_screen.dart';
-import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
-import 'package:personaltrainer_mobile/screens/training_session_calendar_screen.dart';
-import 'package:personaltrainer_mobile/screens/user_list_screen.dart';
-import 'package:personaltrainer_mobile/screens/profile_screen.dart';
-import 'package:personaltrainer_mobile/screens/messaging_screen.dart';
-import 'package:personaltrainer_mobile/screens/nutrition_plan_screen.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/screens/exercise_details_screen.dart';
+import 'package:personaltrainer_desktop/screens/gym_list_screen.dart';
+import 'package:personaltrainer_desktop/screens/training_plan_screen.dart';
+import 'package:personaltrainer_desktop/screens/training_session_calendar_screen.dart';
+import 'package:personaltrainer_desktop/screens/user_list_screen.dart';
+import 'package:personaltrainer_desktop/screens/profile_screen.dart';
+import 'package:personaltrainer_desktop/screens/messaging_screen.dart';
+import 'package:personaltrainer_desktop/screens/nutrition_plan_screen.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class NavBar extends StatefulWidget {
   final String title;

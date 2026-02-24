@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:personaltrainer_mobile/providers/messages_provider.dart';
-import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/providers/messages_provider.dart';
+import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
 class MessagingScreen extends StatefulWidget {
-  const MessagingScreen({Key? key}) : super(key: key);
+  const MessagingScreen({super.key});
 
   @override
   State<MessagingScreen> createState() => _MessagingScreenState();
