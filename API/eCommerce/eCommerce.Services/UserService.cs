@@ -1,3 +1,4 @@
+using eCommerce.Model.Messages;
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
@@ -20,12 +21,14 @@ namespace eCommerce.Services
         private const int Iterations = 10000;
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
+        private readonly IRabbitMQPublisher _rabbitMQPublisher;
 
-        public UserService(IB210033DbContext context, ITokenService tokenService, IEmailService emailService)
+        public UserService(IB210033DbContext context, ITokenService tokenService, IEmailService emailService, IRabbitMQPublisher rabbitMQPublisher)
         {
             _context = context;
             _tokenService = tokenService;
             _emailService = emailService;
+            _rabbitMQPublisher = rabbitMQPublisher;
         }
 
         public async Task<List<UserResponse>> GetAsync(UserSearchObject search)
@@ -355,6 +358,14 @@ namespace eCommerce.Services
                     Description = ur.Role.Description
                 })
                 .ToList();
+
+            await _rabbitMQPublisher.PublishAsync(new LoginNotificationMessage
+            {
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                LoginTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC"
+            }, "user-login");
             
             return response;
         }
