@@ -384,7 +384,7 @@ class LoginPage extends StatelessWidget {
                                 child: Text("Ok"),
                               ),
                             ],
-                            content: Text(e.toString()),
+                            content: Text("Invalid username or password. Please try again."),
                           ),
                         );
                       }

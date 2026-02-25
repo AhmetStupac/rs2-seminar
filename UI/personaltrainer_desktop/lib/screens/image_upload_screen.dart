@@ -248,7 +248,7 @@ Future<void> _uploadImageOnly() async {
                           _isHeader = val ?? false;
                         });
                       },
-                      title: Text('Is Header property'),
+                      title: Text('Is the picture a header?'),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                     ),

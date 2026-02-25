@@ -49,7 +49,6 @@ builder.Services.AddScoped<IMonthlyTrainingStatisticsService, MonthlyTrainingSta
 builder.Services.AddScoped<IGroupTrainingSessionService, GroupTrainingSessionService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
-builder.Services.AddHostedService<LoginEmailWorker>();
 builder.Services.AddHttpContextAccessor();
 
 

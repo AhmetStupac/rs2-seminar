@@ -189,7 +189,7 @@ class _GymScreenState extends State<GymScreen> {
       Navigator.of(context).pop(true);
     } catch (e) {
       setState(() {
-        errorMessage = 'Greška pri spremanju: $e';
+        errorMessage = 'Please check all fields and try again.';
       });
     } finally {
       setState(() {
@@ -220,20 +220,6 @@ class _GymScreenState extends State<GymScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  if (errorMessage != null)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[300]!),
-                      ),
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(color: Colors.red[800]),
-                      ),
-                    ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -305,6 +291,26 @@ class _GymScreenState extends State<GymScreen> {
                     ],
                   ),
                   const SizedBox(height: 40),
+                  if (errorMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red[700], size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            errorMessage!,
+                            style: TextStyle(color: Colors.red[800]),
+                          ),
+                        ],
+                      ),
+                    ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [

@@ -83,8 +83,8 @@ class _MasterScreenState extends State<NavBar> {
 
           _buildMenuItem(
             icon: Icons.fitness_center,
-            label: 'Exercise plan',
-            routeName: 'Exercise plan',
+            label: 'Exercise',
+            routeName: 'Exercise',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -96,8 +96,8 @@ class _MasterScreenState extends State<NavBar> {
 
           _buildMenuItem(
             icon: Icons.bar_chart,
-            label: 'Training plan',
-            routeName: 'Training plan',
+            label: 'Exercise plan',
+            routeName: 'Exercise plan',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => TrainingPlanScreen()),

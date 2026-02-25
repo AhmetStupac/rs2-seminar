@@ -662,7 +662,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                   ElevatedButton.icon(
                     onPressed: isLoading ? null : posaljiNaAPI,
                     icon: Icon(Icons.send),
-                    label: Text('Send plan to API'),
+                    label: Text('Send plan'),
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(
                         horizontal: 24,

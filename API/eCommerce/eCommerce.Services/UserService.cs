@@ -215,7 +215,7 @@ namespace eCommerce.Services
             // Soft delete - samo postavi flag
             user.IsDeleted = true;
             user.DeletedAt = DateTime.UtcNow;
-            // user.DeletedBy = currentUserId; // Možeš dodati ako znaš trenutnog korisnika
+            // user.DeletedBy = currentUserId; // Moï¿½eï¿½ dodati ako znaï¿½ trenutnog korisnika
 
             await _context.SaveChangesAsync();
             return true;
