@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/screens/training_plan_main_area.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/screens/training_plan_main_area.dart';
 
 class TrainingPlanScreen extends StatefulWidget {
+  const TrainingPlanScreen({super.key});
+
   @override
   _TrainingPlanScreenState createState() => _TrainingPlanScreenState();
 }

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/models/exercise.dart';
-import 'package:personaltrainer_mobile/models/exercise_plan.dart';
-import 'package:personaltrainer_mobile/providers/exerciseProvider.dart';
-import 'package:personaltrainer_mobile/providers/exercise_plan.dart';
+import 'package:personaltrainer_desktop/models/exercise.dart';
+import 'package:personaltrainer_desktop/models/exercise_plan.dart';
+import 'package:personaltrainer_desktop/providers/exerciseProvider.dart';
+import 'package:personaltrainer_desktop/providers/exercise_plan.dart';
 import 'package:provider/provider.dart';
-import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
-import 'package:personaltrainer_mobile/models/training_plan.dart';
+import 'package:personaltrainer_desktop/providers/training_plan_provider.dart';
+import 'package:personaltrainer_desktop/models/training_plan.dart';
 
 class TrainingPlanMainArea extends StatefulWidget {
+  const TrainingPlanMainArea({super.key});
+
   @override
   _TrainingPlanMainAreaState createState() => _TrainingPlanMainAreaState();
 }
@@ -32,7 +34,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   String? _plansError;
   int? _selectedTrainingPlanId;
   bool _isEditMode = false;
-  Set<int> _originalExercisePlanIds = {};
+  final Set<int> _originalExercisePlanIds = {};
 
   @override
   void dispose() {
@@ -64,7 +66,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       });
     } catch (e) {
       setState(() {
-        _plansError = e.toString();
+        _plansError = 'Failed to load plans.';
         _loadingPlans = false;
       });
     }
@@ -90,7 +92,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       });
     } catch (e) {
       setState(() {
-        errorMessage = e.toString();
+        errorMessage = 'Failed to load exercises.';
         isLoading = false;
       });
     }
@@ -237,7 +239,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                   border: Border.all(color: Colors.red[200]!),
                 ),
                 child: Text(
-                  'Error: $errorMessage',
+                  '$errorMessage',
                   style: TextStyle(color: Colors.red[700]),
                 ),
               ),
@@ -612,7 +614,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                 ],
               ),
             ),
@@ -726,7 +728,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         print(
-                          'Image load error for url: ' + exercise.image!.url!,
+                          'Image load error for url: ${exercise.image!.url!}',
                         );
                         return Icon(
                           Icons.fitness_center,
@@ -928,7 +930,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Error sending to API: ' + e.toString();
+        errorMessage = 'Failed to save plan.';
       });
     }
   }
@@ -1038,11 +1040,11 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
     } catch (e) {
       setState(() {
         isLoading = false;
-        errorMessage = 'Error updating plan: ' + e.toString();
+        errorMessage = 'Failed to update plan.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error updating plan: $e'),
+          content: Text('Failed to update plan.'),
           backgroundColor: Colors.red,
         ),
       );

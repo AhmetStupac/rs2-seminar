@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:personaltrainer_mobile/models/image.dart';
+import 'package:personaltrainer_desktop/models/image.dart';
 
 part 'user.g.dart';
 

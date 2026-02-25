@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:personaltrainer_mobile/models/training_session.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_desktop/models/training_session.dart';
+import 'package:personaltrainer_desktop/providers/base_provider.dart';
 
 class TrainingSessionProvider extends BaseProvider<TrainingSession> {
   TrainingSessionProvider() : super("TrainingSession");

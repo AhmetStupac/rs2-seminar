@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/models/user.dart';
-import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
-import 'package:personaltrainer_mobile/providers/user_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/models/user.dart';
+import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
+import 'package:personaltrainer_desktop/providers/user_provider.dart';
 
 class PersonalTrainerScreen extends StatefulWidget {
-  const PersonalTrainerScreen({Key? key}) : super(key: key);
+  const PersonalTrainerScreen({super.key});
 
   @override
   State<PersonalTrainerScreen> createState() => _PersonalTrainerScreenState();
@@ -46,7 +46,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
     try {
       final result = await _userProvider.get();
       setState(() {
-        _users = result?.result ?? [];
+        _users = result.result ?? [];
         _isLoadingUsers = false;
       });
     } catch (e) {
@@ -55,7 +55,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading users: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to load users.')));
       }
     }
   }
@@ -92,7 +92,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating Personal Trainer: $e')),
+          SnackBar(content: Text('Failed to create Personal Trainer.')),
         );
       }
     }
@@ -127,7 +127,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
                     children: [
                       // User Dropdown
                       DropdownButtonFormField<int>(
-                        value: _selectedUserId,
+                        initialValue: _selectedUserId,
                         decoration: const InputDecoration(
                           labelText: 'User *',
                           border: OutlineInputBorder(),
@@ -206,7 +206,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
                                   _isActive = value;
                                 });
                               },
-                              activeColor: Colors.green,
+                              activeThumbColor: Colors.green,
                             ),
                           ],
                         ),

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:personaltrainer_mobile/models/user.dart';
-import 'package:personaltrainer_mobile/models/search_result.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/models/user.dart';
+import 'package:personaltrainer_desktop/models/search_result.dart';
+import 'package:personaltrainer_desktop/providers/base_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class UserProvider extends BaseProvider<User> {
   UserProvider() : super("Users");
@@ -85,7 +85,7 @@ class UserProvider extends BaseProvider<User> {
     } else if (response.statusCode == 401) {
       throw Exception("Invalid username or password");
     } else {
-      throw Exception("Login failed: ${response.body}");
+      throw Exception("Login failed");
     }
   }
 

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:personaltrainer_mobile/models/search_result.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/models/search_result.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 abstract class BaseProvider<T> with ChangeNotifier {
   static String? _baseUrl;
@@ -126,6 +126,46 @@ abstract class BaseProvider<T> with ChangeNotifier {
     throw Exception("Method not implemented");
   }
 
+  String _extractErrorMessage(String body) {
+    if (body.isEmpty) return 'An error occurred.';
+
+    // Try JSON first
+    try {
+      final data = jsonDecode(body);
+      if (data is Map) {
+        // ASP.NET Core ModelState: { "errors": { "Field": ["msg"] } }
+        if (data['errors'] is Map) {
+          final errors = data['errors'] as Map;
+          for (final entry in errors.entries) {
+            final msgs = entry.value;
+            if (msgs is List && msgs.isNotEmpty) return msgs.first.toString();
+          }
+        }
+        // FluentValidation: { "errors": [ { "errorMessage": "..." } ] }
+        if (data['errors'] is List) {
+          final errors = data['errors'] as List;
+          if (errors.isNotEmpty) {
+            final first = errors.first;
+            if (first is Map) {
+              final msg = first['errorMessage'] ?? first['message'] ?? first['description'];
+              if (msg != null) return msg.toString();
+            }
+          }
+        }
+        final msg = data['message'] ?? data['title'] ?? data['detail'];
+        if (msg != null && msg.toString().isNotEmpty) return msg.toString();
+      }
+    } catch (_) {}
+
+    // Plain text stack trace: take first line, strip the exception type prefix
+    // e.g. "System.ArgumentException: Validation failed: Description is required."
+    final firstLine = body.split('\n').first.trim();
+    final colonIdx = firstLine.indexOf(': ');
+    if (colonIdx != -1) return firstLine.substring(colonIdx + 2);
+
+    return 'An error occurred.';
+  }
+
   bool isValidResponse(Response response) {
     if (response.statusCode < 299) {
       return true;
@@ -144,17 +184,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
       throw Exception("Access forbidden - User banned");
     } else {
       print("❌ Error ${response.statusCode}: ${response.body}");
-      try {
-        var errorData = jsonDecode(response.body);
-        var errorMessage =
-            errorData['message'] ?? errorData['title'] ?? errorData.toString();
-        throw Exception("API Error (${response.statusCode}): $errorMessage");
-      } catch (e) {
-        if (e is Exception && e.toString().contains('API Error')) {
-          rethrow;
-        }
-        throw Exception("API Error (${response.statusCode}): ${response.body}");
-      }
+      throw Exception(_extractErrorMessage(response.body));
     }
   }
 

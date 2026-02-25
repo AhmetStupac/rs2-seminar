@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:personaltrainer_mobile/models/equipment.dart';
-import 'package:personaltrainer_mobile/models/image.dart';
+import 'package:personaltrainer_desktop/models/equipment.dart';
+import 'package:personaltrainer_desktop/models/image.dart';
 
 part 'exercise.g.dart';
 

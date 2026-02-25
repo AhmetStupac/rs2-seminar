@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:personaltrainer_mobile/providers/admin_provider.dart';
-import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
-import 'package:personaltrainer_mobile/screens/admin_ban_screen.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/providers/admin_provider.dart';
+import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
+import 'package:personaltrainer_desktop/screens/admin_ban_screen.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
 class UsersListScreen extends StatefulWidget {
-  const UsersListScreen({Key? key}) : super(key: key);
+  const UsersListScreen({super.key});
 
   @override
   State<UsersListScreen> createState() => _UsersListScreenState();
@@ -68,7 +68,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška pri učitavanju korisnika: $e')),
+          SnackBar(content: Text('Greška pri učitavanju korisnika.')),
         );
       }
     }

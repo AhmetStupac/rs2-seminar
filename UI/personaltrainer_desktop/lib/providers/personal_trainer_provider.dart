@@ -1,5 +1,5 @@
-import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/providers/base_provider.dart';
 
 class PersonalTrainerProvider extends BaseProvider<PersonalTrainer> {
   PersonalTrainerProvider() : super("PersonalTrainer");

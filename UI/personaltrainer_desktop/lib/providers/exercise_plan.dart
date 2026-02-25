@@ -1,5 +1,5 @@
-import 'package:personaltrainer_mobile/models/exercise_plan.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_desktop/models/exercise_plan.dart';
+import 'package:personaltrainer_desktop/providers/base_provider.dart';
 
 class ExercisePlanProvider extends BaseProvider<ExercisePlan> {
   ExercisePlanProvider() : super("ExercisePlan");

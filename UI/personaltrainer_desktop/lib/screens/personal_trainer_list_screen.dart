@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
-import 'package:personaltrainer_mobile/screens/personal_trainer_screen.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
+import 'package:personaltrainer_desktop/screens/personal_trainer_screen.dart';
 
 class PersonalTrainerListScreen extends StatefulWidget {
-  const PersonalTrainerListScreen({Key? key}) : super(key: key);
+  const PersonalTrainerListScreen({super.key});
 
   @override
   State<PersonalTrainerListScreen> createState() =>
@@ -37,7 +37,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Greška pri učitavanju: $e')));
+        ).showSnackBar(SnackBar(content: Text('Greška pri učitavanju.')));
       }
     }
   }
@@ -85,7 +85,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Greška pri brisanju: $e'),
+              content: Text('Greška pri brisanju.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -155,7 +155,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                     ),
                     child: DataTable(
                       columnSpacing: 20,
-                      headingRowColor: MaterialStateProperty.all(
+                      headingRowColor: WidgetStateProperty.all(
                         Colors.grey[100],
                       ),
                       columns: const [

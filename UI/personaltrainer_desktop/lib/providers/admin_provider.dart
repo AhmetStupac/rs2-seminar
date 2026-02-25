@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart'; // ⭐ Dodaj import
+import 'package:personaltrainer_desktop/providers/auth_provider.dart'; // ⭐ Dodaj import
 
 class AdminProvider {
   final String baseUrl = const String.fromEnvironment(

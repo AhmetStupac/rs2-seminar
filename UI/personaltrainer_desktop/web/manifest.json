@@ -1,6 +1,6 @@
 {
-    "name": "personaltrainer_mobile",
-    "short_name": "personaltrainer_mobile",
+    "name": "personaltrainer_desktop",
+    "short_name": "personaltrainer_desktop",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

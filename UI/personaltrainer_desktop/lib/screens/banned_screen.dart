@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class BannedScreen extends StatelessWidget {
   final String reason;
@@ -9,12 +9,12 @@ class BannedScreen extends StatelessWidget {
   final bool isPermanent;
 
   const BannedScreen({
-    Key? key,
+    super.key,
     required this.reason,
     this.bannedAt,
     this.expiresAt,
     this.isPermanent = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

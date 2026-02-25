@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/models/gym.dart';
-import 'package:personaltrainer_mobile/providers/gym_provider.dart';
-import 'package:personaltrainer_mobile/screens/gym_screen.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/widgets/network_image_loader.dart';
+import 'package:personaltrainer_desktop/models/gym.dart';
+import 'package:personaltrainer_desktop/providers/gym_provider.dart';
+import 'package:personaltrainer_desktop/screens/gym_screen.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/widgets/network_image_loader.dart';
 
 class GymListScreen extends StatefulWidget {
-  const GymListScreen({Key? key}) : super(key: key);
+  const GymListScreen({super.key});
 
   @override
   State<GymListScreen> createState() => _GymListScreenState();
@@ -37,7 +37,7 @@ class _GymListScreenState extends State<GymListScreen> {
     try {
       final result = await _gymProvider.get();
       setState(() {
-        _gyms = result?.result ?? [];
+        _gyms = result.result ?? [];
         _isLoading = false;
       });
 
@@ -53,7 +53,7 @@ class _GymListScreenState extends State<GymListScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška pri učitavanju teretana: $e')),
+          SnackBar(content: Text('Greška pri učitavanju teretana.')),
         );
       }
     }
@@ -161,7 +161,7 @@ class _GymListScreenState extends State<GymListScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Greška pri brisanju teretane: $e')),
+            SnackBar(content: Text('Greška pri brisanju teretane.')),
           );
         }
       }

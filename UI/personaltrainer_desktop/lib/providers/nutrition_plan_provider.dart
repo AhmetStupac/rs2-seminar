@@ -1,5 +1,5 @@
-import 'package:personaltrainer_mobile/models/nutrition_plan.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_desktop/models/nutrition_plan.dart';
+import 'package:personaltrainer_desktop/providers/base_provider.dart';
 
 class NutritionPlanProvider extends BaseProvider<NutritionPlan> {
   NutritionPlanProvider() : super("NutritionPlan");
