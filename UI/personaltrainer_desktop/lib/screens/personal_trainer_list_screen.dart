@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
 import 'package:personaltrainer_desktop/screens/personal_trainer_screen.dart';
 
@@ -20,7 +21,11 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPersonalTrainers();
+    if (AuthProvider.isSuperAdmin) {
+      _loadPersonalTrainers();
+    } else {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadPersonalTrainers() async {
@@ -96,6 +101,30 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AuthProvider.isSuperAdmin) {
+      return NavBar(
+        "Personal Trainers",
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_outline, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              const Text(
+                'Access Denied',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This section is only available to SuperAdmins.',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return NavBar(
       "Personal Trainers",
       Scaffold(

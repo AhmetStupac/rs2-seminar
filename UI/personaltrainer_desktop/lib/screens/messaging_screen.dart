@@ -5,6 +5,17 @@ import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
+String _formatTimestamp(DateTime? dt) {
+  if (dt == null) return '';
+  final d = dt.toLocal();
+  final day = d.day.toString().padLeft(2, '0');
+  final month = d.month.toString().padLeft(2, '0');
+  final year = d.year.toString();
+  final hour = d.hour.toString().padLeft(2, '0');
+  final minute = d.minute.toString().padLeft(2, '0');
+  return '$day.$month.$year $hour:$minute';
+}
+
 class MessagingScreen extends StatefulWidget {
   const MessagingScreen({super.key});
 
@@ -310,7 +321,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          message.timestamp?.toString() ?? '',
+                                          _formatTimestamp(message.timestamp),
                                           style: TextStyle(
                                             fontSize: 10,
                                             color: Colors.grey.shade600,

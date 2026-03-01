@@ -455,6 +455,12 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                             return;
                           }
 
+                          // Tapping the already-selected plan deselects it
+                          if (isSelected) {
+                            _clearForm();
+                            return;
+                          }
+
                           // Use the plan data we already have instead of fetching again
                           setState(() {
                             _selectedTrainingPlanId = plan.id;
@@ -625,24 +631,6 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (_isEditMode) ...[
-                  ElevatedButton.icon(
-                    onPressed: isLoading ? null : _clearForm,
-                    icon: Icon(Icons.add),
-                    label: Text('Create New'),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                      backgroundColor: Colors.grey[600],
-                      foregroundColor: Colors.white,
-                      textStyle: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: isLoading ? null : updatePlan,
                     icon: Icon(Icons.edit),

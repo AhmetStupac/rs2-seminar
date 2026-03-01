@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/models/training_plan.dart';
-import 'package:personaltrainer_mobile/providers/admin_provider.dart';
-import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
-import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/personal_trainer.dart';
+import 'package:personaltrainer_desktop/models/training_plan.dart';
+import 'package:personaltrainer_desktop/providers/admin_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
+import 'package:personaltrainer_desktop/providers/training_plan_provider.dart';
 
 // ─── Main list screen ───────────────────────────────────────────────────────
 
@@ -21,6 +22,9 @@ class _TrainingPlanAdminScreenState extends State<TrainingPlanAdminScreen> {
   List<TrainingPlan> _plans = [];
   bool _isLoading = true;
 
+  // Populated when the logged-in user is an Administrator (PersonalTrainer)
+  int? _myTrainerId;
+
   @override
   void initState() {
     super.initState();
@@ -30,9 +34,28 @@ class _TrainingPlanAdminScreenState extends State<TrainingPlanAdminScreen> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try {
+      // If Administrator, resolve their PersonalTrainer record first
+      if (AuthProvider.isAdministrator && _myTrainerId == null) {
+        final trainers = await PersonalTrainerProvider().get();
+        final mine = trainers.result.firstWhere(
+          (t) => t.userId == AuthProvider.userId,
+          orElse: () => PersonalTrainer(),
+        );
+        _myTrainerId = mine.id;
+      }
+
       final result = await _provider.get();
+      var plans = result.result;
+
+      // Filter to only this trainer's plans when role is Administrator
+      if (AuthProvider.isAdministrator && _myTrainerId != null) {
+        plans = plans
+            .where((p) => p.personalTrainerId == _myTrainerId)
+            .toList();
+      }
+
       setState(() {
-        _plans = result.result;
+        _plans = plans;
         _isLoading = false;
       });
     } catch (e) {
@@ -58,7 +81,10 @@ class _TrainingPlanAdminScreenState extends State<TrainingPlanAdminScreen> {
   Future<void> _openForm({TrainingPlan? plan}) async {
     final saved = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (_) => _TrainingPlanFormScreen(plan: plan),
+        builder: (_) => _TrainingPlanFormScreen(
+          plan: plan,
+          lockedTrainerId: _myTrainerId,
+        ),
       ),
     );
     if (saved == true) _load();
@@ -212,18 +238,6 @@ class _TrainingPlanAdminScreenState extends State<TrainingPlanAdminScreen> {
                                         Text(plan.description!),
                                         const SizedBox(height: 8),
                                       ],
-                                      Text(
-                                        'Trainer ID: ${plan.personalTrainerId ?? 'N/A'}',
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                      Text(
-                                        'User ID: ${plan.userId ?? 'N/A'}',
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
                                       if (plan.exercises != null &&
                                           plan.exercises!.isNotEmpty) ...[
                                         const SizedBox(height: 8),
@@ -240,7 +254,7 @@ class _TrainingPlanAdminScreenState extends State<TrainingPlanAdminScreen> {
                                               top: 4,
                                             ),
                                             child: Text(
-                                              '• ${ep.exercise?.name ?? 'Exercise #${ep.exerciseId}'}',
+                                              '• ${ep.exerciseName ?? ep.exercise?.name ?? 'Unknown exercise'}',
                                             ),
                                           ),
                                         ),
@@ -264,8 +278,10 @@ class _TrainingPlanAdminScreenState extends State<TrainingPlanAdminScreen> {
 
 class _TrainingPlanFormScreen extends StatefulWidget {
   final TrainingPlan? plan;
+  // When set, the trainer dropdown is pre-selected and read-only
+  final int? lockedTrainerId;
 
-  const _TrainingPlanFormScreen({this.plan});
+  const _TrainingPlanFormScreen({this.plan, this.lockedTrainerId});
 
   @override
   State<_TrainingPlanFormScreen> createState() =>
@@ -300,7 +316,7 @@ class _TrainingPlanFormScreenState extends State<_TrainingPlanFormScreen> {
     _priceCtrl = TextEditingController(
       text: plan?.basePrice?.toString() ?? '',
     );
-    _selectedTrainerId = plan?.personalTrainerId;
+    _selectedTrainerId = plan?.personalTrainerId ?? widget.lockedTrainerId;
     _selectedUserId = plan?.userId;
 
     _fetchDropdownData();
@@ -452,29 +468,57 @@ class _TrainingPlanFormScreenState extends State<_TrainingPlanFormScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
-                    value: _selectedTrainerId,
-                    decoration: const InputDecoration(
-                      labelText: 'Personal Trainer *',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _trainers
-                        .map(
-                          (t) => DropdownMenuItem<int>(
-                            value: t.id,
-                            child: Text(
-                              t.userFirstName != null
+                  if (widget.lockedTrainerId != null) ...[
+                    // Read-only display for Administrators (their own profile)
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Personal Trainer',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lock_outline,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(
+                            () {
+                              final t = _trainers.firstWhere(
+                                (t) => t.id == widget.lockedTrainerId,
+                                orElse: () => PersonalTrainer(),
+                              );
+                              return t.userFirstName != null
                                   ? '${t.userFirstName} (ID: ${t.id})'
-                                  : 'Trainer #${t.id}',
-                            ),
+                                  : 'Trainer #${widget.lockedTrainerId}';
+                            }(),
                           ),
-                        )
-                        .toList(),
-                    onChanged: (val) =>
-                        setState(() => _selectedTrainerId = val),
-                    validator: (val) =>
-                        val == null ? 'Please select a trainer' : null,
-                  ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    DropdownButtonFormField<int>(
+                      value: _selectedTrainerId,
+                      decoration: const InputDecoration(
+                        labelText: 'Personal Trainer *',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _trainers
+                          .map(
+                            (t) => DropdownMenuItem<int>(
+                              value: t.id,
+                              child: Text(
+                                t.userFirstName != null
+                                    ? '${t.userFirstName} (ID: ${t.id})'
+                                    : 'Trainer #${t.id}',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) =>
+                          setState(() => _selectedTrainerId = val),
+                      validator: (val) =>
+                          val == null ? 'Please select a trainer' : null,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: _selectedUserId,

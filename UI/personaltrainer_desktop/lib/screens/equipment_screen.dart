@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/equipment.dart';
-import 'package:personaltrainer_mobile/providers/equipment_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/equipment.dart';
+import 'package:personaltrainer_desktop/providers/equipment_provider.dart';
 
 class EquipmentScreen extends StatefulWidget {
   const EquipmentScreen({Key? key}) : super(key: key);

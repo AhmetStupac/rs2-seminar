@@ -135,6 +135,15 @@ namespace eCommerce.Services
 
                 case PaymentItemType.Membership:
                 {
+                    if (!request.ItemId.HasValue)
+                        throw new ArgumentException("ItemId (PersonalTrainer ID) is required for Membership payments.");
+
+                    var trainer = await _context.Set<Database.PersonalTrainer>()
+                        .FindAsync(request.ItemId.Value);
+
+                    if (trainer == null)
+                        throw new KeyNotFoundException($"PersonalTrainer with id {request.ItemId.Value} not found.");
+
                     if (!request.CustomAmountInCents.HasValue || request.CustomAmountInCents.Value <= 0)
                         throw new ArgumentException("CustomAmountInCents is required for Membership payments.");
 

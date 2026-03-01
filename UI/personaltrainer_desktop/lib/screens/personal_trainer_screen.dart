@@ -21,6 +21,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
       TextEditingController();
   final TextEditingController _certificationsController =
       TextEditingController();
+  final TextEditingController _sportController = TextEditingController();
 
   List<User> _users = [];
   int? _selectedUserId;
@@ -38,6 +39,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
   void dispose() {
     _yearsOfExperienceController.dispose();
     _certificationsController.dispose();
+    _sportController.dispose();
     super.dispose();
   }
 
@@ -70,12 +72,12 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
     try {
       final personalTrainer = PersonalTrainer(
         userId: _selectedUserId,
-        // userFirstName: _userFirstNameController.text, // Removed, now only from user
         yearsOfExperience: int.tryParse(_yearsOfExperienceController.text),
         isActive: _isActive,
         certifications: _certificationsController.text.isEmpty
             ? null
             : _certificationsController.text,
+        sport: _sportController.text.isEmpty ? null : _sportController.text,
       );
 
       await _personalTrainerProvider.insert(personalTrainer.toJson());
@@ -223,6 +225,18 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
                           hintText: 'Enter certifications',
                         ),
                         maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Sport Field
+                      TextFormField(
+                        controller: _sportController,
+                        decoration: const InputDecoration(
+                          labelText: 'Sport (Optional)',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.sports),
+                          hintText: 'e.g. Football, Basketball, Swimming',
+                        ),
                       ),
                       const SizedBox(height: 32),
 

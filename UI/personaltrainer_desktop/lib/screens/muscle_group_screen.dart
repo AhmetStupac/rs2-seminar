@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/models/muscleGroup.dart';
-import 'package:personaltrainer_mobile/providers/muscle_group_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/models/muscleGroup.dart';
+import 'package:personaltrainer_desktop/providers/muscle_group_provider.dart';
 
 class MuscleGroupScreen extends StatefulWidget {
   const MuscleGroupScreen({Key? key}) : super(key: key);

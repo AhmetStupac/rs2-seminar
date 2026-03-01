@@ -3,13 +3,15 @@ using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authorization;
+    
 namespace eCommerce.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class NutritionPlanController : BaseCRUDController
-        <NutritionPlanResponse, NameSearchObject, NutritionPlanUpsertRequest, NutritionPlanUpsertRequest>
+        <NutritionPlanResponse, NutritionPlanSearchObject, NutritionPlanUpsertRequest, NutritionPlanUpsertRequest>
     {
         private readonly INutritionPlanService _nutritionPlanService;
 

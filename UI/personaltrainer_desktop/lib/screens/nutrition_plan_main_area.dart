@@ -555,7 +555,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                   onPressed: isLoading ? null : posaljiNaAPI,
                   icon: Icon(_selectedPlanId != null ? Icons.save : Icons.send),
                   label: Text(
-                    _selectedPlanId != null ? 'Update' : 'Send to API',
+                    _selectedPlanId != null ? 'Update' : 'Send',
                   ),
                 ),
               ],

@@ -4,13 +4,14 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.AspNetCore.Authorization;
 namespace eCommerce.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TrainingPlanController : BaseCRUDController
-        <TrainingPlanResponse, NameSearchObject, TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
+        <TrainingPlanResponse, TrainingPlanSearchObject, TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
     {
         private readonly ITrainingPlanService _trainingPlanService;
 

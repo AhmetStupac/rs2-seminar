@@ -12,7 +12,7 @@ using System.Security.Claims;
 
 namespace eCommerce.Services
 {
-    public class NutritionPlanService : BaseCRUDService<NutritionPlanResponse, NameSearchObject, Database.NutritionPlan, NutritionPlanUpsertRequest, NutritionPlanUpsertRequest>, INutritionPlanService
+    public class NutritionPlanService : BaseCRUDService<NutritionPlanResponse, NutritionPlanSearchObject, Database.NutritionPlan, NutritionPlanUpsertRequest, NutritionPlanUpsertRequest>, INutritionPlanService
     {
 
         private readonly IValidator<NutritionPlanUpsertRequest> _validator;
@@ -96,32 +96,40 @@ namespace eCommerce.Services
             await base.BeforeUpdate(entity, request);
         }
 
-        protected override IQueryable<Database.NutritionPlan> ApplyFilter(IQueryable<Database.NutritionPlan> query, NameSearchObject search)
+        protected override IQueryable<Database.NutritionPlan> ApplyFilter(IQueryable<Database.NutritionPlan> query, NutritionPlanSearchObject search)
         {
             // Include related entities for better query performance
             query = query.Include(np => np.PersonalTrainer)
                          .ThenInclude(pt => pt.User)
                          .Include(np => np.User);
 
-            // Filter by authenticated user
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            // When PersonalTrainerId is specified (e.g. purchase flow), filter by that trainer's plans only
+            if (search.PersonalTrainerId.HasValue && search.PersonalTrainerId.Value > 0)
             {
-                // Check if user is a personal trainer
-                var personalTrainerId = _context.PersonalTrainers
-                    .Where(pt => pt.UserId == userId)
-                    .Select(pt => pt.Id)
-                    .FirstOrDefault();
+                query = query.Where(np => np.PersonalTrainerId == search.PersonalTrainerId.Value);
+            }
+            else
+            {
+                // Filter by authenticated user
+                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+                {
+                    // Check if user is a personal trainer
+                    var personalTrainerId = _context.PersonalTrainers
+                        .Where(pt => pt.UserId == userId)
+                        .Select(pt => pt.Id)
+                        .FirstOrDefault();
 
-                if (personalTrainerId > 0)
-                {
-                    // User is a personal trainer - show only their created nutrition plans
-                    query = query.Where(np => np.PersonalTrainerId == personalTrainerId);
-                }
-                else
-                {
-                    // User is a regular user - show only nutrition plans assigned to them
-                    query = query.Where(np => np.UserId == userId);
+                    if (personalTrainerId > 0)
+                    {
+                        // User is a personal trainer - show only their created nutrition plans
+                        query = query.Where(np => np.PersonalTrainerId == personalTrainerId);
+                    }
+                    else
+                    {
+                        // User is a regular user - show only nutrition plans assigned to them
+                        query = query.Where(np => np.UserId == userId);
+                    }
                 }
             }
 

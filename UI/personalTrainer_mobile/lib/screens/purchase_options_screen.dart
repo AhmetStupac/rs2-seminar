@@ -389,6 +389,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
     return InkWell(
       onTap: () => _navigateToPayment(
         itemType: 2,
+        itemId: widget.trainer.id,
         customAmountInCents: _membershipPriceInCents,
         itemName: 'Članarina — ${widget.trainer.userFirstName ?? "Trener"}',
       ),

@@ -41,6 +41,15 @@ class AuthProvider {
     // unsupported type (e.g., SearchResult<Exercise>) -> ignore silently
   }
 
+  static String? _role;
+  static String? get role => _role;
+
+  static bool get isSuperAdmin =>
+      _role?.toLowerCase() == 'superadmin';
+
+  static bool get isAdministrator =>
+      _role?.toLowerCase() == 'administrator';
+
   static void _setUserIdFromToken(String jwt) {
     try {
       final parts = jwt.split('.');
@@ -49,8 +58,19 @@ class AuthProvider {
       final normalized = base64Url.normalize(payload);
       final decoded = utf8.decode(base64Url.decode(normalized));
       final map = jsonDecode(decoded) as Map<String, dynamic>;
+      print('🔑 JWT claims keys: ${map.keys.toList()}');
       final idVal = map['nameid'] ?? map['sub'] ?? map['userId'];
       userId = idVal != null ? int.tryParse(idVal.toString()) : null;
+      // Extract role from JWT claims
+      final roleVal = map['role'] ??
+          map['roles'] ??
+          map['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      if (roleVal is List) {
+        _role = roleVal.isNotEmpty ? roleVal.first.toString() : null;
+      } else if (roleVal != null) {
+        _role = roleVal.toString();
+      }
+      print('🔑 Extracted role: $_role | userId: $userId');
     } catch (_) {
       /* ignore parse errors */
     }
@@ -60,6 +80,7 @@ class AuthProvider {
   static void logout() {
     userId = null;
     token = null;
+    _role = null;
   }
 
   /// Provjerava da li je korisnik ulogovan

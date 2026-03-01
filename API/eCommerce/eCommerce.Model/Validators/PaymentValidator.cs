@@ -19,8 +19,7 @@ namespace eCommerce.Model.Validators
             RuleFor(x => x.ItemId)
                 .NotNull()
                 .GreaterThan(0)
-                .When(x => x.ItemType != PaymentItemType.Membership)
-                .WithMessage("ItemId is required for TrainingPlan and NutritionPlan purchases.");
+                .WithMessage("ItemId is required. For TrainingPlan/NutritionPlan it is the plan ID; for Membership it is the PersonalTrainer ID.");
 
             RuleFor(x => x.CustomAmountInCents)
                 .NotNull()

@@ -48,23 +48,6 @@ class MobileNavBar extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
-            icon: Icons.home,
-            title: 'Početna',
-            routeName: 'home',
-            onTap: () {
-              Navigator.pop(context);
-              if (currentRoute != 'home') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PersonalTrainerSearchScreen(),
-                  ),
-                );
-              }
-            },
-          ),
-          _buildMenuItem(
-            context,
             icon: Icons.search,
             title: 'Pretraga trenera',
             routeName: 'search',

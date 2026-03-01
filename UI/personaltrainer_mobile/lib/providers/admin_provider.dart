@@ -314,4 +314,44 @@ class AdminProvider {
       };
       }
   }
+
+  // Trainer dashboard (Administrator / PersonalTrainer – own stats only)
+  Future<Map<String, dynamic>?> getTrainerDashboard() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}dashboard/trainer-dashboard'),
+        headers: _createHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        print('getTrainerDashboard error: ${response.statusCode} ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error in getTrainerDashboard: $e');
+      return null;
+    }
+  }
+
+  // Dashboard report (SuperAdmin only)
+  Future<Map<String, dynamic>?> getDashboardReport() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}dashboard/report'),
+        headers: _createHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        print('getDashboardReport error: ${response.statusCode} ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error in getDashboardReport: $e');
+      return null;
+    }
+  }
 }

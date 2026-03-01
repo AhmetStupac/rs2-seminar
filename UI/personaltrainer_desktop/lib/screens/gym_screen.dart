@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:personaltrainer_mobile/models/gym.dart';
-import 'package:personaltrainer_mobile/providers/gym_provider.dart';
-import 'package:personaltrainer_mobile/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_mobile/layouts/navBar.dart';
-import 'package:personaltrainer_mobile/widgets/network_image_loader.dart';
+import 'package:personaltrainer_desktop/models/gym.dart';
+import 'package:personaltrainer_desktop/providers/gym_provider.dart';
+import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
+import 'package:personaltrainer_desktop/layouts/navBar.dart';
+import 'package:personaltrainer_desktop/widgets/network_image_loader.dart';
 
 class GymScreen extends StatefulWidget {
   final Gym? gym;
@@ -142,9 +142,50 @@ class _GymScreenState extends State<GymScreen> {
   }
 
   Future<void> _saveGym() async {
-    if (nameController.text.isEmpty) {
+    if (nameController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'Gym name cannot be empty.'; });
+      return;
+    }
+    if (addressController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'Address cannot be empty.'; });
+      return;
+    }
+    if (cityController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'City cannot be empty.'; });
+      return;
+    }
+    if (countryController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'Country cannot be empty.'; });
+      return;
+    }
+    if (emailController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'Email cannot be empty.'; });
+      return;
+    }
+    if (phoneNumberController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'Phone number cannot be empty.'; });
+      return;
+    }
+    if (workTimeController.text.trim().isEmpty) {
+      setState(() { errorMessage = 'Work time cannot be empty.'; });
+      return;
+    }
+
+    final phoneRaw = phoneNumberController.text.trim();
+    final phoneRegex = RegExp(r'^\+387 6[0-9] [0-9]{3} [0-9]{3}$');
+    if (!phoneRegex.hasMatch(phoneRaw)) {
       setState(() {
-        errorMessage = 'Naziv teretane je obavezan';
+        errorMessage = 'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
+      });
+      return;
+    }
+
+    final emailRaw = emailController.text.trim();
+    final emailComRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$');
+    final emailEduRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@edu\.fit\.ba$');
+    if (!emailComRegex.hasMatch(emailRaw) && !emailEduRegex.hasMatch(emailRaw)) {
+      setState(() {
+        errorMessage = 'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
       });
       return;
     }

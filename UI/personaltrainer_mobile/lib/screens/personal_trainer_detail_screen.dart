@@ -251,32 +251,6 @@ class _PersonalTrainerDetailScreenState
 
                     const SizedBox(height: 30),
 
-                    // Motto/Tagline
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Motiv:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.trainer.certifications ??
-                                'Samo jako, nema lagano',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     const SizedBox(height: 40),
 
                     // Contact Information
@@ -285,20 +259,13 @@ class _PersonalTrainerDetailScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInfoRow('Kontakt:', '000-000-000'),
-                          _buildInfoRow('Grad:', 'Mostar'),
-                          _buildInfoRow('Porijeklo:', 'BiH'),
-                          _buildInfoRow('Spol:', 'Žensko'),
-                          _buildInfoRow(
-                            'Email:',
-                            '${widget.trainer.userFirstName?.toLowerCase().replaceAll(' ', '.')}@gmail.com',
-                          ),
                           if (widget.trainer.sport != null)
                             _buildInfoRow('Sport:', widget.trainer.sport!),
-                          if (widget.trainer.yearsOfExperience != null)
+                          if (widget.trainer.certifications != null &&
+                              widget.trainer.certifications!.isNotEmpty)
                             _buildInfoRow(
-                              'Iskustvo:',
-                              '${widget.trainer.yearsOfExperience} godina',
+                              'Certifikati:',
+                              widget.trainer.certifications!,
                             ),
                         ],
                       ),

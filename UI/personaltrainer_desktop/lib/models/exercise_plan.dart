@@ -10,6 +10,8 @@ class ExercisePlan {
   int? trainingPlanId;
   @JsonKey(includeToJson: false)
   Exercise? exercise;
+  @JsonKey(includeToJson: false)
+  String? exerciseName;
   int? sets;
   int? reps;
   int? duration;
@@ -26,6 +28,7 @@ class ExercisePlan {
     this.exerciseId,
     this.trainingPlanId,
     this.exercise,
+    this.exerciseName,
     this.sets,
     this.reps,
     this.duration,

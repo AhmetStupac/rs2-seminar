@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace eCommerce.Services
 {
-    public class TrainingPlanService : BaseCRUDService<TrainingPlanResponse, NameSearchObject, Database.TrainingPlan, TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
+    public class TrainingPlanService : BaseCRUDService<TrainingPlanResponse, TrainingPlanSearchObject, Database.TrainingPlan, TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
         , ITrainingPlanService
     {
 
@@ -36,7 +36,7 @@ namespace eCommerce.Services
         }
 
 
-        protected override IQueryable<Database.TrainingPlan> ApplyFilter(IQueryable<Database.TrainingPlan> query, NameSearchObject search)
+        protected override IQueryable<Database.TrainingPlan> ApplyFilter(IQueryable<Database.TrainingPlan> query, TrainingPlanSearchObject search)
         {
             // Keep the result as IQueryable<Database.TrainingPlan> to avoid type mismatch
             IQueryable<Database.TrainingPlan> result = query
@@ -44,6 +44,13 @@ namespace eCommerce.Services
                     .ThenInclude(pt => pt.User)
                 .Include(t => t.ExercisePlans)
                     .ThenInclude(ep => ep.Exercise);
+
+            // When PersonalTrainerId is specified (e.g. purchase flow), filter by that trainer's plans only
+            if (search.PersonalTrainerId.HasValue && search.PersonalTrainerId.Value > 0)
+            {
+                result = result.Where(t => t.PersonalTrainerId == search.PersonalTrainerId.Value);
+                return result;
+            }
 
             // Filter by authenticated user
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;

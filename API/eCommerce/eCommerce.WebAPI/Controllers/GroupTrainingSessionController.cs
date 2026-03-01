@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class GroupTrainingSessionController

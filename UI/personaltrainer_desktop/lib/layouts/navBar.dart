@@ -105,16 +105,17 @@ class _MasterScreenState extends State<NavBar> {
             },
           ),
 
-          _buildMenuItem(
-            icon: Icons.location_on,
-            label: 'Gym List',
-            routeName: 'Gym List',
-            onTap: () {
-              Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (context) => GymListScreen()));
-            },
-          ),
+          if (AuthProvider.isSuperAdmin)
+            _buildMenuItem(
+              icon: Icons.location_on,
+              label: 'Gym List',
+              routeName: 'Gym List',
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (context) => GymListScreen()));
+              },
+            ),
 
           _buildMenuItem(
             icon: Icons.restaurant_menu,
@@ -140,16 +141,17 @@ class _MasterScreenState extends State<NavBar> {
             },
           ),
 
-          _buildMenuItem(
-            icon: Icons.admin_panel_settings,
-            label: 'Admin Panel',
-            routeName: 'Admin Panel',
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => UsersListScreen()),
-              );
-            },
-          ),
+          if (AuthProvider.isSuperAdmin)
+            _buildMenuItem(
+              icon: Icons.admin_panel_settings,
+              label: 'Admin Panel',
+              routeName: 'Admin Panel',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => UsersListScreen()),
+                );
+              },
+            ),
 
           Spacer(), // Gurni donji deo na dno
           // Logout dugme

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace eCommerce.Services.Interface
 {
-    public interface ITrainingPlanService : ICRUDService<TrainingPlanResponse,NameSearchObject,TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
+    public interface ITrainingPlanService : ICRUDService<TrainingPlanResponse, TrainingPlanSearchObject, TrainingPlanUpsertRequest, TrainingPlanUpsertRequest>
     {
         Task<IEnumerable<TrainingPlanCatalogResponse>> GetCatalogAsync();
     }

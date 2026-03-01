@@ -175,8 +175,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  String? _validate() {
+    if (_firstNameController.text.trim().isEmpty) return 'First name cannot be empty.';
+    if (_lastNameController.text.trim().isEmpty) return 'Last name cannot be empty.';
+    if (_emailController.text.trim().isEmpty) return 'Email cannot be empty.';
+    final emailComRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$');
+    final emailEduRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@edu\.fit\.ba$');
+    final email = _emailController.text.trim();
+    if (!emailComRegex.hasMatch(email) && !emailEduRegex.hasMatch(email))
+      return 'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
+    if (_phoneController.text.trim().isEmpty) return 'Phone number cannot be empty.';
+    final phoneRegex = RegExp(r'^\+387 6[0-9] [0-9]{3} [0-9]{3}$');
+    if (!phoneRegex.hasMatch(_phoneController.text.trim())) return 'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
+    if (_usernameController.text.trim().isEmpty) return 'Username cannot be empty.';
+    return null;
+  }
+
   Future<void> _saveChanges() async {
     if (_user == null) return;
+
+    final validationError = _validate();
+    if (validationError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(validationError),
+            ],
+          ),
+          backgroundColor: Colors.orange[700],
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
 
     setState(() {
       _saving = true;
@@ -539,6 +573,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: _emailController,
                             decoration: const InputDecoration(
                               labelText: 'Email',
+                              hintText: 'e.g. john.doe@gmail.com or john.doe@edu.fit.ba',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -555,6 +590,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: _phoneController,
                             decoration: const InputDecoration(
                               labelText: 'Phone',
+                              hintText: '+387 6x xxx xxx',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,

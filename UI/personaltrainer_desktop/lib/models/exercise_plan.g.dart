@@ -13,6 +13,7 @@ ExercisePlan _$ExercisePlanFromJson(Map<String, dynamic> json) => ExercisePlan(
   exercise: json['exercise'] == null
       ? null
       : Exercise.fromJson(json['exercise'] as Map<String, dynamic>),
+  exerciseName: json['exerciseName'] as String?,
   sets: (json['sets'] as num?)?.toInt(),
   reps: (json['reps'] as num?)?.toInt(),
   duration: (json['duration'] as num?)?.toInt(),

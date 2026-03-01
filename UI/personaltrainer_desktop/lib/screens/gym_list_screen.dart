@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/models/gym.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/providers/gym_provider.dart';
 import 'package:personaltrainer_desktop/screens/gym_screen.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
@@ -180,6 +181,30 @@ class _GymListScreenState extends State<GymListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AuthProvider.isSuperAdmin) {
+      return NavBar(
+        'Teretane',
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock_outline, size: 64, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              const Text(
+                'Access Denied',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This section is only available to SuperAdmins.',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return NavBar(
       'Teretane',
       Column(
