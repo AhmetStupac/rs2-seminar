@@ -100,7 +100,7 @@ class _PersonalTrainerSearchScreenState
         // Filter by sport
         final matchesSport =
             _selectedSport == null ||
-            _selectedSport == 'Svi sportovi' ||
+            _selectedSport == 'All sports' ||
             trainer.sport == _selectedSport;
 
         return matchesName && matchesSport;
@@ -115,7 +115,7 @@ class _PersonalTrainerSearchScreenState
         .toSet()
         .toList();
     sports.sort();
-    return ['Svi sportovi', ...sports];
+    return ['All sports', ...sports];
   }
 
   void _showFilterDialog() {
@@ -125,7 +125,7 @@ class _PersonalTrainerSearchScreenState
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Filtriraj po sportu'),
+          title: const Text('Filter by sport'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -134,10 +134,10 @@ class _PersonalTrainerSearchScreenState
                   title: Text(sport),
                   leading: Radio<String>(
                     value: sport,
-                    groupValue: _selectedSport ?? 'Svi sportovi',
+                    groupValue: _selectedSport ?? 'All sports',
                     onChanged: (String? value) {
                       setState(() {
-                        _selectedSport = value == 'Svi sportovi' ? null : value;
+                        _selectedSport = value == 'All sports' ? null : value;
                       });
                       _filterTrainers();
                       Navigator.of(context).pop();
@@ -145,7 +145,7 @@ class _PersonalTrainerSearchScreenState
                   ),
                   onTap: () {
                     setState(() {
-                      _selectedSport = sport == 'Svi sportovi' ? null : sport;
+                      _selectedSport = sport == 'All sports' ? null : sport;
                     });
                     _filterTrainers();
                     Navigator.of(context).pop();
@@ -157,7 +157,7 @@ class _PersonalTrainerSearchScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Zatvori'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -179,7 +179,7 @@ class _PersonalTrainerSearchScreenState
           ),
         ),
         title: const Text(
-          'Pretraga trenera',
+          'Trainer search',
           style: TextStyle(color: Colors.black87),
         ),
         centerTitle: true,
@@ -205,7 +205,7 @@ class _PersonalTrainerSearchScreenState
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Pretraži trenere',
+                  hintText: 'Search trainers',
                   hintStyle: TextStyle(color: Colors.grey[400]),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -300,7 +300,7 @@ class _PersonalTrainerSearchScreenState
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadTrainers,
-              child: const Text('Pokušaj ponovo'),
+              child: const Text('Try again'),
             ),
           ],
         ),
@@ -316,8 +316,8 @@ class _PersonalTrainerSearchScreenState
             const SizedBox(height: 16),
             Text(
               _searchController.text.isEmpty
-                  ? 'Nema dostupnih trenera'
-                  : 'Nema rezultata za "${_searchController.text}"',
+                  ? 'No available trainers'
+                  : 'No results for "${_searchController.text}"',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -411,7 +411,7 @@ class _PersonalTrainerSearchScreenState
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        '${trainer.yearsOfExperience} godina iskustva',
+                        '${trainer.yearsOfExperience} years of experience',
                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ),

@@ -79,7 +79,7 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                       // Exercise Name
                       Text(
-                        exercise.name ?? 'Bez naziva',
+                        exercise.name ?? 'No name',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -90,8 +90,8 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                       // Exercise Details
                       _buildDetailSection(
-                        'Oprema',
-                        exercise.equipment?.name ?? 'Nije potrebna',
+                        'Equipment',
+                        exercise.equipment?.name ?? 'Not required',
                         Icons.sports_gymnastics,
                         Colors.blue,
                       ),
@@ -99,7 +99,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       _buildDetailSection(
-                        'Grupa mišića',
+                        'Muscle Group',
                         _getMuscleGroupName(exercise.muscleGroupId),
                         Icons.accessibility_new,
                         Colors.orange,
@@ -109,7 +109,7 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                       // Instructions Section
                       const Text(
-                        'Uputstva za izvođenje',
+                        'Instructions before execution',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -120,26 +120,26 @@ class ExerciseDetailScreen extends StatelessWidget {
 
                       _buildInstructionCard(
                         '1',
-                        'Početna pozicija',
-                        'Postavite se u pravilnu startnu poziciju. Stopala su na širini ramena, leđa su ravna.',
+                        'Warm up #1',
+                        'Swing your arms back and forth in a circular motion.',
                       ),
 
                       _buildInstructionCard(
                         '2',
-                        'Izvođenje',
-                        'Kontrolisano izvedite vježbu u punom opsegu pokreta. Držite konstantnu napetost u mišićima.',
+                        'Warm up #2',
+                        'Do hip rotations.',
                       ),
 
                       _buildInstructionCard(
                         '3',
-                        'Disanje',
-                        'Udahnite pri spuštanju/relaksaciji, izdahnite pri naprezanju/dizanju.',
+                        'Warm up #3',
+                        'Lift your arms up to the sky, then lower them down to your sides. Breathe deeply during the movement.',
                       ),
 
                       _buildInstructionCard(
                         '4',
-                        'Povratak',
-                        'Polako se vratite u početnu poziciju, bez naglog opuštanja.',
+                        'Warm up #4',
+                        'Rotate each leg leg, knee and ankle in a circular motion.',
                       ),
 
                       const SizedBox(height: 32),
@@ -164,7 +164,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Savjeti',
+                                  'Tips',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -174,10 +174,10 @@ class ExerciseDetailScreen extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            _buildTipItem('Zagrijte se prije izvođenja vježbe'),
-                            _buildTipItem('Fokusirajte se na pravilnu tehniku, ne na težinu'),
-                            _buildTipItem('Održavajte konstantnu kontrolu tokom cijele vježbe'),
-                            _buildTipItem('Ako osjetite bol, zaustavite se i konsultujte trenera'),
+                            _buildTipItem('Warm up before executing the exercise'),
+                            _buildTipItem('Focus on the correct technique, not on the weight'),
+                            _buildTipItem('Maintain constant control throughout the exercise'),
+                            _buildTipItem('If you feel pain, stop and consult the trainer'),
                           ],
                         ),
                       ),
@@ -212,7 +212,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Nema slike',
+            'No image',
             style: TextStyle(
               color: Colors.grey[500],
               fontSize: 14,
@@ -375,21 +375,21 @@ class ExerciseDetailScreen extends StatelessWidget {
     // You can expand this based on your muscle group IDs
     switch (muscleGroupId) {
       case 1:
-        return 'Grudi';
+        return 'Chest';
       case 2:
-        return 'Leđa';
+        return 'Back';
       case 3:
-        return 'Noge';
+        return 'Legs';
       case 4:
-        return 'Ramena';
+        return 'Shoulders';
       case 5:
-        return 'Bicepsi';
+        return 'Biceps';
       case 6:
-        return 'Tricepsi';
+        return 'Triceps';
       case 7:
-        return 'Trbušnjaci';
+        return 'Abs';
       default:
-        return 'Nije specificirano';
+        return 'Not specified';
     }
   }
 }

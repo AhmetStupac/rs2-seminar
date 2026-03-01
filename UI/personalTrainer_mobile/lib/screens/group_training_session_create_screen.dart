@@ -33,7 +33,7 @@ class _GroupTrainingSessionCreateScreenState
     'Weightlifting',
     'Hiking',
     'HIIT',
-    'Pilates',
+    'Karate',
     'CrossFit',
     'Other',
   ];

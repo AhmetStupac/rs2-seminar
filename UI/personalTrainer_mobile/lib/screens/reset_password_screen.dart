@@ -62,11 +62,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 children: [
                   Icon(Icons.check_circle, color: Colors.green, size: 28),
                   SizedBox(width: 8),
-                  Text('Uspješno!'),
+                  Text('Success!'),
                 ],
               ),
               content: const Text(
-                'Vaša lozinka je uspješno promijenjena. Sada se možete prijaviti sa novom lozinkom.',
+                'Your password has been successfully changed. You can now login with your new password.',
               ),
               actions: [
                 ElevatedButton(
@@ -88,7 +88,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Greška pri resetiranju lozinke. Provjerite unijete podatke.',
+                'Error resetting password. Please check the entered data.',
               ),
               backgroundColor: Colors.red,
             ),
@@ -117,7 +117,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset lozinke'),
+        title: const Text('Reset password'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -141,7 +141,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                   // Title
                   Text(
-                    'Nova lozinka',
+                    'New password',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -180,7 +180,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                   // Description
                   Text(
-                    'Unesite verifikacioni kod koji ste primili na email',
+                    'Enter the verification code you received on email',
                     textAlign: TextAlign.center,
                     style: Theme.of(
                       context,
@@ -193,7 +193,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _codeController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Verifikacioni kod',
+                      labelText: 'Verification code',
                       hintText: '123456',
                       prefixIcon: const Icon(Icons.pin),
                       border: OutlineInputBorder(
@@ -202,7 +202,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Molimo unesite verifikacioni kod';
+                        return 'Please enter the verification code';
                       }
                       return null;
                     },
@@ -215,7 +215,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _newPasswordController,
                     obscureText: _obscureNewPassword,
                     decoration: InputDecoration(
-                      labelText: 'Nova lozinka',
+                      labelText: 'New password',
+                      hintText: 'At least 6 characters',
                       prefixIcon: const Icon(Icons.lock),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -235,10 +236,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Molimo unesite novu lozinku';
+                        return 'Please enter a new password';
                       }
                       if (value.length < 6) {
-                        return 'Lozinka mora imati najmanje 6 karaktera';
+                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
@@ -251,7 +252,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
                     decoration: InputDecoration(
-                      labelText: 'Potvrdite lozinku',
+                        labelText: 'Confirm password',
+                      hintText: 'Repeat password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -271,10 +273,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Molimo potvrdite lozinku';
+                        return 'Please confirm your password';
                       }
                       if (value != _newPasswordController.text) {
-                        return 'Lozinke se ne poklapaju';
+                        return 'Passwords do not match';
                       }
                       return null;
                     },
@@ -300,7 +302,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text(
-                              'Resetuj lozinku',
+                              'Reset password',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -314,7 +316,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   TextButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_back),
-                    label: const Text('Nazad'),
+                    label: const Text('Back'),
                   ),
                 ],
               ),

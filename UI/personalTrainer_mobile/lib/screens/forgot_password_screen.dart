@@ -39,7 +39,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Verifikacioni kod je poslat na vašu email adresu'),
+              content: Text('Verification code has been sent to your email address'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
             ),
@@ -54,7 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Greška pri slanju koda. Molimo pokušajte ponovo.'),
+              content: Text('Error sending code. Please try again.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -82,7 +82,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Zaboravljena lozinka'),
+        title: const Text('Forgot Password'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -106,7 +106,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                   // Title
                   Text(
-                    'Reset lozinke',
+                    'Reset Password',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -116,7 +116,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                   // Description
                   Text(
-                    'Unesite vašu email adresu i poslaćemo vam verifikacioni kod za reset lozinke',
+                    'Enter your email address and we will send you a verification code to reset your password',
                     textAlign: TextAlign.center,
                     style: Theme.of(
                       context,
@@ -129,8 +129,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email adresa',
-                      hintText: 'primjer@email.com',
+                      labelText: 'Email address',
+                      hintText: 'xxx@email.com',
                       prefixIcon: const Icon(Icons.email),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -138,10 +138,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Molimo unesite email adresu';
+                        return 'Please enter your email address';
                       }
                       if (!value.contains('@') || !value.contains('.')) {
-                        return 'Molimo unesite validnu email adresu';
+                        return 'Please enter a valid email address';
                       }
                       return null;
                     },
@@ -167,7 +167,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Text(
-                              'Pošalji kod',
+                              'Send Code',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -181,7 +181,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   TextButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_back),
-                    label: const Text('Nazad na prijavu'),
+                    label: const Text('Back to login'),
                   ),
                 ],
               ),

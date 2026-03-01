@@ -2,6 +2,8 @@
 
 part of 'user.dart';
 
+// ignore_for_file: type=lint
+
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
@@ -13,6 +15,10 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   username: json['username'] as String?,
   email: json['email'] as String?,
   phoneNumber: json['phoneNumber'] as String?,
+  profileImageId: (json['profileImageId'] as num?)?.toInt(),
+  profileImage: json['profileImage'] == null
+      ? null
+      : Image.fromJson(json['profileImage'] as Map<String, dynamic>),
   password: json['password'] as String?,
   passwordConfirmation: json['passwordConfirmation'] as String?,
   isActive: json['isActive'] as bool? ?? true,
@@ -33,6 +39,8 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'username': instance.username,
   'email': instance.email,
   'phoneNumber': instance.phoneNumber,
+  'profileImageId': instance.profileImageId,
+  'profileImage': instance.profileImage?.toJson(),
   'password': instance.password,
   'passwordConfirmation': instance.passwordConfirmation,
   'isActive': instance.isActive,

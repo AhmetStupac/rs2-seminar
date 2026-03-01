@@ -285,6 +285,50 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     });
   }
 
+  Future<void> _deletePlan(NutritionPlan plan) async {
+    if (plan.id == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete nutrition plan'),
+        content: Text(
+          'Are you sure you want to delete "${plan.title ?? 'Untitled Plan'}"? This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => isLoading = true);
+    try {
+      await _nutritionProvider.delete(plan.id!);
+      if (_selectedPlanId == plan.id) _clearForm();
+      await _fetchAvailablePlans();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nutrition plan deleted.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete: ${_errorReason(e)}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -545,12 +589,25 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (_selectedPlanId != null)
+                if (_selectedPlanId != null) ...[
                   TextButton(
                     onPressed: isLoading ? null : _clearForm,
                     child: Text('Cancel'),
                   ),
-                SizedBox(width: 8),
+                  SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            final match = _availablePlans
+                                .where((p) => p.id == _selectedPlanId);
+                            if (match.isNotEmpty) _deletePlan(match.first);
+                          },
+                    icon: Icon(Icons.delete_outline, size: 18, color: Colors.red[700]),
+                    label: Text('Delete', style: TextStyle(color: Colors.red[700])),
+                  ),
+                  SizedBox(width: 8),
+                ],
                 ElevatedButton.icon(
                   onPressed: isLoading ? null : posaljiNaAPI,
                   icon: Icon(_selectedPlanId != null ? Icons.save : Icons.send),
@@ -649,20 +706,30 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                           ),
                         ],
                       ),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '\$${plan.price?.toStringAsFixed(2) ?? "0.00"}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green[700],
-                            ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '\$${plan.price?.toStringAsFixed(2) ?? "0.00"}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[700],
+                                ),
+                              ),
+                              if (isSelected)
+                                Icon(Icons.check_circle, color: Colors.blue),
+                            ],
                           ),
-                          if (isSelected)
-                            Icon(Icons.check_circle, color: Colors.blue),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: Colors.red[400]),
+                            tooltip: 'Delete plan',
+                            onPressed: () => _deletePlan(plan),
+                          ),
                         ],
                       ),
                     ),

@@ -76,8 +76,8 @@ class _OnlineUsersScreenState extends State<OnlineUsersScreen> {
                         SnackBar(
                           content: Text(
                             signalRProvider.isConnected
-                                ? 'Povezani'
-                                : 'Nepovezani',
+                                ? 'Connected'
+                                : 'Disconnected',
                           ),
                         ),
                       );
@@ -99,7 +99,7 @@ class _OnlineUsersScreenState extends State<OnlineUsersScreen> {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Povezivanje...'),
+                  Text('Connecting...'),
                 ],
               ),
             );
@@ -120,12 +120,12 @@ class _OnlineUsersScreenState extends State<OnlineUsersScreen> {
                     const Icon(Icons.person_off, size: 80, color: Colors.grey),
                     const SizedBox(height: 16),
                     const Text(
-                      'Nema dostupnih korisnika',
+                      'No available users',
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Trenutno niko nije online',
+                      'No one is online',
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 24),
@@ -134,7 +134,7 @@ class _OnlineUsersScreenState extends State<OnlineUsersScreen> {
                         await signalRProvider.refreshOnlineUsers();
                       },
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Osvježi'),
+                      label: const Text('Refresh'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,

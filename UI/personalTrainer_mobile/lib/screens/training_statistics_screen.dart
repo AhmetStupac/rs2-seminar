@@ -110,7 +110,7 @@ class _TrainingStatisticsScreenState extends State<TrainingStatisticsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Training Statistics',
+          'Training statistics',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,

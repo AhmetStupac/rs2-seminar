@@ -135,14 +135,15 @@ class UserProvider extends BaseProvider<User> {
     String lastName,
     String email,
     String username,
-    String phoneNumber,
-  ) async {
+    String phoneNumber, {
+    int? profileImageId,
+  }) async {
     try {
       var url = "${BaseProvider.baseUrl}Users/update/$userId";
       var uri = Uri.parse(url);
       var headers = createHeaders();
 
-      var body = jsonEncode({
+      var body = <String, dynamic>{
         "firstName": firstName,
         "lastName": lastName,
         "email": email,
@@ -150,14 +151,18 @@ class UserProvider extends BaseProvider<User> {
         "phoneNumber": phoneNumber,
         "isActive": true,
         "roleIds": [],
-      });
+      };
+      if (profileImageId != null) {
+        body["profileImageId"] = profileImageId;
+      }
+      var bodyEncoded = jsonEncode(body);
 
       print("🔄 Updating user: $userId");
       print("🔄 URL: $url");
       var response = await BaseProvider.client.put(
         uri,
         headers: headers,
-        body: body,
+        body: bodyEncoded,
       );
       print("🔄 Update user response status: ${response.statusCode}");
       print("🔄 Update user response body: ${response.body}");

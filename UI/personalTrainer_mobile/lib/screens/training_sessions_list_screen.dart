@@ -116,7 +116,7 @@ class _TrainingSessionsListScreenState
             'dd.MM.yyyy HH:mm',
           ).format(session.scheduledDateTime!);
           final cancellationMessage =
-              'Trening sesija za $dateTime je otkazana od strane klijenta.';
+              'Training session for $dateTime has been cancelled by the client.';
 
           // Connect to messaging hub and send message
           await _messagesProvider.connect(trainerId);
@@ -138,7 +138,7 @@ class _TrainingSessionsListScreenState
           SnackBar(
             content: Text(
               messageSent
-                  ? 'Trening sesija otkazana. Trener je obaviješten.'
+                  ? 'Training session cancelled. Trainer has been notified.'
                   : 'Training session cancelled successfully',
             ),
             backgroundColor: Colors.green,
@@ -191,7 +191,7 @@ class _TrainingSessionsListScreenState
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Trening sesije',
+          'Training sessions',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -222,7 +222,7 @@ class _TrainingSessionsListScreenState
         backgroundColor: const Color(0xFFE8B44A),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
-          'Book Session',
+          'Book session',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
@@ -250,7 +250,7 @@ class _TrainingSessionsListScreenState
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Error loading sessions',
+              'Error loading training sessions',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -425,8 +425,8 @@ class _TrainingSessionsListScreenState
               Expanded(
                 child: Text(
                   session.trainerName != null
-                      ? 'Trening zakazan sa ${session.trainerName} is ${session.durationMinutes ?? 60} min'
-                      : 'Trening zakazan za ${session.durationMinutes ?? 60} minuta',
+                      ? 'Training session booked with ${session.trainerName} is ${session.durationMinutes ?? 60} minutes'
+                      : 'Training session booked for ${session.durationMinutes ?? 60} minutes',
                   style: const TextStyle(fontSize: 14, color: Colors.black87),
                 ),
               ),
@@ -585,7 +585,7 @@ class _TrainingSessionsListScreenState
   String _getStatusText(TrainingSession session) {
     // Check cancelled status first, regardless of statusDisplay from backend
     if (session.isCancelled) {
-      return 'Otkazan';
+      return 'Cancelled';
     }
 
     // Use backend statusDisplay if available
@@ -595,13 +595,13 @@ class _TrainingSessionsListScreenState
 
     // Fallback to local status determination
     if (session.isCompleted) {
-      return 'Završen';
+      return 'Completed';
     } else if (session.isConfirmed) {
-      return 'Potvrđen';
+      return 'Confirmed';
     } else if (session.isPending) {
-      return 'Na čekanju';
+      return 'Pending';
     } else if (session.isNoShow) {
-      return 'Nije se pojavio';
+      return 'Did not show up';
     }
     return 'Unknown';
   }

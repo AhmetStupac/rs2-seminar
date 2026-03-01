@@ -92,7 +92,7 @@ class _PersonalTrainerDetailScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Ocjena uspješno dodana!'),
+              content: Text('Rating successfully added!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -103,7 +103,7 @@ class _PersonalTrainerDetailScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Ocjena uspješno ažurirana!'),
+              content: Text('Rating successfully updated!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -132,19 +132,19 @@ class _PersonalTrainerDetailScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Obriši ocjenu'),
+        title: const Text('Delete rating'),
         content: const Text(
-          'Da li ste sigurni da želite obrisati vašu ocjenu?',
+          'Are you sure you want to delete your rating?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Obriši'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -170,7 +170,7 @@ class _PersonalTrainerDetailScreenState
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Ocjena uspješno obrisana!'),
+              content: Text('Rating successfully deleted!'),
               backgroundColor: Colors.green,
             ),
           );
@@ -180,7 +180,7 @@ class _PersonalTrainerDetailScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Greška prilikom brisanja ocjene'),
+            content: Text('Error deleting rating'),
             backgroundColor: Colors.red,
           ),
         );
@@ -264,7 +264,7 @@ class _PersonalTrainerDetailScreenState
                           if (widget.trainer.certifications != null &&
                               widget.trainer.certifications!.isNotEmpty)
                             _buildInfoRow(
-                              'Certifikati:',
+                              'Certifications:',
                               widget.trainer.certifications!,
                             ),
                         ],
@@ -308,7 +308,7 @@ class _PersonalTrainerDetailScreenState
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '${_ratingStats!.totalRatings} ocjena',
+                                    '${_ratingStats!.totalRatings} ratings',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey[600],
@@ -332,7 +332,7 @@ class _PersonalTrainerDetailScreenState
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                'Vaša ocjena',
+                                'Your rating',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -346,7 +346,7 @@ class _PersonalTrainerDetailScreenState
                                     size: 20,
                                   ),
                                   onPressed: _deleteRating,
-                                  tooltip: 'Obriši ocjenu',
+                                  tooltip: 'Delete rating',
                                 ),
                             ],
                           ),
@@ -382,7 +382,7 @@ class _PersonalTrainerDetailScreenState
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
                                     child: Text(
-                                      'Vaša ocjena: ${_userRating.toInt()}/5',
+                                      'Your rating: ${_userRating.toInt()}/5',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey[600],
@@ -397,7 +397,7 @@ class _PersonalTrainerDetailScreenState
                                       maxLines: 3,
                                       decoration: InputDecoration(
                                         hintText:
-                                            'Dodajte komentar (opcionalno)',
+                                            'Add comment (optional)',
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                             8,
@@ -422,7 +422,7 @@ class _PersonalTrainerDetailScreenState
                                               }
                                             });
                                           },
-                                          child: const Text('Otkaži'),
+                                          child: const Text('Cancel'),
                                         ),
                                         const SizedBox(width: 8),
                                         ElevatedButton(
@@ -433,8 +433,8 @@ class _PersonalTrainerDetailScreenState
                                           ),
                                           child: Text(
                                             _myRating == null
-                                                ? 'Dodaj ocjenu'
-                                                : 'Ažuriraj',
+                                                ? 'Add rating'
+                                                : 'Update rating',
                                           ),
                                         ),
                                       ],
@@ -457,7 +457,7 @@ class _PersonalTrainerDetailScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Sve ocjene',
+                              'All ratings',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -492,7 +492,7 @@ class _PersonalTrainerDetailScreenState
                           },
                           icon: const Icon(Icons.calendar_today, size: 20),
                           label: const Text(
-                            'Zakaži trening',
+                            'Book training',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -530,7 +530,7 @@ class _PersonalTrainerDetailScreenState
                           },
                           icon: const Icon(Icons.shopping_cart_outlined, size: 20),
                           label: const Text(
-                            'Kupi plan / Članarinu',
+                            'Buy plan / Membership',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,

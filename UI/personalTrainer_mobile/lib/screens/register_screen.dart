@@ -133,6 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _firstNameController,
                   decoration: InputDecoration(
                     labelText: 'First Name',
+                    hintText: 'e.g. John',
                     prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -153,6 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _lastNameController,
                   decoration: InputDecoration(
                     labelText: 'Last Name',
+                    hintText: 'e.g. Doe',
                     prefixIcon: const Icon(Icons.person_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -173,6 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _usernameController,
                   decoration: InputDecoration(
                     labelText: 'Username',
+                    hintText: 'e.g. johndoe',
                     prefixIcon: const Icon(Icons.account_circle),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -197,6 +200,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
+                    hintText: 'e.g. john@example.com',
                     prefixIcon: const Icon(Icons.email),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -218,12 +222,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Phone Number field
+                // Phone Number field (+387 6x xxx xxx)
                 TextFormField(
                   controller: _phoneNumberController,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
+                    hintText: '+387 6x xxx xxx',
                     prefixIcon: const Icon(Icons.phone),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -232,6 +237,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your phone number';
+                    }
+                    // Format: +387 6x xxx xxx (Bosnia mobile)
+                    final phoneRegex = RegExp(
+                      r'^\+387 6[0-9] \d{3} \d{3}$',
+                    );
+                    if (!phoneRegex.hasMatch(value.trim())) {
+                      return 'Phone must be in format: +387 6x xxx xxx';
                     }
                     return null;
                   },
@@ -245,6 +257,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    hintText: 'At least 6 characters',
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -281,6 +294,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: _obscureConfirmPassword,
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
+                    hintText: 'Repeat password',
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(

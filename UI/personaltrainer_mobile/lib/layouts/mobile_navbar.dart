@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:personaltrainer_mobile/models/user.dart';
+import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/screens/training_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/nutrition_plan_screen.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
@@ -7,6 +9,7 @@ import 'package:personaltrainer_mobile/screens/training_sessions_list_screen.dar
 import 'package:personaltrainer_mobile/screens/training_statistics_screen.dart';
 import 'package:personaltrainer_mobile/screens/online_users_screen.dart';
 import 'package:personaltrainer_mobile/screens/group_training_sessions_screen.dart';
+import 'package:personaltrainer_mobile/screens/profile_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
@@ -25,31 +28,55 @@ class MobileNavBar extends StatelessWidget {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(color: Colors.orange.shade400),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 40, color: Colors.orange),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  'Personal Trainer',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            child: FutureBuilder<User?>(
+              future: UserProvider().getCurrentUser(),
+              builder: (context, snapshot) {
+                final user = snapshot.data;
+                final imageUrl = user?.profileImage?.url;
+                final displayName = user != null
+                    ? '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim()
+                    : 'Personal Trainer';
+                final initials = _getInitials(user?.firstName, user?.lastName);
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white,
+                      backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                          ? NetworkImage(imageUrl)
+                          : null,
+                      child: imageUrl == null || imageUrl.isEmpty
+                          ? Text(
+                              initials,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      displayName.isNotEmpty ? displayName : 'Personal Trainer',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           _buildMenuItem(
             context,
             icon: Icons.search,
-            title: 'Pretraga trenera',
+            title: 'Personal Trainer Search',
             routeName: 'search',
             onTap: () {
               Navigator.pop(context);
@@ -66,7 +93,7 @@ class MobileNavBar extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.fitness_center,
-            title: 'Planovi treninga',
+            title: 'Training Plans',
             routeName: 'training_plan',
             onTap: () {
               Navigator.pop(context);
@@ -83,7 +110,7 @@ class MobileNavBar extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.restaurant_menu,
-            title: 'Planovi ishrane',
+            title: 'Nutrition Plans',
             routeName: 'nutrition_plan',
             onTap: () {
               Navigator.pop(context);
@@ -100,7 +127,7 @@ class MobileNavBar extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.calendar_today,
-            title: 'Moji treninzi',
+            title: 'My Trainings',
             routeName: 'trainings',
             onTap: () {
               Navigator.pop(context);
@@ -117,7 +144,7 @@ class MobileNavBar extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.group_work_outlined,
-            title: 'Group Sessions',
+            title: 'Group Training Sessions',
             routeName: 'group_sessions',
             onTap: () {
               Navigator.pop(context);
@@ -134,7 +161,7 @@ class MobileNavBar extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.bar_chart,
-            title: 'Statistics',
+            title: 'Training Statistics',
             routeName: 'statistics',
             onTap: () {
               Navigator.pop(context);
@@ -168,32 +195,24 @@ class MobileNavBar extends StatelessWidget {
           _buildMenuItem(
             context,
             icon: Icons.person,
-            title: 'Profil',
+            title: 'Profile',
             routeName: 'profile',
             onTap: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profil - uskoro dostupno')),
-              );
-            },
-          ),
-          const Divider(),
-          _buildMenuItem(
-            context,
-            icon: Icons.settings,
-            title: 'Postavke',
-            routeName: 'settings',
-            onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Postavke - uskoro dostupno')),
-              );
+              if (currentRoute != 'profile') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              }
             },
           ),
           _buildMenuItem(
             context,
             icon: Icons.logout,
-            title: 'Odjava',
+            title: 'Logout',
             routeName: 'logout',
             onTap: () async {
               final confirmed = await showDialog<bool>(
@@ -201,12 +220,12 @@ class MobileNavBar extends StatelessWidget {
                 builder: (dialogContext) => AlertDialog(
                   title: const Text('Odjava'),
                   content: const Text(
-                    'Da li ste sigurni da želite da se odjavite?',
+                    'Are you sure you want to logout?',
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Odustani'),
+                      child: const Text('Cancel'),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -214,7 +233,7 @@ class MobileNavBar extends StatelessWidget {
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Odjavi se'),
+                      child: const Text('Logout'),
                     ),
                   ],
                 ),
@@ -244,6 +263,13 @@ class MobileNavBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _getInitials(String? firstName, String? lastName) {
+    final first = firstName?.trim().isNotEmpty == true ? firstName!.trim()[0] : '';
+    final last = lastName?.trim().isNotEmpty == true ? lastName!.trim()[0] : '';
+    if (first.isEmpty && last.isEmpty) return '?';
+    return (first + last).toUpperCase();
   }
 
   Widget _buildMenuItem(

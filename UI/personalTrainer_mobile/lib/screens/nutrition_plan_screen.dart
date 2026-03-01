@@ -80,7 +80,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
           ),
         ),
         title: const Text(
-          'Moji planovi ishrane',
+          'My Nutrition Plans',
           style: TextStyle(color: Colors.black87),
         ),
         centerTitle: true,
@@ -110,7 +110,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadNutritionPlans,
-              child: const Text('Pokušaj ponovo'),
+              child: const Text('Try again'),
             ),
           ],
         ),
@@ -125,7 +125,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             Icon(Icons.restaurant_menu, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'Nemate dodijeljenih planova ishrane',
+              'You have no assigned nutrition plans',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -184,7 +184,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plan.title ?? 'Plan ishrane',
+                      plan.title ?? 'Nutrition Plan',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -235,7 +235,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
                     Expanded(
                       child: Center(
                         child: Text(
-                          'Plan ishrane',
+                          'Nutrition Plan',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -270,7 +270,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
-                  _selectedPlan?.title ?? 'Plan ishrane',
+                  _selectedPlan?.title ?? 'Nutrition Plan',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 20,
@@ -350,7 +350,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
                 Icon(Icons.info_outline, color: Colors.orange.shade700),
                 const SizedBox(width: 8),
                 const Text(
-                  'Informacije o ishrani',
+                  'Nutrition Information',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -358,7 +358,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             const Divider(height: 24),
             if (_selectedPlan?.totalCalories != null) ...[
               _buildInfoRow(
-                'Ukupne kalorije',
+                'Total Calories',
                 '${_selectedPlan?.totalCalories} kcal',
                 Icons.local_fire_department,
                 Colors.red.shade400,
@@ -367,7 +367,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             ],
             if (_selectedPlan?.createdAt != null) ...[
               _buildInfoRow(
-                'Kreiran',
+                'Created',
                 _formatDate(_selectedPlan?.createdAt),
                 Icons.calendar_today,
                 Colors.blue.shade400,
@@ -393,7 +393,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
                 Icon(Icons.pie_chart, color: Colors.orange.shade700),
                 const SizedBox(width: 8),
                 const Text(
-                  'Makronutrijenti',
+                  'Macros',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -401,7 +401,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             const Divider(height: 24),
             if (_selectedPlan?.protein != null) ...[
               _buildMacroRow(
-                'Proteini',
+                'Proteins',
                 '${_selectedPlan?.protein}g',
                 Colors.blue.shade400,
                 0.8,
@@ -410,7 +410,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             ],
             if (_selectedPlan?.carbs != null) ...[
               _buildMacroRow(
-                'Ugljeni hidrati',
+                'Carbohydrates',
                 '${_selectedPlan?.carbs}g',
                 Colors.orange.shade400,
                 0.6,
@@ -419,7 +419,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
             ],
             if (_selectedPlan?.fats != null) ...[
               _buildMacroRow(
-                'Masti',
+                'Fats',
                 '${_selectedPlan?.fats}g',
                 Colors.green.shade400,
                 0.4,

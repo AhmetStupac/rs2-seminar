@@ -76,12 +76,12 @@ class _ChatScreenState extends State<ChatScreen> {
             Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
-              'Nema poruka',
+              'No messages',
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
             SizedBox(height: 8),
             Text(
-              'Započnite razgovor!',
+              'Start a conversation!',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
@@ -148,9 +148,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final difference = now.difference(timestamp);
 
     if (difference.inMinutes < 1) {
-      return 'Upravo';
+      return 'Just now';
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes} min';
+      return '${difference.inMinutes} minutes';
     } else if (difference.inDays < 1) {
       return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
     } else {
@@ -178,7 +178,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Dodavanje fajlova - uskoro dostupno'),
+                  content: Text('Adding files - soon available'),
                 ),
               );
             },
@@ -187,7 +187,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextField(
               controller: _messageController,
               decoration: const InputDecoration(
-                hintText: 'Napišite poruku...',
+                hintText: 'Write a message...',
                 border: InputBorder.none,
               ),
               enabled: messagesProvider.isConnected,
@@ -224,7 +224,7 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Povezivanje...'),
+                Text('Connecting...'),
               ],
             ),
           );
@@ -238,7 +238,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const Icon(Icons.error_outline, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
                 Text(
-                  'Greška: ${messagesProvider.error}',
+                  'Error: ${messagesProvider.error}',
                   style: const TextStyle(color: Colors.red),
                   textAlign: TextAlign.center,
                 ),
@@ -246,7 +246,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ElevatedButton(
                   onPressed: () =>
                       messagesProvider.connect(widget.selectedUser.userId),
-                  child: const Text('Pokušaj ponovo'),
+                  child: const Text('Try again'),
                 ),
               ],
             ),

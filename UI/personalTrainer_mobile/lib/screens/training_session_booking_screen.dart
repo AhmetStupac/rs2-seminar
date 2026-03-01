@@ -175,7 +175,7 @@ class _TrainingSessionBookingScreenState
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Kalendar',
+          'Calendar',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -238,8 +238,8 @@ class _TrainingSessionBookingScreenState
                       Center(
                         child: Text(
                           _isAvailable!
-                              ? 'Slobodan termin'
-                              : 'Termin nije dostupan',
+                              ? 'Free slot'
+                              : 'Slot not available',
                           style: TextStyle(
                             color: _isAvailable!
                                 ? const Color(0xFF4CAF50)
@@ -277,7 +277,7 @@ class _TrainingSessionBookingScreenState
                                   ),
                                 )
                               : const Text(
-                                  'Zakaži termin',
+                                  'Book slot',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -373,7 +373,7 @@ class _TrainingSessionBookingScreenState
   }
 
   Widget _buildDayLabels() {
-    const days = ['Sub', 'Ned', 'Pon', 'Uto', 'Sri', 'Čet', 'Pet'];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -387,8 +387,8 @@ class _TrainingSessionBookingScreenState
             day,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: day == 'Uto' ? const Color(0xFFE8B44A) : Colors.black54,
-              fontWeight: day == 'Uto' ? FontWeight.bold : FontWeight.normal,
+              color: day == 'Tue' ? const Color(0xFFE8B44A) : Colors.black54,
+              fontWeight: day == 'Tue' ? FontWeight.bold : FontWeight.normal,
               fontSize: 14,
             ),
           ),

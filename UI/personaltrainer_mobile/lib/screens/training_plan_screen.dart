@@ -159,7 +159,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
           ),
         ),
         title: const Text(
-          'Moji planovi treninga',
+          'My training plans',
           style: TextStyle(color: Colors.black87),
         ),
         centerTitle: true,
@@ -189,7 +189,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadTrainingPlans,
-              child: const Text('Pokušaj ponovo'),
+              child: const Text('Try again'),
             ),
           ],
         ),
@@ -204,7 +204,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
             Icon(Icons.fitness_center, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'Nemate dodijeljenih planova treninga',
+              'You have no assigned training plans',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -266,7 +266,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plan.title ?? 'Bez naziva',
+                      plan.title ?? 'No name',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -317,7 +317,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        _selectedPlan?.title ?? 'Plan treninga',
+                        _selectedPlan?.title ?? 'Training plan',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
@@ -360,7 +360,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_selectedPlan?.basePrice?.toStringAsFixed(2)} KM',
+                    '${_selectedPlan?.basePrice?.toStringAsFixed(2)} €',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -391,7 +391,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Nema vježbi u ovom planu',
+                          'No exercises in this plan',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 16,
@@ -454,7 +454,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    exercisePlan.exercise?.name ?? 'Bez naziva',
+                    exercisePlan.exercise?.name ?? 'No name',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.normal,
@@ -509,9 +509,9 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
 
   String _buildExerciseSubtitle(ExercisePlan plan) {
     final parts = <String>[];
-    if (plan.sets != null) parts.add('${plan.sets}x setova');
-    if (plan.reps != null) parts.add('${plan.reps} ponavljanja');
-    if (plan.duration != null) parts.add('${plan.duration} min');
+    if (plan.sets != null) parts.add('${plan.sets}x sets');
+    if (plan.reps != null) parts.add('${plan.reps} repetitions');
+    if (plan.duration != null) parts.add('${plan.duration} minutes');
     return parts.join(' • ');
   }
 }

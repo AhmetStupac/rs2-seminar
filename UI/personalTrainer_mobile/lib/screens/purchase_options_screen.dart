@@ -104,8 +104,8 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
         ),
         title: Text(
           widget.trainer.userFirstName != null
-              ? 'Kupovina — ${widget.trainer.userFirstName}'
-              : 'Opcije kupovine',
+              ? 'Purchase — ${widget.trainer.userFirstName}'
+              : 'Purchase options',
           style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.w600,
@@ -121,7 +121,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Odaberite šta želite kupiti',
+                'Choose what you want to buy',
                 style: TextStyle(
                   fontSize: 15,
                   color: Colors.grey,
@@ -133,8 +133,8 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
               _buildExpandableOption(
                 icon: Icons.fitness_center,
                 color: const Color(0xFF4CAF50),
-                title: 'Plan treninga',
-                subtitle: 'Kupite personalizovani plan treninga',
+                title: 'Training plan',
+                subtitle: 'Buy personalized training plan',
                 isExpanded: _trainingExpanded,
                 isLoading: _loadingTrainingPlans,
                 onToggle: () =>
@@ -145,14 +145,14 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                       .map(
                         (p) => _PlanItem(
                           id: p.id ?? 0,
-                          name: p.title ?? 'Bez naziva',
+                          name: p.title ?? 'No name',
                           price: p.basePrice != null
                               ? '€${p.basePrice!.toStringAsFixed(2)}'
                               : null,
                         ),
                       )
                       .toList(),
-                  emptyMessage: 'Nema dostupnih planova treninga.',
+                  emptyMessage: 'No available training plans.',
                   onSelect: (item) => _navigateToPayment(
                     itemType: 0,
                     itemId: item.id,
@@ -167,8 +167,8 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
               _buildExpandableOption(
                 icon: Icons.restaurant_menu,
                 color: const Color(0xFF2196F3),
-                title: 'Plan prehrane',
-                subtitle: 'Kupite personalizovani plan prehrane',
+                title: 'Nutrition plan',
+                subtitle: 'Buy personalized nutrition plan',
                 isExpanded: _nutritionExpanded,
                 isLoading: _loadingNutritionPlans,
                 onToggle: () =>
@@ -179,14 +179,14 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                       .map(
                         (p) => _PlanItem(
                           id: p.id ?? 0,
-                          name: p.title ?? 'Bez naziva',
+                          name: p.title ?? 'No name',
                           price: p.price != null
                               ? '€${p.price!.toStringAsFixed(2)}'
                               : null,
                         ),
                       )
                       .toList(),
-                  emptyMessage: 'Nema dostupnih planova prehrane.',
+                  emptyMessage: 'No available nutrition plans.',
                   onSelect: (item) => _navigateToPayment(
                     itemType: 1,
                     itemId: item.id,
@@ -391,7 +391,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
         itemType: 2,
         itemId: widget.trainer.id,
         customAmountInCents: _membershipPriceInCents,
-        itemName: 'Članarina — ${widget.trainer.userFirstName ?? "Trener"}',
+        itemName: 'Membership — ${widget.trainer.userFirstName ?? "Trainer"}',
       ),
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -432,7 +432,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Članarina',
+                    'Membership',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -441,7 +441,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Mjesečna pretplata — €${price.toStringAsFixed(2)}',
+                    'Monthly subscription — €${price.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withOpacity(0.85),

@@ -33,13 +33,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String get _itemTypeLabel {
     switch (widget.itemType) {
       case 0:
-        return 'Plan treninga';
+        return 'Training Plan';
       case 1:
-        return 'Plan prehrane';
+        return 'Nutrition Plan';
       case 2:
-        return 'Članarina';
+        return 'Membership';
       default:
-        return 'Stavka';
+        return 'Item';
     }
   }
 
@@ -52,7 +52,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final userId = AuthProvider.userId;
     if (userId == null) {
       setState(() {
-        _errorMessage = 'Morate biti prijavljeni da biste platili.';
+        _errorMessage = 'You must be logged in to make a payment.';
       });
       return;
     }
@@ -99,9 +99,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       setState(() {
         _isLoading = false;
         if (e.error.code == FailureCode.Canceled) {
-          _errorMessage = 'Plaćanje je otkazano.';
+          _errorMessage = 'Payment was cancelled.';
         } else {
-          _errorMessage = e.error.localizedMessage ?? 'Plaćanje nije uspjelo.';
+          _errorMessage = e.error.localizedMessage ?? 'Payment failed.';
         }
       });
     } catch (e) {
@@ -124,7 +124,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           onPressed: () => Navigator.of(context).pop(_paymentSuccess),
         ),
         title: const Text(
-          'Plaćanje',
+          'Payment',
           style: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.w600,
@@ -157,7 +157,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             const SizedBox(height: 32),
             const Text(
-              'Plaćanje uspješno!',
+              'Payment Successful!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -166,14 +166,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Vaša kupovina "${widget.itemName}" je potvrđena.',
+              'Your purchase of "${widget.itemName}" has been confirmed.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 15, color: Colors.grey[600]),
             ),
             if (_amountInCents != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Plaćeni iznos: ${_formatAmount(_amountInCents!)}',
+                'Paid amount: ${_formatAmount(_amountInCents!)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -195,7 +195,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Nazad',
+                  'Back',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -225,7 +225,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pregled narudžbe',
+                  'Order Preview',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -298,7 +298,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Plaćanje je sigurno i zaštićeno od strane Stripe-a.',
+                    'Payment is secure and protected by Stripe.',
                     style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   ),
                 ),
@@ -374,7 +374,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                     )
                   : const Text(
-                      'Plati putem Stripe-a',
+                      'Pay via Stripe',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
