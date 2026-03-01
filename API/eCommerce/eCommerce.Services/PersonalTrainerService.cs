@@ -4,17 +4,21 @@ using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using FluentValidation;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace eCommerce.Services
 {
     public class PersonalTrainerService : BaseCRUDService<PersonalTrainerResponse, PersonalTrainerSearchObject, PersonalTrainer, PersonalTrainerUpsertRequest, PersonalTrainerUpsertRequest>, IPersonalTrainerService
     {
-        public PersonalTrainerService(IB210033DbContext context, IMapper mapper)
+        private readonly IValidator<PersonalTrainerUpsertRequest> _validator;
+
+        public PersonalTrainerService(IB210033DbContext context, IMapper mapper, IValidator<PersonalTrainerUpsertRequest> validator)
             : base(context, mapper)
         {
-
+            _validator = validator;
         }
 
 
@@ -49,6 +53,40 @@ namespace eCommerce.Services
             }
 
             return response;
+        }
+
+        protected override async Task BeforeInsert(PersonalTrainer entity, PersonalTrainerUpsertRequest insertRequest)
+        {
+            var result = _validator.Validate(insertRequest);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+            var alreadyExists = await _context.PersonalTrainers
+                .Include(pt => pt.User)
+                .AnyAsync(pt => pt.UserId == insertRequest.UserId);
+
+            if (alreadyExists)
+            {
+                var user = await _context.Users.FindAsync(insertRequest.UserId);
+                throw new InvalidOperationException($"A personal trainer with user name '{user?.FirstName}' already exists.");
+            }
+        }
+
+        protected override Task BeforeUpdate(PersonalTrainer entity, PersonalTrainerUpsertRequest updateRequest)
+        {
+            var result = _validator.Validate(updateRequest);
+
+            if (!result.IsValid)
+            {
+                var errors = string.Join(";", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

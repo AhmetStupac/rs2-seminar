@@ -93,8 +93,12 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
+        final msg = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create Personal Trainer.')),
+          SnackBar(
+            content: Text(msg.isNotEmpty ? msg : 'Failed to create Personal Trainer.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -237,6 +241,13 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
                           prefixIcon: Icon(Icons.sports),
                           hintText: 'e.g. Football, Basketball, Swimming',
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          if (!RegExp(r'[a-zA-Z]').hasMatch(value)) {
+                            return 'Sport must contain at least one letter';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 32),
 
