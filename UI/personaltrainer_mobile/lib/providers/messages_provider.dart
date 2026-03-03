@@ -22,10 +22,9 @@ class MessagesProvider with ChangeNotifier {
   String? get currentRecipientId => _currentRecipientId;
 
   // Get base URL for SignalR hubs
-  // Use dedicated HTTP port for SignalR to avoid SSL cert issues
+  // Use the same HTTP port as the API since everything runs through Docker on one port
   String get _hubBaseUrl {
-    // Use HTTP on port 7094 specifically for SignalR hubs
-    return "http://10.0.2.2:7094";
+    return "http://10.0.2.2:7093";
   }
 
   void setRecipient(String recipientId) {

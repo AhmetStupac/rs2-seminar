@@ -9,6 +9,7 @@ namespace eCommerce.WebAPI.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize]
     public class BlobStorageController : ControllerBase
     {
         private readonly IBlobStorageService _blobStorageService;

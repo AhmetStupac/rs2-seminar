@@ -9,13 +9,13 @@ abstract class BaseProvider<T> with ChangeNotifier {
   static String? _baseUrl;
   String _endpoint = "";
 
-  static String get baseUrl => _baseUrl ?? "https://localhost:7093/api/";
+  static String get baseUrl => _baseUrl ?? "http://localhost:7093/api/";
 
   BaseProvider(String endpoint) {
     _endpoint = endpoint;
     _baseUrl = const String.fromEnvironment(
       "baseUrl",
-      defaultValue: "https://localhost:7093/api/",
+      defaultValue: "http://localhost:7093/api/",
     );
   }
 
@@ -147,7 +147,10 @@ abstract class BaseProvider<T> with ChangeNotifier {
           if (errors.isNotEmpty) {
             final first = errors.first;
             if (first is Map) {
-              final msg = first['errorMessage'] ?? first['message'] ?? first['description'];
+              final msg =
+                  first['errorMessage'] ??
+                  first['message'] ??
+                  first['description'];
               if (msg != null) return msg.toString();
             }
           }

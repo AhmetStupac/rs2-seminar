@@ -1,3 +1,4 @@
+using DotNetEnv;
 using eCommerce.Model.Validators;
 using eCommerce.Services;
 using eCommerce.Services.Database;
@@ -9,9 +10,26 @@ using FluentValidation;
 using Mapster;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+
+// Load .env file for local development.
+// In Docker, environment variables are injected by docker-compose and this is a no-op.
+try
+{
+    var possiblePaths = new[]
+    {
+        Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+        Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"),
+        Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env"),
+    };
+    var envFile = possiblePaths.FirstOrDefault(File.Exists);
+    if (envFile != null)
+        Env.Load(envFile);
+}
+catch (FileNotFoundException) { /* Docker supplies env vars directly */ }
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,7 +116,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<PaymentValidator>();
 
 
 // Configure database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=IB210033PersonalTrainer;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found. Set it in appsettings.json or environment variables.");
 builder.Services.AddDatabaseServices(connectionString);
 
 builder.Services.AddAuthorization(options =>
@@ -167,12 +186,12 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 
-// Ensure database is created
-// using (var scope = app.Services.CreateScope())
-// {
-//     var dbContext = scope.ServiceProvider.GetRequiredService<eCommerceDbContext>();
-//     dbContext.Database.EnsureCreated();
-// }
+// Ensure database is created and migrations are applied
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<IB210033DbContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -181,7 +200,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") != "true")
 {
     app.Urls.Clear();
     app.Urls.Add("https://localhost:7093");  // HTTPS for API/Swagger
@@ -201,5 +220,14 @@ app.MapControllers();
 app.MapHub<PresenceHub>("/hubs/presence");
 app.MapHub<MessageHub>("/hubs/messages");
 
+// Train the personal trainer recommender model in background after startup
+_ = Task.Run(async () =>
+{
+    await Task.Delay(2000);
+    using (var trainingScope = app.Services.CreateScope())
+    {
+        PersonalTrainerService.TrainRecommenderAtStartup(trainingScope.ServiceProvider);
+    }
+});
 
 app.Run();

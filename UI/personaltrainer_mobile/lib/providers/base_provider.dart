@@ -12,7 +12,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
   String _endpoint = "";
   static http.Client? _client;
 
-  static String get baseUrl => _baseUrl ?? "https://10.0.2.2:7093/api/";
+  static String get baseUrl => _baseUrl ?? "http://10.0.2.2:7093/api/";
 
   static http.Client get client {
     if (_client == null) {
@@ -29,7 +29,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
     _endpoint = endpoint;
     _baseUrl = const String.fromEnvironment(
       "baseUrl",
-      defaultValue: "https://10.0.2.2:7093/api/",
+      defaultValue: "http://10.0.2.2:7093/api/",
     );
   }
 

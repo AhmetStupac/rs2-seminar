@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
+import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_rating_provider.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_detail_screen.dart';
@@ -25,11 +26,14 @@ class _PersonalTrainerSearchScreenState
   bool _isLoading = false;
   String? _errorMessage;
   String? _selectedSport;
+  PersonalTrainer? _recommendedTrainer;
+  bool _isLoadingRecommendation = false;
 
   @override
   void initState() {
     super.initState();
     _loadTrainers();
+    _loadRecommendation();
     _searchController.addListener(_filterTrainers);
   }
 
@@ -62,6 +66,28 @@ class _PersonalTrainerSearchScreenState
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadRecommendation() async {
+    final userId = AuthProvider.userId;
+    if (userId == null) return;
+
+    setState(() {
+      _isLoadingRecommendation = true;
+    });
+
+    try {
+      final recommended = await _personalTrainerProvider.recommend(userId);
+      setState(() {
+        _recommendedTrainer = recommended;
+        _isLoadingRecommendation = false;
+      });
+    } catch (e) {
+      print('Error loading recommendation: $e');
+      setState(() {
+        _isLoadingRecommendation = false;
       });
     }
   }
@@ -273,9 +299,111 @@ class _PersonalTrainerSearchScreenState
             ),
           if (_selectedSport != null) const SizedBox(height: 12),
 
+          // Recommended trainer
+          if (_isLoadingRecommendation)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Center(
+                child: SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else if (_recommendedTrainer != null)
+            _buildRecommendationCard(),
+
           // Results list
           Expanded(child: _buildContent()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationCard() {
+    final trainer = _recommendedTrainer!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  PersonalTrainerDetailScreen(trainer: trainer),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFA726), Color(0xFFFF7043)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Colors.white.withOpacity(0.3),
+                child: const Icon(Icons.star, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Recommended for you',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      trainer.userFirstName ?? 'Unknown',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (trainer.sport != null && trainer.sport!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          trainer.sport!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white70,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

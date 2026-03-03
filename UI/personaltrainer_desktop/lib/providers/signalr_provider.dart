@@ -30,7 +30,7 @@ class SignalRProvider with ChangeNotifier {
       //Configure the SignalR connection with JWT Bearer token
       _hubConnection = HubConnectionBuilder()
           .withUrl(
-            "https://localhost:7093/hubs/presence",
+            "http://localhost:7093/hubs/presence",
             options: HttpConnectionOptions(
               accessTokenFactory: () async => token,
               skipNegotiation: true,

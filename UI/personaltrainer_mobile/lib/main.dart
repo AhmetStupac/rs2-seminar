@@ -11,8 +11,17 @@ import 'package:personaltrainer_mobile/screens/register_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Replace with your Stripe test publishable key from https://dashboard.stripe.com/test/apikeys
-  Stripe.publishableKey = 'pk_test_51T3mm2J0jiiSNJ3blaJUkoD6Wb3vlb7TXbuaVPRvZcqcnR97wbKE9SUGS6zFy6Zo39yYKTxT9Ak8SvuOBe0pyqqK00qlBz8Evl';
+  // Stripe publishable key from environment (pass via --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...)
+  const stripeKey = String.fromEnvironment(
+    'STRIPE_PUBLISHABLE_KEY',
+    defaultValue: '',
+  );
+  if (stripeKey.isEmpty) {
+    debugPrint(
+      'WARNING: STRIPE_PUBLISHABLE_KEY not set. Pass it via --dart-define.',
+    );
+  }
+  Stripe.publishableKey = stripeKey;
   await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
@@ -29,6 +38,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Personal Trainer Mobile',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
@@ -77,12 +87,13 @@ class _LoginScreenState extends State<LoginScreen> {
       await userProvider.login(username, password);
 
       if (mounted) {
-        // Connect to SignalR presence hub immediately after login
+        // Connect to SignalR presence hub after login (non-blocking)
         final signalRProvider = Provider.of<SignalRProvider>(
           context,
           listen: false,
         );
-        await signalRProvider.connect();
+        // Don't await - let it connect in the background so login isn't blocked
+        signalRProvider.connect();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

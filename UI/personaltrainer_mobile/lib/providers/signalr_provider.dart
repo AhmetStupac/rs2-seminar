@@ -19,11 +19,12 @@ class SignalRProvider with ChangeNotifier {
   bool get isConnected => _isConnected;
   String? get error => _error;
 
-  // Get base URL for SignalR hubs
-  // Use dedicated HTTP port for SignalR to avoid SSL cert issues
+  // Get base URL for SignalR hubs (same API server)
   String get _hubBaseUrl {
-    // Use HTTP on port 7094 specifically for SignalR hubs
-    return "http://10.0.2.2:7094";
+    // Strip trailing /api/ from the base URL to get the root
+    final base = BaseProvider.baseUrl;
+    final idx = base.indexOf('/api');
+    return idx != -1 ? base.substring(0, idx) : base;
   }
 
   Future<void> connect() async {

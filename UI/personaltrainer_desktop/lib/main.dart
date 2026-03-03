@@ -33,7 +33,7 @@ class MyHttpOverrides extends HttpOverrides {
 
 void main() {
   HttpOverrides.global = MyHttpOverrides();
-  
+
   runApp(
     MultiProvider(
       providers: [
@@ -80,7 +80,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget homeWidget;
-    
+
     // Choose appropriate handler based on platform
     if (kIsWeb) {
       homeWidget = _WebUrlHandler();
@@ -91,8 +91,9 @@ class MyApp extends StatelessWidget {
       // Mobile platforms (Android/iOS) - use app_links
       homeWidget = _MobileDeepLinkHandler();
     }
-    
+
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Personal Trainer',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -103,9 +104,13 @@ class MyApp extends StatelessWidget {
           case '/register':
             return MaterialPageRoute(builder: (context) => RegisterScreen());
           case '/training-plans':
-            return MaterialPageRoute(builder: (context) => TrainingPlanScreen());
+            return MaterialPageRoute(
+              builder: (context) => TrainingPlanScreen(),
+            );
           case '/change-password':
-            return MaterialPageRoute(builder: (context) => ChangePasswordScreen());
+            return MaterialPageRoute(
+              builder: (context) => ChangePasswordScreen(),
+            );
           default:
             return MaterialPageRoute(builder: (context) => LoginPage());
         }
@@ -152,12 +157,15 @@ class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
     }
 
     // Listen for incoming links
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      print('📱 Incoming link: $uri');
-      _handleDeepLink(uri);
-    }, onError: (err) {
-      print('❌ Error listening to links: $err');
-    });
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (uri) {
+        print('📱 Incoming link: $uri');
+        _handleDeepLink(uri);
+      },
+      onError: (err) {
+        print('❌ Error listening to links: $err');
+      },
+    );
   }
 
   void _handleDeepLink(Uri uri) {
@@ -171,10 +179,10 @@ class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
     if (uri.scheme == 'personaltrainerapp' && uri.host == 'reset-password') {
       final token = uri.queryParameters['token'];
       print('📱 Reset token: ${token?.substring(0, 30)}...');
-      
+
       final email = uri.queryParameters['email'];
       print('📱 Email from deep link: $email');
-      
+
       if (email != null && email.isNotEmpty && mounted) {
         print('✅ Navigating to password reset screen');
         Navigator.of(context).pushReplacement(
@@ -185,11 +193,11 @@ class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
       }
     }
     // Handle HTTP/HTTPS: http://localhost:8080/reset-password?email=xxx
-    else if ((uri.scheme == 'http' || uri.scheme == 'https') && 
-             uri.path.contains('reset-password')) {
+    else if ((uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.path.contains('reset-password')) {
       final email = uri.queryParameters['email'];
       print('📱 Email from HTTP: $email');
-      
+
       if (email != null && email.isNotEmpty && mounted) {
         print('✅ Navigating to password reset screen');
         Navigator.of(context).pushReplacement(
@@ -223,7 +231,7 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
   @override
   void initState() {
     super.initState();
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleWebUrl();
     });
@@ -235,43 +243,50 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
     print('🌐 Full URI: $uri');
     print('🌐 Fragment: "${uri.fragment}"');
     print('🌐 Fragment isEmpty: ${uri.fragment.isEmpty}');
-    
+
     if (uri.fragment.isNotEmpty) {
       try {
         final fragmentPath = uri.fragment;
         print('🌐 Raw fragment: "$fragmentPath"');
-        
+
         final parts = fragmentPath.split('?');
         final path = parts[0];
-        
+
         print('🌐 Path from fragment: "$path"');
         print('🌐 Number of parts: ${parts.length}');
-        
+
         if (path == '/reset-password') {
           print('🌐 ✓ Path matches /reset-password');
-          
+
           if (parts.length > 1) {
             final queryString = parts[1];
-            print('🌐 Query string: "${queryString.substring(0, queryString.length > 50 ? 50 : queryString.length)}..."');
-            
+            print(
+              '🌐 Query string: "${queryString.substring(0, queryString.length > 50 ? 50 : queryString.length)}..."',
+            );
+
             final queryParams = Uri.splitQueryString(queryString);
             print('🌐 Parsed query params keys: ${queryParams.keys.toList()}');
-            
+
             final token = queryParams['token'];
-            
+
             if (token != null) {
-              print('🌐 Token found: ${token.substring(0, token.length > 30 ? 30 : token.length)}...');
+              print(
+                '🌐 Token found: ${token.substring(0, token.length > 30 ? 30 : token.length)}...',
+              );
               print('🌐 Token length: ${token.length}');
-              
+
               if (token.isNotEmpty) {
-                print('✅ All checks passed - Navigating to password reset screen');
+                print(
+                  '✅ All checks passed - Navigating to password reset screen',
+                );
                 final email = uri.queryParameters['email'];
-                
+
                 Future.delayed(Duration(milliseconds: 100), () {
                   if (mounted) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
-                        builder: (context) => ChangePasswordScreen(email: email),
+                        builder: (context) =>
+                            ChangePasswordScreen(email: email),
                       ),
                     );
                   }
@@ -284,7 +299,9 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
               print('❌ Token is null');
             }
           } else {
-            print('❌ No query parameters found (parts.length = ${parts.length})');
+            print(
+              '❌ No query parameters found (parts.length = ${parts.length})',
+            );
           }
         } else {
           print('❌ Path "$path" does not match /reset-password');
@@ -296,7 +313,7 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
     } else {
       print('🌐 Fragment is empty - staying on login page');
     }
-    
+
     print('🌐 ========== END URL HANDLER ==========');
   }
 
@@ -378,7 +395,10 @@ class LoginPage extends StatelessWidget {
                         );
                       } on Exception catch (e) {
                         print("❌ Login failed: $e");
-                        final errMsg = e.toString().replaceFirst('Exception: ', '');
+                        final errMsg = e.toString().replaceFirst(
+                          'Exception: ',
+                          '',
+                        );
                         final isBan = errMsg.startsWith('BANNED:');
                         final isDeleted = errMsg.startsWith('DELETED:');
                         final banMessage = isBan
@@ -396,8 +416,8 @@ class LoginPage extends StatelessWidget {
                                   isBan
                                       ? Icons.block
                                       : isDeleted
-                                          ? Icons.person_off
-                                          : Icons.error_outline,
+                                      ? Icons.person_off
+                                      : Icons.error_outline,
                                   color: isBan || isDeleted
                                       ? Colors.red
                                       : Colors.orange,
@@ -407,8 +427,8 @@ class LoginPage extends StatelessWidget {
                                   isBan
                                       ? "Account Banned"
                                       : isDeleted
-                                          ? "Account Deleted"
-                                          : "Login Error",
+                                      ? "Account Deleted"
+                                      : "Login Error",
                                 ),
                               ],
                             ),
@@ -416,10 +436,12 @@ class LoginPage extends StatelessWidget {
                               isBan
                                   ? banMessage!
                                   : isDeleted
-                                      ? deletedMessage!
-                                      : "Invalid username or password. Please try again.",
+                                  ? deletedMessage!
+                                  : "Invalid username or password. Please try again.",
                               style: TextStyle(
-                                color: isBan || isDeleted ? Colors.red[800] : null,
+                                color: isBan || isDeleted
+                                    ? Colors.red[800]
+                                    : null,
                               ),
                             ),
                             actions: [
@@ -462,7 +484,7 @@ class LoginPage extends StatelessWidget {
 
   void _showResetPasswordDialog(BuildContext context) {
     final TextEditingController tokenController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -501,10 +523,10 @@ class LoginPage extends StatelessWidget {
                 );
                 return;
               }
-              
+
               String? token;
               String? email;
-              
+
               // Try to extract token from URL
               if (input.contains('token=') || input.contains('email=')) {
                 final parsedUri = Uri.tryParse(input);
@@ -513,11 +535,15 @@ class LoginPage extends StatelessWidget {
                   email = parsedUri.queryParameters['email'];
                 } else {
                   // Try to extract from plain string
-                  final tokenMatch = RegExp(r'token=([^&\s]+)').firstMatch(input);
+                  final tokenMatch = RegExp(
+                    r'token=([^&\s]+)',
+                  ).firstMatch(input);
                   if (tokenMatch != null) {
                     token = tokenMatch.group(1);
                   }
-                  final emailMatch = RegExp(r'email=([^&\s]+)').firstMatch(input);
+                  final emailMatch = RegExp(
+                    r'email=([^&\s]+)',
+                  ).firstMatch(input);
                   if (emailMatch != null) {
                     email = emailMatch.group(1);
                   }
@@ -526,7 +552,7 @@ class LoginPage extends StatelessWidget {
                 // Assume entire input is the token
                 token = input;
               }
-              
+
               if (token != null && token.isNotEmpty) {
                 Navigator.pop(context); // Close dialog
                 Navigator.of(context).push(

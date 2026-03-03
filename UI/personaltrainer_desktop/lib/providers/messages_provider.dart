@@ -49,7 +49,7 @@ class MessagesProvider with ChangeNotifier {
 
       _hubConnection = HubConnectionBuilder()
           .withUrl(
-            "https://localhost:7093/hubs/messages?userId=$recipientId",
+            "http://localhost:7093/hubs/messages?userId=$recipientId",
             options: HttpConnectionOptions(
               accessTokenFactory: () async => token,
               skipNegotiation: true,
@@ -62,27 +62,29 @@ class MessagesProvider with ChangeNotifier {
       _registerHandlers();
 
       await _hubConnection!.start();
-      
+
       // Verify connection state before marking as connected
       if (_hubConnection!.state == HubConnectionState.Connected) {
         _isConnected = true;
         _error = null;
         print("✅ MessagesProvider Connected to recipient $recipientId");
         print("✅ Connection state: ${_hubConnection!.state}");
-        
+
         // Give backend time to send initial message thread
         await Future.delayed(const Duration(milliseconds: 500));
         print("⏰ Waited for initial messages from backend");
-        
+
         if (_messages.isEmpty) {
-          print("⚠️ No initial messages received - this is normal if there's no message history");
+          print(
+            "⚠️ No initial messages received - this is normal if there's no message history",
+          );
         }
       } else {
         _isConnected = false;
         _error = "Failed to establish connection";
         print("❌ Connection state after start: ${_hubConnection!.state}");
       }
-      
+
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -94,28 +96,28 @@ class MessagesProvider with ChangeNotifier {
 
   void _registerHandlers() {
     print("🔍 Registering message handlers...");
-    
+
     // Add a catch-all handler to see ALL events from backend
     _hubConnection!.onclose(({error}) {
       print("🔌 Connection closed: $error");
       _isConnected = false;
       notifyListeners();
     });
-    
+
     // Log all incoming methods
     print("🔍 Setting up method handlers with client protocol...");
-    
+
     // Handle initial message thread - try multiple event names
     void handleMessageThread(List<dynamic>? arguments) {
       print("🔍 ReceiveMessageThread event triggered!");
       print("🔍 Arguments: $arguments");
-      
+
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final data = arguments[0];
           print("🔍 Raw data type: ${data.runtimeType}");
           print("🔍 Raw data: $data");
-          
+
           if (data is List) {
             _messages.clear();
             for (var item in data) {
@@ -136,12 +138,14 @@ class MessagesProvider with ChangeNotifier {
           print("❌ Stack trace: $stackTrace");
         }
       } else {
-        print("ℹ️ ReceiveMessageThread called with no arguments (empty thread)");
+        print(
+          "ℹ️ ReceiveMessageThread called with no arguments (empty thread)",
+        );
         _messages.clear();
         notifyListeners();
       }
     }
-    
+
     _hubConnection!.on("ReceiveMessageThread", handleMessageThread);
     _hubConnection!.on("receiveMessageThread", handleMessageThread);
 
@@ -149,7 +153,7 @@ class MessagesProvider with ChangeNotifier {
     void handleNewMessage(List<dynamic>? arguments) {
       print("🔍 New message event triggered!");
       print("🔍 Arguments: $arguments");
-      
+
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final data = arguments[0] as Map<String, dynamic>;
@@ -164,16 +168,17 @@ class MessagesProvider with ChangeNotifier {
         }
       }
     }
-    
+
     _hubConnection!.on("New message", handleNewMessage);
     _hubConnection!.on("new message", handleNewMessage);
     _hubConnection!.on("NewMessage", handleNewMessage);
-    
+
     print("✅ Message handlers registered");
   }
 
   Future<void> sendMessage(String content) async {
-    if (_hubConnection == null || _hubConnection!.state != HubConnectionState.Connected) {
+    if (_hubConnection == null ||
+        _hubConnection!.state != HubConnectionState.Connected) {
       _error = "Not connected. Please wait or reconnect.";
       _isConnected = false;
       notifyListeners();
@@ -207,10 +212,10 @@ class MessagesProvider with ChangeNotifier {
       };
 
       print("📤 Attempting to send message via HTTP...");
-      
+
       // Use HTTP POST instead of SignalR invoke due to compatibility issues
-      final url = Uri.parse('https://localhost:7093/api/Message/send');
-      
+      final url = Uri.parse('http://localhost:7093/api/Message/send');
+
       final response = await http.post(
         url,
         headers: {
@@ -224,8 +229,11 @@ class MessagesProvider with ChangeNotifier {
         print("📤 Message sent to $_currentRecipientId: $content");
         // Don't add locally - backend will broadcast via SignalR
       } else {
-        _error = "Failed to send message: ${response.statusCode} - ${response.body}";
-        print("❌ Error sending message: ${response.statusCode} - ${response.body}");
+        _error =
+            "Failed to send message: ${response.statusCode} - ${response.body}";
+        print(
+          "❌ Error sending message: ${response.statusCode} - ${response.body}",
+        );
         notifyListeners();
       }
     } catch (e, stackTrace) {
