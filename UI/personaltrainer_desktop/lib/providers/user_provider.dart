@@ -85,6 +85,32 @@ class UserProvider extends BaseProvider<User> {
     } else if (response.statusCode == 401) {
       throw Exception("Invalid username or password");
     } else {
+      // Try to extract a meaningful error message (e.g. ban message)
+      final body = response.body;
+      if (body.isNotEmpty) {
+        String? message;
+        try {
+          final decoded = jsonDecode(body);
+          if (decoded is Map) {
+            message = decoded['message']?.toString() ??
+                decoded['Message']?.toString() ??
+                decoded['detail']?.toString();
+          }
+        } catch (_) {
+          // Plain string response
+          message = body.trim().replaceAll('"', '');
+        }
+        if (message != null && message.isNotEmpty) {
+          if (message.toLowerCase().contains('banned') ||
+              message.toLowerCase().contains('ban')) {
+            throw Exception('BANNED:$message');
+          }
+          if (message.toLowerCase().contains('deleted')) {
+            throw Exception('DELETED:$message');
+          }
+          throw Exception(message);
+        }
+      }
       throw Exception("Login failed");
     }
   }

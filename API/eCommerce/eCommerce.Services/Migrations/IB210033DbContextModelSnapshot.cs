@@ -11,7 +11,7 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class eCommerceDbContextModelSnapshot : ModelSnapshot
+    partial class IB210033DbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -56,6 +56,33 @@ namespace eCommerce.Services.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Equipments");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Barbell"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Dumbbell"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Pull-up Bar"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Resistance Band"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Treadmill"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Exercise", b =>
@@ -83,6 +110,64 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("ImageId");
 
                     b.ToTable("Exercises");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EquipmentId = 1,
+                            ImageId = 5,
+                            Name = "Bench Press"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            EquipmentId = 1,
+                            ImageId = 8,
+                            Name = "Deadlift"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            EquipmentId = 2,
+                            ImageId = 9,
+                            Name = "Dumbbell Curl"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            EquipmentId = 3,
+                            ImageId = 4,
+                            Name = "Pull-up"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            EquipmentId = 1,
+                            ImageId = 7,
+                            Name = "Barbell Squat"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            EquipmentId = 1,
+                            ImageId = 6,
+                            Name = "Barbell Row"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            EquipmentId = 5,
+                            ImageId = 10,
+                            Name = "Treadmill Run"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            EquipmentId = 2,
+                            ImageId = 11,
+                            Name = "Lateral Raise"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.ExerciseMuscleGroup", b =>
@@ -106,6 +191,68 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("MuscleGroupId");
 
                     b.ToTable("ExerciseMuscleGroup");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ExerciseId = 1,
+                            MuscleGroupId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ExerciseId = 1,
+                            MuscleGroupId = 3
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ExerciseId = 2,
+                            MuscleGroupId = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ExerciseId = 2,
+                            MuscleGroupId = 4
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ExerciseId = 3,
+                            MuscleGroupId = 5
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ExerciseId = 4,
+                            MuscleGroupId = 2
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ExerciseId = 5,
+                            MuscleGroupId = 4
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ExerciseId = 6,
+                            MuscleGroupId = 2
+                        },
+                        new
+                        {
+                            Id = 9,
+                            ExerciseId = 7,
+                            MuscleGroupId = 4
+                        },
+                        new
+                        {
+                            Id = 10,
+                            ExerciseId = 8,
+                            MuscleGroupId = 3
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.ExercisePlan", b =>
@@ -145,6 +292,61 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("TrainingPlanId");
 
                     b.ToTable("ExercisePlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ExerciseId = 1,
+                            Note = "Focus on form and controlled movement",
+                            Reps = 10,
+                            Sets = 3,
+                            TrainingPlanId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ExerciseId = 5,
+                            Note = "Keep back straight, knees tracking over toes",
+                            Reps = 12,
+                            Sets = 3,
+                            TrainingPlanId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ExerciseId = 4,
+                            Note = "Use assisted machine if full pull-ups are too difficult",
+                            Reps = 8,
+                            Sets = 3,
+                            TrainingPlanId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ExerciseId = 2,
+                            Note = "Progressive overload - increase weight each week",
+                            Reps = 5,
+                            Sets = 5,
+                            TrainingPlanId = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ExerciseId = 1,
+                            Note = "Drop set on the last set",
+                            Reps = 8,
+                            Sets = 4,
+                            TrainingPlanId = 2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Duration = 30,
+                            ExerciseId = 7,
+                            Note = "Maintain 70-80% of maximum heart rate",
+                            TrainingPlanId = 3
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Group", b =>
@@ -200,6 +402,31 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("GroupTrainingSessions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatorId = 1,
+                            DurationMinutes = 45,
+                            KcalBurned = 450,
+                            Name = "Morning Bootcamp",
+                            Notes = "Bring a mat and water bottle",
+                            Place = "FitLife Gym - Studio A",
+                            TrainingType = "Bodyweight Training"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatorId = 1,
+                            DurationMinutes = 40,
+                            KcalBurned = 350,
+                            Name = "Sunset Run",
+                            Place = "Central Park Trail",
+                            TrainingType = "Running"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.GroupTrainingSessionParticipant", b =>
@@ -227,6 +454,22 @@ namespace eCommerce.Services.Migrations
                         .IsUnique();
 
                     b.ToTable("GroupTrainingSessionParticipants");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            GroupTrainingSessionId = 1,
+                            JoinedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            GroupTrainingSessionId = 2,
+                            JoinedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            UserId = 2
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Gym", b =>
@@ -273,6 +516,32 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("ImageId");
 
                     b.ToTable("Gyms");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Address = "123 Main Street",
+                            City = "New York",
+                            Country = "USA",
+                            Email = "contact@fitlifegym.com",
+                            ImageId = 2,
+                            Name = "FitLife Gym",
+                            PhoneNumber = "+387 62 111 111",
+                            WorkTime = "Mon-Fri: 6am-10pm, Sat-Sun: 8am-6pm"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Address = "45 Oak Avenue",
+                            City = "London",
+                            Country = "UK",
+                            Email = "info@powerzone.co.uk",
+                            ImageId = 3,
+                            Name = "PowerZone Fitness",
+                            PhoneNumber = "+387 62 111 112",
+                            WorkTime = "Mon-Sun: 7am-11pm"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Image", b =>
@@ -302,7 +571,99 @@ namespace eCommerce.Services.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Images");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsHeader = true,
+                            Name = "Ahmet Profile",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/users/1/9e3e8fe361ec4270962aea28b798f5e3-Sample_User_Icon.png"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsHeader = true,
+                            Name = "Arena1",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/031c3d0740664e38b58800302259c3ef-arena.jpg"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsHeader = true,
+                            Name = "Arena2",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/498dbeb0028f46f7928417bda2be856d-arena2.png"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsHeader = true,
+                            Name = "pull-up",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/045cfc4432704dff8b23ee0bd602aa09-pull up bar.png"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            IsHeader = true,
+                            Name = "bench-press",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/b9921a30b8864d3b87b8329883ef4b54-benchh.jpg"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            IsHeader = true,
+                            Name = "row",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/row.jpeg"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            IsHeader = true,
+                            Name = "squat",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/squat.jpg"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            IsHeader = true,
+                            Name = "deadlift",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/deadlift.jpg"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            IsHeader = true,
+                            Name = "curl1",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/curl1.jpeg"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            IsHeader = true,
+                            Name = "treadmill",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/treadmill.jpeg"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            IsHeader = true,
+                            Name = "lateral-raise",
+                            Size = 204800L,
+                            Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/lateral-raise.jpeg"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Meal", b =>
@@ -452,6 +813,33 @@ namespace eCommerce.Services.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("MuscleGroups");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Chest"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Back"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Shoulders"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Legs"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Arms"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.NutritionPlan", b =>
@@ -504,6 +892,48 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("NutritionPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Carbs = "320g",
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "High-protein diet plan tailored for muscle building and recovery.",
+                            Fats = 80,
+                            PersonalTrainerId = 1,
+                            Price = 29.99f,
+                            Protein = "220g",
+                            Title = "Muscle Gain Diet",
+                            TotalCalories = "3200",
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Carbs = "150g",
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Calorie-deficit diet designed for sustainable and healthy weight loss.",
+                            Fats = 60,
+                            PersonalTrainerId = 1,
+                            Price = 24.99f,
+                            Protein = "160g",
+                            Title = "Fat Loss Plan",
+                            TotalCalories = "1800"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Carbs = "380g",
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Carbohydrate-focused plan for endurance athletes and long-distance runners.",
+                            Fats = 55,
+                            PersonalTrainerId = 2,
+                            Price = 19.99f,
+                            Protein = "140g",
+                            Title = "Endurance Fueling",
+                            TotalCalories = "2800"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Payment", b =>
@@ -542,6 +972,30 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Payments");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AmountInCents = 4999,
+                            CreatedAt = new DateTime(2026, 1, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemId = 1,
+                            ItemType = 0,
+                            Status = "succeeded",
+                            StripePaymentIntentId = "pi_test_3NpL4K2eZvKYlo2C0QJx7aBC",
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AmountInCents = 2999,
+                            CreatedAt = new DateTime(2026, 1, 17, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ItemId = 1,
+                            ItemType = 1,
+                            Status = "succeeded",
+                            StripePaymentIntentId = "pi_test_7MqQ8R5eZvKYlo2C1XPz9eFG",
+                            UserId = 2
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.PersonalTrainer", b =>
@@ -575,6 +1029,44 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PersonalTrainers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Certifications = "NASM-CPT, CSCS",
+                            IsActive = true,
+                            Sport = "Karate",
+                            UserId = 2,
+                            YearsOfExperience = 8
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Certifications = "ACE-CPT",
+                            IsActive = true,
+                            Sport = "Running",
+                            UserId = 3,
+                            YearsOfExperience = 3
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Certifications = "ACE-CC",
+                            IsActive = true,
+                            Sport = "Gym",
+                            UserId = 4,
+                            YearsOfExperience = 4
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Certifications = "ACE-DPT",
+                            IsActive = true,
+                            Sport = "Boxing",
+                            UserId = 5,
+                            YearsOfExperience = 10
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.PersonalTrainerRating", b =>
@@ -611,6 +1103,26 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PersonalTrainerRatings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Comment = "Excellent trainer! Very knowledgeable, motivating, and professional.",
+                            CreatedAt = new DateTime(2026, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            PersonalTrainerId = 1,
+                            Rating = 5,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Comment = "Great running coach. Helped me improve my pace and endurance significantly.",
+                            CreatedAt = new DateTime(2026, 1, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            PersonalTrainerId = 2,
+                            Rating = 4,
+                            UserId = 2
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.PlanCostItem", b =>
@@ -673,7 +1185,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7118),
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8438),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -681,7 +1193,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7121),
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8440),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -689,7 +1201,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7122),
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8441),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -728,6 +1240,34 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("PersonalTrainerId");
 
                     b.ToTable("Trainings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ClientId = 2,
+                            Description = "One-on-one session focusing on compound lifts and proper technique.",
+                            Duration = 60,
+                            Name = "Strength Foundation",
+                            PersonalTrainerId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Treadmill intervals and circuit training session for fat burn.",
+                            Duration = 45,
+                            Name = "Cardio Conditioning",
+                            PersonalTrainerId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ClientId = 2,
+                            Description = "Guided stretching, foam rolling, and mobility work.",
+                            Duration = 30,
+                            Name = "Mobility & Recovery",
+                            PersonalTrainerId = 1
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.TrainingPlan", b =>
@@ -765,6 +1305,37 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("TrainingPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BasePrice = 49.99f,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "A 4-week program for building foundational strength using compound lifts.",
+                            PersonalTrainerId = 1,
+                            Title = "Beginner Strength Program",
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BasePrice = 79.99f,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "12-week muscle-building program designed for experienced lifters.",
+                            PersonalTrainerId = 1,
+                            Title = "Advanced Hypertrophy",
+                            UserId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BasePrice = 39.99f,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "High-intensity cardio program focused on fat loss and endurance.",
+                            PersonalTrainerId = 2,
+                            Title = "Cardio Blast"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.TrainingSession", b =>
@@ -823,6 +1394,46 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("PersonalTrainerId");
 
                     b.ToTable("TrainingSessions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ClientId = 2,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DurationMinutes = 60,
+                            GymId = 1,
+                            Notes = "Please bring lifting gloves",
+                            PersonalTrainerId = 1,
+                            Price = 50f,
+                            ScheduledDateTime = new DateTime(2026, 3, 10, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 1,
+                            TrainerNotes = "Client needs focus on squat depth"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ClientId = 2,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DurationMinutes = 60,
+                            GymId = 1,
+                            PersonalTrainerId = 1,
+                            Price = 50f,
+                            ScheduledDateTime = new DateTime(2026, 3, 12, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DurationMinutes = 45,
+                            GymId = 2,
+                            Notes = "Open availability slot",
+                            PersonalTrainerId = 2,
+                            Price = 40f,
+                            ScheduledDateTime = new DateTime(2026, 3, 15, 8, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.User", b =>
@@ -907,9 +1518,7 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.HasIndex("ProfileImageId")
-                        .IsUnique()
-                        .HasFilter("[ProfileImageId] IS NOT NULL");
+                    b.HasIndex("ProfileImageId");
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -920,28 +1529,100 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7576),
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8868),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
                             IsDeleted = false,
                             LastName = "Stupac",
-                            PasswordHash = "U7tUy3i14k06vqRZ4KGUX4Fe/rHqra3/l02Z3KX5IyM=",
-                            PasswordSalt = "3Z3TLmz+AF2jaNxcyCmaVw==",
-                            Username = "goran"
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "superadmin"
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7579),
-                            Email = "denis@edu.fit.ba",
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8872),
+                            Email = "adil@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
                             IsDeleted = false,
                             LastName = "Music",
-                            PasswordHash = "U7tUy3i14k06vqRZ4KGUX4Fe/rHqra3/l02Z3KX5IyM=",
-                            PasswordSalt = "3Z3TLmz+AF2jaNxcyCmaVw==",
-                            Username = "admin"
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "desktop"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8874),
+                            Email = "ahmet2.stupac@edu.fit.ba",
+                            FirstName = "Ismail",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LastName = "Catic",
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "trener2"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8876),
+                            Email = "ahmet3.stupac@edu.fit.ba",
+                            FirstName = "Alem",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LastName = "Stupac",
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "trener3"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8879),
+                            Email = "ahmet4.stupac@edu.fit.ba",
+                            FirstName = "Adil",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LastName = "Joldic",
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "trener4"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8881),
+                            Email = "ahmet5.stupac@edu.fit.ba",
+                            FirstName = "Amel",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LastName = "Music",
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "trener5"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8884),
+                            Email = "ahmet6.stupac@edu.fit.ba",
+                            FirstName = "Emina",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LastName = "Junuz",
+                            PasswordHash = "cnmepYg0B3XVzwr9POBGEWwEAzNGv+KuqebPm0/AvFk=",
+                            PasswordSalt = "Qeunp0McejKht6Qx9PW6ug==",
+                            ProfileImageId = 1,
+                            Username = "mobile"
                         });
                 });
 
@@ -976,23 +1657,51 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7542),
-                            RoleId = 1,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8912),
+                            RoleId = 3,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7544),
-                            RoleId = 2,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8913),
+                            RoleId = 1,
                             UserId = 2
                         },
                         new
                         {
-                            Id = 3,
-                            DateAssigned = new DateTime(2026, 2, 23, 0, 10, 22, 14, DateTimeKind.Utc).AddTicks(7545),
-                            RoleId = 3,
-                            UserId = 1
+                            Id = 4,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8915),
+                            RoleId = 1,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            Id = 5,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8916),
+                            RoleId = 1,
+                            UserId = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8918),
+                            RoleId = 1,
+                            UserId = 5
+                        },
+                        new
+                        {
+                            Id = 7,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8919),
+                            RoleId = 1,
+                            UserId = 6
+                        },
+                        new
+                        {
+                            Id = 8,
+                            DateAssigned = new DateTime(2026, 3, 3, 0, 27, 13, 303, DateTimeKind.Utc).AddTicks(8920),
+                            RoleId = 2,
+                            UserId = 7
                         });
                 });
 
@@ -1101,6 +1810,15 @@ namespace eCommerce.Services.Migrations
                     b.Navigation("Image");
                 });
 
+            modelBuilder.Entity("eCommerce.Services.Database.Image", b =>
+                {
+                    b.HasOne("eCommerce.Services.Database.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("eCommerce.Services.Database.Meal", b =>
                 {
                     b.HasOne("eCommerce.Services.Database.NutritionPlan", "NutritionPlan")
@@ -1173,7 +1891,7 @@ namespace eCommerce.Services.Migrations
                     b.HasOne("eCommerce.Services.Database.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -1281,8 +1999,9 @@ namespace eCommerce.Services.Migrations
             modelBuilder.Entity("eCommerce.Services.Database.User", b =>
                 {
                     b.HasOne("eCommerce.Services.Database.Image", "ProfileImage")
-                        .WithOne("User")
-                        .HasForeignKey("eCommerce.Services.Database.User", "ProfileImageId");
+                        .WithMany()
+                        .HasForeignKey("ProfileImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("ProfileImage");
                 });
@@ -1318,11 +2037,6 @@ namespace eCommerce.Services.Migrations
             modelBuilder.Entity("eCommerce.Services.Database.GroupTrainingSession", b =>
                 {
                     b.Navigation("Participants");
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.Image", b =>
-                {
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.PersonalTrainer", b =>

@@ -190,12 +190,6 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                       columns: const [
                         DataColumn(
                           label: Text(
-                            'ID',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        DataColumn(
-                          label: Text(
                             'Ime',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
@@ -228,7 +222,6 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                       rows: _trainers.map((trainer) {
                         return DataRow(
                           cells: [
-                            DataCell(Text('${trainer.id ?? 'N/A'}')),
                             DataCell(Text(trainer.userFirstName ?? 'N/A')),
                             DataCell(
                               Text('${trainer.yearsOfExperience ?? 0} godina'),

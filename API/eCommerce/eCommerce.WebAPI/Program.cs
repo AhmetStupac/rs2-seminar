@@ -166,6 +166,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+
 // Ensure database is created
 // using (var scope = app.Services.CreateScope())
 // {

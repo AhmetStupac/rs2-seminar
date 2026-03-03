@@ -487,7 +487,7 @@ class _TrainingPlanFormScreenState extends State<_TrainingPlanFormScreen> {
                                 orElse: () => PersonalTrainer(),
                               );
                               return t.userFirstName != null
-                                  ? '${t.userFirstName} (ID: ${t.id})'
+                                  ? '${t.userFirstName}'
                                   : 'Trainer #${widget.lockedTrainerId}';
                             }(),
                           ),
@@ -507,7 +507,7 @@ class _TrainingPlanFormScreenState extends State<_TrainingPlanFormScreen> {
                               value: t.id,
                               child: Text(
                                 t.userFirstName != null
-                                    ? '${t.userFirstName} (ID: ${t.id})'
+                                    ? '${t.userFirstName}'
                                     : 'Trainer #${t.id}',
                               ),
                             ),

@@ -204,7 +204,6 @@ class _EquipmentScreenState extends State<EquipmentScreen> {
                                 item.name ?? 'Unnamed',
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              subtitle: Text('ID: ${item.id}'),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

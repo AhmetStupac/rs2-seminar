@@ -378,17 +378,56 @@ class LoginPage extends StatelessWidget {
                         );
                       } on Exception catch (e) {
                         print("❌ Login failed: $e");
+                        final errMsg = e.toString().replaceFirst('Exception: ', '');
+                        final isBan = errMsg.startsWith('BANNED:');
+                        final isDeleted = errMsg.startsWith('DELETED:');
+                        final banMessage = isBan
+                            ? errMsg.replaceFirst('BANNED:', '').trim()
+                            : null;
+                        final deletedMessage = isDeleted
+                            ? errMsg.replaceFirst('DELETED:', '').trim()
+                            : null;
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text("Login Error"),
+                            title: Row(
+                              children: [
+                                Icon(
+                                  isBan
+                                      ? Icons.block
+                                      : isDeleted
+                                          ? Icons.person_off
+                                          : Icons.error_outline,
+                                  color: isBan || isDeleted
+                                      ? Colors.red
+                                      : Colors.orange,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  isBan
+                                      ? "Account Banned"
+                                      : isDeleted
+                                          ? "Account Deleted"
+                                          : "Login Error",
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              isBan
+                                  ? banMessage!
+                                  : isDeleted
+                                      ? deletedMessage!
+                                      : "Invalid username or password. Please try again.",
+                              style: TextStyle(
+                                color: isBan || isDeleted ? Colors.red[800] : null,
+                              ),
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
                                 child: Text("Ok"),
                               ),
                             ],
-                            content: Text("Invalid username or password. Please try again."),
                           ),
                         );
                       }

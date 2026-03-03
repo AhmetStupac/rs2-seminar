@@ -113,19 +113,26 @@ namespace eCommerce.WebAPI.Controllers
         [HttpPost("login")]
         public async Task<ActionResult> Login(UserLoginRequest request)
         {
-            var user = await _userService.AuthenticateAsync(request);
-            
-            if (user == null)
-                return Unauthorized(new { message = "Invalid username or password" });
-            
-            // Create JWT token
-            var token = _tokenService.CreateToken(await _userService.GetUserByIdAsync(user.Id));
-            
-            return Ok(new LoginResponse
-            { 
-                Token = token,
-                User = user
-            });
+            try
+            {
+                var user = await _userService.AuthenticateAsync(request);
+                
+                if (user == null)
+                    return Unauthorized(new { message = "Invalid username or password" });
+                
+                // Create JWT token
+                var token = _tokenService.CreateToken(await _userService.GetUserByIdAsync(user.Id));
+                
+                return Ok(new LoginResponse
+                { 
+                    Token = token,
+                    User = user
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
         }
 
 

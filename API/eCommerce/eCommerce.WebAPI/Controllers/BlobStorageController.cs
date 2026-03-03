@@ -1,6 +1,5 @@
 ﻿using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
-using eCommerce.Services.Migrations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -18,8 +18,6 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   late TextEditingController _basePriceController;
-  late TextEditingController _personalTrainerIdController;
-  late TextEditingController _userIdController;
   late TextEditingController _createdAtController;
   late TrainingPlanProvider _trainingPlanProvider;
   List<TrainingPlan> _availablePlans = [];
@@ -38,12 +36,6 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
     );
     _basePriceController = TextEditingController(
       text: widget.trainingPlan?.basePrice?.toString() ?? '',
-    );
-    _personalTrainerIdController = TextEditingController(
-      text: widget.trainingPlan?.personalTrainerId?.toString() ?? '',
-    );
-    _userIdController = TextEditingController(
-      text: widget.trainingPlan?.userId?.toString() ?? '',
     );
     _createdAtController = TextEditingController(
       text: widget.trainingPlan?.createdAt ?? '',
@@ -75,8 +67,6 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
     _titleController.dispose();
     _descriptionController.dispose();
     _basePriceController.dispose();
-    _personalTrainerIdController.dispose();
-    _userIdController.dispose();
     _createdAtController.dispose();
     super.dispose();
   }
@@ -88,8 +78,8 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
         title: _titleController.text,
         description: _descriptionController.text,
         basePrice: double.tryParse(_basePriceController.text),
-        personalTrainerId: int.tryParse(_personalTrainerIdController.text),
-        userId: int.tryParse(_userIdController.text),
+        personalTrainerId: widget.trainingPlan?.personalTrainerId,
+        userId: widget.trainingPlan?.userId,
         createdAt: _createdAtController.text,
       );
       try {
@@ -144,26 +134,6 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                     ),
                     validator: (value) => value == null || value.isEmpty
                         ? 'Please enter the price'
-                        : null,
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _personalTrainerIdController,
-                    decoration: InputDecoration(
-                      labelText: 'Personal Trainer ID',
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Please enter the trainer ID'
-                        : null,
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _userIdController,
-                    decoration: InputDecoration(labelText: 'User ID'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'Please enter the user ID'
                         : null,
                   ),
                   SizedBox(height: 16),
@@ -258,7 +228,7 @@ class _TrainingDetailsScreenState extends State<TrainingDetailsScreen> {
                               title: Text(plan.title ?? 'No Title'),
                               subtitle: Text(plan.description ?? ''),
                               trailing: Text(
-                                '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',
+                                '€ ${plan.basePrice?.toStringAsFixed(2) ?? ''}',  
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),

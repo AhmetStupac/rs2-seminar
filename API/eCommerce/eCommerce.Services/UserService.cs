@@ -339,8 +339,30 @@ namespace eCommerce.Services
             if (user == null)
                 return null;
 
+            // Check if user is soft deleted
+            if (user.IsDeleted)
+                throw new InvalidOperationException("This account has been deleted.");
+
             if (!VerifyPassword(request.Password!, user.PasswordHash, user.PasswordSalt))
                 return null;
+
+            // Check if user is banned
+            if (user.IsBanned == true)
+            {
+                if (user.BanExpiresAt.HasValue && user.BanExpiresAt.Value <= DateTime.UtcNow)
+                {
+                    // Ban has expired, unban the user
+                    user.IsBanned = false;
+                    user.BanExpiresAt = null;
+                    user.BanReason = null;
+                }
+                else
+                {
+                    throw new InvalidOperationException(user.BanExpiresAt.HasValue
+                        ? $"Your account is banned until {user.BanExpiresAt.Value:yyyy-MM-dd HH:mm} UTC. Reason: {user.BanReason}"
+                        : $"Your account is permanently banned. Reason: {user.BanReason}");
+                }
+            }
 
             // Update last login time
             user.LastLoginAt = DateTime.UtcNow;
@@ -359,13 +381,20 @@ namespace eCommerce.Services
                 })
                 .ToList();
 
-            await _rabbitMQPublisher.PublishAsync(new LoginNotificationMessage
+            try
             {
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                LoginTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC"
-            }, "user-login");
+                await _rabbitMQPublisher.PublishAsync(new LoginNotificationMessage
+                {
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    LoginTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " UTC"
+                }, "user-login");
+            }
+            catch (Exception)
+            {
+                // RabbitMQ failure should not prevent login
+            }
             
             return response;
         }

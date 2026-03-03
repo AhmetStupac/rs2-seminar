@@ -569,14 +569,17 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
             ),
             SizedBox(height: 16),
             Text(
-              'Price',
+              'Price (€)',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
             TextField(
               controller: PriceController,
               keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                prefixText: '€ ',
+              ),
             ),
             SizedBox(height: 24),
             if (errorMessage != null)
@@ -714,7 +717,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '\$${plan.price?.toStringAsFixed(2) ?? "0.00"}',
+                                '€ ${plan.price?.toStringAsFixed(2) ?? "0.00"}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

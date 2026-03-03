@@ -150,7 +150,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Price:',
+                    'Price (€):',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
@@ -161,6 +161,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     ),
                     decoration: InputDecoration(
                       hintText: 'Enter price',
+                      prefixText: '€ ',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -609,7 +610,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                                   ),
                                 ),
                                 Text(
-                                  '${plan.basePrice?.toStringAsFixed(2) ?? ''} KM',
+                                  '€ ${plan.basePrice?.toStringAsFixed(2) ?? ''}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
