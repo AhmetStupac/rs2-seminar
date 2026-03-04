@@ -16,13 +16,19 @@ void main() async {
     'STRIPE_PUBLISHABLE_KEY',
     defaultValue: '',
   );
-  if (stripeKey.isEmpty) {
+  if (stripeKey.isNotEmpty) {
+    Stripe.publishableKey = stripeKey;
+    try {
+      await Stripe.instance.applySettings();
+    } catch (e) {
+      debugPrint('WARNING: Stripe initialization failed: $e');
+    }
+  } else {
     debugPrint(
-      'WARNING: STRIPE_PUBLISHABLE_KEY not set. Pass it via --dart-define.',
+      'WARNING: STRIPE_PUBLISHABLE_KEY not set. Pass it via --dart-define. '
+      'Stripe features will be unavailable.',
     );
   }
-  Stripe.publishableKey = stripeKey;
-  await Stripe.instance.applySettings();
   runApp(const MyApp());
 }
 
