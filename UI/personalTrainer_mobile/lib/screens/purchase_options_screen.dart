@@ -41,11 +41,12 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
   Future<void> _loadTrainingPlans() async {
     setState(() => _loadingTrainingPlans = true);
     try {
-      final result = await _trainingPlanProvider.get(filter: {
-        if (widget.trainer.id != null)
-          'personalTrainerId': widget.trainer.id,
-        'retrieveAll': true,
-      });
+      final result = await _trainingPlanProvider.get(
+        filter: {
+          if (widget.trainer.id != null) 'personalTrainerId': widget.trainer.id,
+          'retrieveAll': true,
+        },
+      );
       setState(() {
         _trainingPlans = result.result;
         _loadingTrainingPlans = false;
@@ -58,11 +59,12 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
   Future<void> _loadNutritionPlans() async {
     setState(() => _loadingNutritionPlans = true);
     try {
-      final result = await _nutritionPlanProvider.get(filter: {
-        if (widget.trainer.id != null)
-          'personalTrainerId': widget.trainer.id,
-        'retrieveAll': true,
-      });
+      final result = await _nutritionPlanProvider.get(
+        filter: {
+          if (widget.trainer.id != null) 'personalTrainerId': widget.trainer.id,
+          'retrieveAll': true,
+        },
+      );
       setState(() {
         _nutritionPlans = result.result;
         _loadingNutritionPlans = false;
@@ -72,13 +74,13 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
     }
   }
 
-  void _navigateToPayment({
+  Future<void> _navigateToPayment({
     required int itemType,
     int? itemId,
     int? customAmountInCents,
     required String itemName,
-  }) {
-    Navigator.push(
+  }) async {
+    final paymentSuccess = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => PaymentScreen(
@@ -89,6 +91,12 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
         ),
       ),
     );
+
+    if (!mounted) return;
+
+    if (itemType == 2 && paymentSuccess == true) {
+      Navigator.of(context).pop(true);
+    }
   }
 
   @override
@@ -122,10 +130,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
             children: [
               const Text(
                 'Choose what you want to buy',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 15, color: Colors.grey),
               ),
               const SizedBox(height: 24),
 
@@ -450,11 +455,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white,
-              size: 16,
-            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
           ],
         ),
       ),

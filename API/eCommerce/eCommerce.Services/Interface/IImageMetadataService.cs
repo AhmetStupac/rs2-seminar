@@ -13,5 +13,6 @@ namespace eCommerce.Services.Interface
         Task<bool> UploadImageMetadata(Image image);
         Task<bool> DeleteImageMetadata(int id);
         Task<IEnumerable<ImageResponse>> GetByUserIdAsync(int userId);
+        Task<ImageResponse?> GetByIdAsync(int id);
     }
 }

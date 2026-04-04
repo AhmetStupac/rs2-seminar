@@ -5,6 +5,9 @@ using eCommerce.Services.Interface;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -31,6 +34,12 @@ namespace eCommerce.WebAPI.Controllers
         [HttpPost("create-intent")]
         public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentCreateRequest request)
         {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return Forbid();
+
+            request.UserId = currentUserId.Value;
+
             var validation = await _validator.ValidateAsync(request);
             if (!validation.IsValid)
                 return BadRequest(validation.Errors);
@@ -49,19 +58,47 @@ namespace eCommerce.WebAPI.Controllers
             if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
                 return BadRequest("StripePaymentIntentId is required.");
 
-            var result = await _paymentService.ConfirmPaymentAsync(request);
-            return Ok(result);
+            try
+            {
+                var result = await _paymentService.ConfirmPaymentAsync(request);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         /// <summary>
         /// Returns all payment records for the specified user.
         /// </summary>
-        [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetByUser(int userId)
+        [HttpGet("user")]
+        public async Task<IActionResult> GetByUser()
         {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return Forbid();
+
+            var userId = currentUserId.Value;
             var search = new PaymentSearchObject { UserId = userId, RetrieveAll = true };
             var result = await _paymentService.GetAsync(search);
             return Ok(result);
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User?.FindFirst("nameid")?.Value;
+
+            return int.TryParse(claim, out var userId) ? userId : null;
         }
 
         /// <summary>

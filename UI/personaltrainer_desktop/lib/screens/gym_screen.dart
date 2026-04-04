@@ -111,7 +111,6 @@ class _GymScreenState extends State<GymScreen> {
       final result = await _blobStorageProvider.uploadFile(
         _fileBytes!,
         _selectedFile!.name,
-        null,
         false,
       );
 
@@ -143,31 +142,45 @@ class _GymScreenState extends State<GymScreen> {
 
   Future<void> _saveGym() async {
     if (nameController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'Gym name cannot be empty.'; });
+      setState(() {
+        errorMessage = 'Gym name cannot be empty.';
+      });
       return;
     }
     if (addressController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'Address cannot be empty.'; });
+      setState(() {
+        errorMessage = 'Address cannot be empty.';
+      });
       return;
     }
     if (cityController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'City cannot be empty.'; });
+      setState(() {
+        errorMessage = 'City cannot be empty.';
+      });
       return;
     }
     if (countryController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'Country cannot be empty.'; });
+      setState(() {
+        errorMessage = 'Country cannot be empty.';
+      });
       return;
     }
     if (emailController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'Email cannot be empty.'; });
+      setState(() {
+        errorMessage = 'Email cannot be empty.';
+      });
       return;
     }
     if (phoneNumberController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'Phone number cannot be empty.'; });
+      setState(() {
+        errorMessage = 'Phone number cannot be empty.';
+      });
       return;
     }
     if (workTimeController.text.trim().isEmpty) {
-      setState(() { errorMessage = 'Work time cannot be empty.'; });
+      setState(() {
+        errorMessage = 'Work time cannot be empty.';
+      });
       return;
     }
 
@@ -175,17 +188,22 @@ class _GymScreenState extends State<GymScreen> {
     final phoneRegex = RegExp(r'^\+387 6[0-9] [0-9]{3} [0-9]{3}$');
     if (!phoneRegex.hasMatch(phoneRaw)) {
       setState(() {
-        errorMessage = 'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
+        errorMessage =
+            'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
       });
       return;
     }
 
     final emailRaw = emailController.text.trim();
-    final emailComRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$');
+    final emailComRegex = RegExp(
+      r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$',
+    );
     final emailEduRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@edu\.fit\.ba$');
-    if (!emailComRegex.hasMatch(emailRaw) && !emailEduRegex.hasMatch(emailRaw)) {
+    if (!emailComRegex.hasMatch(emailRaw) &&
+        !emailEduRegex.hasMatch(emailRaw)) {
       setState(() {
-        errorMessage = 'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
+        errorMessage =
+            'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
       });
       return;
     }
@@ -343,7 +361,11 @@ class _GymScreenState extends State<GymScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red[700], size: 18),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red[700],
+                            size: 18,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             errorMessage!,

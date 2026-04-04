@@ -36,6 +36,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   int? _uploadedImageId;
   bool _isUploadingImage = false;
 
+  String _extractErrorMessage(Object error) {
+    final message = error.toString().trim();
+
+    if (message.isEmpty) {
+      return 'Registration failed. Please try again.';
+    }
+
+    // Flutter/Dart exceptions commonly stringify as: Exception: <message>
+    const exceptionPrefix = 'Exception: ';
+    if (message.startsWith(exceptionPrefix)) {
+      final cleaned = message.substring(exceptionPrefix.length).trim();
+      if (cleaned.isNotEmpty) {
+        return cleaned;
+      }
+    }
+
+    return message;
+  }
+
   @override
   void dispose() {
     _firstNameController.dispose();
@@ -64,9 +83,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to select file.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to select file.')));
       }
     }
   }
@@ -92,12 +111,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      int? userId = auth_provider.AuthProvider.userId;
-
       final result = await _blobStorageProvider.uploadFile(
         _fileBytes!,
         _selectedFile!.name,
-        userId,
         false, // isHeader
       );
 
@@ -161,10 +177,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Navigator.of(context).pop();
         }
       } catch (e) {
+        final errorMessage = _extractErrorMessage(e);
+
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Registration failed. Please try again.')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          );
         }
       } finally {
         if (mounted) {

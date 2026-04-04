@@ -10,9 +10,8 @@ class GroupTrainingSessionProvider extends BaseProvider<GroupTrainingSession> {
     return GroupTrainingSession.fromJson(data);
   }
 
-  Future<GroupTrainingSession> join(int sessionId, int userId) async {
-    final url =
-        "${BaseProvider.baseUrl}GroupTrainingSession/$sessionId/join/$userId";
+  Future<GroupTrainingSession> join(int sessionId) async {
+    final url = "${BaseProvider.baseUrl}GroupTrainingSession/$sessionId/join";
     final uri = Uri.parse(url);
     final headers = createHeaders();
 
@@ -25,9 +24,8 @@ class GroupTrainingSessionProvider extends BaseProvider<GroupTrainingSession> {
     }
   }
 
-  Future<bool> leave(int sessionId, int userId) async {
-    final url =
-        "${BaseProvider.baseUrl}GroupTrainingSession/$sessionId/leave/$userId";
+  Future<bool> leave(int sessionId) async {
+    final url = "${BaseProvider.baseUrl}GroupTrainingSession/$sessionId/leave";
     final uri = Uri.parse(url);
     final headers = createHeaders();
 

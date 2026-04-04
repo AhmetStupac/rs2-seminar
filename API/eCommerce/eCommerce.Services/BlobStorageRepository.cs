@@ -28,8 +28,13 @@ namespace eCommerce.Services
                 return false;
             }
             _dbContext.Images.Remove(result);
-            _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<Image?> GetImageByIdAsync(int id)
+        {
+            return await _dbContext.Images.FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<List<Image>> GetImagesByUserIdAsync(int userId)

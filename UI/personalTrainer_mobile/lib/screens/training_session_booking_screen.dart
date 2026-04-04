@@ -5,6 +5,8 @@ import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/training_session.dart';
 import 'package:personaltrainer_mobile/providers/training_session_provider.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/screens/purchase_options_screen.dart';
+import 'package:personaltrainer_mobile/services/membership_access_service.dart';
 
 class TrainingSessionBookingScreen extends StatefulWidget {
   final PersonalTrainer trainer;
@@ -28,6 +30,8 @@ class _TrainingSessionBookingScreenState
   List<DateTime> _availableSlots = [];
   bool _isLoadingSlots = false;
   bool _isLocaleInitialized = false;
+  bool _isCheckingMembership = true;
+  bool _hasMembership = false;
 
   @override
   void initState() {
@@ -40,11 +44,36 @@ class _TrainingSessionBookingScreenState
     setState(() {
       _isLocaleInitialized = true;
     });
-    _loadAvailableSlots();
+    _checkMembershipAndLoadSlots();
+  }
+
+  Future<void> _checkMembershipAndLoadSlots() async {
+    if (widget.trainer.id == null) {
+      setState(() {
+        _isCheckingMembership = false;
+        _hasMembership = false;
+      });
+      return;
+    }
+
+    final hasMembership = await MembershipAccessService.hasMembershipForTrainer(
+      widget.trainer.id!,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _hasMembership = hasMembership;
+      _isCheckingMembership = false;
+    });
+
+    if (hasMembership) {
+      await _loadAvailableSlots();
+    }
   }
 
   Future<void> _loadAvailableSlots() async {
-    if (widget.trainer.id == null) return;
+    if (widget.trainer.id == null || !_hasMembership) return;
 
     setState(() => _isLoadingSlots = true);
 
@@ -65,7 +94,7 @@ class _TrainingSessionBookingScreenState
   }
 
   Future<void> _checkAvailability(int hour) async {
-    if (widget.trainer.id == null) return;
+    if (widget.trainer.id == null || !_hasMembership) return;
 
     setState(() {
       _selectedHour = hour;
@@ -101,6 +130,20 @@ class _TrainingSessionBookingScreenState
   }
 
   Future<void> _bookTrainingSession() async {
+    if (!_hasMembership) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'You need an active trainer membership before booking a session.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     if (widget.trainer.id == null ||
         _selectedHour == null ||
         _isAvailable != true)
@@ -155,6 +198,8 @@ class _TrainingSessionBookingScreenState
   }
 
   void _selectDate(DateTime date) {
+    if (!_hasMembership) return;
+
     setState(() {
       _selectedDate = date;
       _selectedHour = null;
@@ -194,6 +239,12 @@ class _TrainingSessionBookingScreenState
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFE8B44A)),
             )
+          : _isCheckingMembership
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFE8B44A)),
+            )
+          : !_hasMembership
+          ? _buildMembershipRequiredView()
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -237,9 +288,7 @@ class _TrainingSessionBookingScreenState
                     else if (_isAvailable != null)
                       Center(
                         child: Text(
-                          _isAvailable!
-                              ? 'Free slot'
-                              : 'Slot not available',
+                          _isAvailable! ? 'Free slot' : 'Slot not available',
                           style: TextStyle(
                             color: _isAvailable!
                                 ? const Color(0xFF4CAF50)
@@ -289,6 +338,74 @@ class _TrainingSessionBookingScreenState
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildMembershipRequiredView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE8B44A).withOpacity(0.5)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.lock_outline,
+                size: 48,
+                color: Color(0xFFE8B44A),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Membership required',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'You must buy a membership from this trainer before booking a training session.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black87),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PurchaseOptionsScreen(trainer: widget.trainer),
+                      ),
+                    );
+
+                    if (!mounted) return;
+
+                    if (result == true) {
+                      setState(() {
+                        _isCheckingMembership = true;
+                      });
+                      await _checkMembershipAndLoadSlots();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE8B44A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Buy membership'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

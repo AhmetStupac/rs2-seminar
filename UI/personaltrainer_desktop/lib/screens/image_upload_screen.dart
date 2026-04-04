@@ -22,7 +22,7 @@ class ImageUploadScreen extends StatefulWidget {
 }
 
 class _ImageUploadScreenState extends State<ImageUploadScreen> {
-    int? _uploadedImageId;
+  int? _uploadedImageId;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _exerciseNameController;
   late BlobStorageProvider _blobStorageProvider;
@@ -53,16 +53,16 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     final eqProvider = EquipmentProvider();
     final mgResult = await mgProvider.get();
     final eqResult = await eqProvider.get();
-    
+
     print('Muscle groups count: ${mgResult.result.length}');
     print('Equipment count: ${eqResult.result.length}');
-    
+
     if (eqResult.result.isNotEmpty) {
       for (var eq in eqResult.result) {
         print('Equipment: id=${eq.id}, name=${eq.name}');
       }
     }
-    
+
     setState(() {
       _muscleGroups = mgResult.result;
       _equipments = eqResult.result;
@@ -75,46 +75,47 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     super.dispose();
   }
 
-Future<void> _uploadImageOnly() async {
-  if (_selectedFile == null || _fileBytes == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Please select a file')),
-    );
-    return;
-  }
-  
-  setState(() {
-    _isUploading = true;
-  });
-  
-  try {
-    int? userId = auth_provider.AuthProvider.userId;
-    
-    // uploadFile sada vraća Map<String, dynamic> umjesto Image objekta
-    final result = await _blobStorageProvider.uploadFile(
-      _fileBytes!,
-      _selectedFile!.name,
-      userId,
-      _isHeader,
-    );
-    
+  Future<void> _uploadImageOnly() async {
+    if (_selectedFile == null || _fileBytes == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select a file')));
+      return;
+    }
+
     setState(() {
-      _uploadedImageId = result['imageId'];  // Uzmi imageId iz mape
+      _isUploading = true;
     });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Image uploaded successfully! (ID: ${result['imageId']})')),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to upload image.')),
-    );
-  } finally {
-    setState(() {
-      _isUploading = false;
-    });
+
+    try {
+      // uploadFile sada vraća Map<String, dynamic> umjesto Image objekta
+      final result = await _blobStorageProvider.uploadFile(
+        _fileBytes!,
+        _selectedFile!.name,
+        _isHeader,
+      );
+
+      setState(() {
+        _uploadedImageId = result['imageId']; // Uzmi imageId iz mape
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Image uploaded successfully! (ID: ${result['imageId']})',
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to upload image.')));
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
   }
-}
 
   Future<void> _pickFile() async {
     try {
@@ -132,9 +133,9 @@ Future<void> _uploadImageOnly() async {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to select file.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to select file.')));
       }
     }
   }
@@ -180,16 +181,13 @@ Future<void> _uploadImageOnly() async {
       });
 
       try {
-        int? userId = auth_provider.AuthProvider.userId;
-
         // PRVI HTTP REQUEST - Upload slike
         final imageResult = await _blobStorageProvider.uploadFile(
           _fileBytes!,
           _selectedFile!.name,
-          userId,
           _isHeader,
         );
-        
+
         // Uzmi imageId iz rezultata prvog HTTP requesta
         int? imageId = imageResult['imageId'];
 
@@ -198,7 +196,7 @@ Future<void> _uploadImageOnly() async {
           name: _exerciseNameController.text,
           muscleGroupId: _selectedMuscleGroupId,
           equipmentId: _selectedEquipmentId,
-          imageId: imageId,  // Pohrani imageId u exercise objekat
+          imageId: imageId, // Pohrani imageId u exercise objekat
         );
 
         // DRUGI HTTP REQUEST - Kreiraj exercise na API-ju
@@ -206,7 +204,11 @@ Future<void> _uploadImageOnly() async {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Image uploaded (ID: $imageId) and exercise created successfully!')),
+            SnackBar(
+              content: Text(
+                'Image uploaded (ID: $imageId) and exercise created successfully!',
+              ),
+            ),
           );
           Navigator.of(context).pop(exercise);
         }
@@ -228,7 +230,6 @@ Future<void> _uploadImageOnly() async {
 
   @override
   Widget build(BuildContext context) {
-
     return NavBar(
       'Upload slike',
       _isLoadingDropdowns
@@ -238,7 +239,6 @@ Future<void> _uploadImageOnly() async {
               child: Form(
                 key: _formKey,
                 child: ListView(
-
                   children: [
                     // isHeader checkbox section
                     CheckboxListTile(
@@ -350,7 +350,10 @@ Future<void> _uploadImageOnly() async {
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
                                 'Image ID: $_uploadedImageId',
-                                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                         ],

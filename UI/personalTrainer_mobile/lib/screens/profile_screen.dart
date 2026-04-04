@@ -11,7 +11,10 @@ import 'package:personaltrainer_mobile/providers/user_provider.dart';
 bool _isValidEmail(String? value) {
   if (value == null || value.trim().isEmpty) return false;
   final eduFit = RegExp(r'^[\w.]+@edu\.fit\.ba$', caseSensitive: false);
-  final standard = RegExp(r'^[\w.]+@[a-zA-Z0-9.-]+\.com$', caseSensitive: false);
+  final standard = RegExp(
+    r'^[\w.]+@[a-zA-Z0-9.-]+\.com$',
+    caseSensitive: false,
+  );
   return eduFit.hasMatch(value.trim()) || standard.hasMatch(value.trim());
 }
 
@@ -183,7 +186,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final uploadResult = await _blobStorageProvider.uploadFile(
         bytes,
         fileName,
-        _user!.id,
         false, // isHeader = false for profile image
       );
 
@@ -199,7 +201,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _emailController.text.trim(),
         _usernameController.text.trim(),
         _phoneController.text.trim(),
-        profileImageId: imageId is int ? imageId : int.tryParse(imageId.toString()),
+        profileImageId: imageId is int
+            ? imageId
+            : int.tryParse(imageId.toString()),
       );
 
       if (mounted) {
@@ -255,7 +259,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           elevation: 0,
           title: const Text(
             'My Profile',
-            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           centerTitle: true,
         ),
@@ -271,13 +278,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           elevation: 0,
           title: const Text(
             'My Profile',
-            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           centerTitle: true,
         ),
-        body: const Center(
-          child: Text('User not found.'),
-        ),
+        body: const Center(child: Text('User not found.')),
       );
     }
 
@@ -297,10 +305,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
         actions: [
           if (!_isEditing)
-            TextButton(
-              onPressed: _startEditing,
-              child: const Text('Edit'),
-            )
+            TextButton(onPressed: _startEditing, child: const Text('Edit'))
           else
             TextButton(
               onPressed: _isSaving ? null : _cancelEditing,
@@ -325,11 +330,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 56,
                         backgroundColor: Colors.grey[300],
-                        backgroundImage: _profileImageUrl != null &&
+                        backgroundImage:
+                            _profileImageUrl != null &&
                                 _profileImageUrl!.isNotEmpty
                             ? NetworkImage(_profileImageUrl!)
                             : null,
-                        child: _profileImageUrl == null ||
+                        child:
+                            _profileImageUrl == null ||
                                 _profileImageUrl!.isEmpty
                             ? Text(
                                 _getInitials(),
@@ -376,10 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       'Tap to change picture',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ),
                 const SizedBox(height: 32),

@@ -79,7 +79,7 @@ class _PersonalTrainerSearchScreenState
     });
 
     try {
-      final recommended = await _personalTrainerProvider.recommend(userId);
+      final recommended = await _personalTrainerProvider.recommend();
       setState(() {
         _recommendedTrainer = recommended;
         _isLoadingRecommendation = false;

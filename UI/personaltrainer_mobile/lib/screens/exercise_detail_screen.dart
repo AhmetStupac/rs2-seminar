@@ -4,10 +4,7 @@ import 'package:personaltrainer_mobile/models/exercise.dart';
 class ExerciseDetailScreen extends StatelessWidget {
   final Exercise exercise;
 
-  const ExerciseDetailScreen({
-    super.key,
-    required this.exercise,
-  });
+  const ExerciseDetailScreen({super.key, required this.exercise});
 
   @override
   Widget build(BuildContext context) {
@@ -56,27 +53,6 @@ class ExerciseDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Exercise Image
-                      if (exercise.image?.url != null)
-                        Center(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              exercise.image!.url!,
-                              height: 300,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _buildPlaceholderImage();
-                              },
-                            ),
-                          ),
-                        )
-                      else
-                        Center(child: _buildPlaceholderImage()),
-
-                      const SizedBox(height: 32),
-
                       // Exercise Name
                       Text(
                         exercise.name ?? 'No name',
@@ -174,10 +150,18 @@ class ExerciseDetailScreen extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            _buildTipItem('Warm up before executing the exercise'),
-                            _buildTipItem('Focus on the correct technique, not on the weight'),
-                            _buildTipItem('Maintain constant control throughout the exercise'),
-                            _buildTipItem('If you feel pain, stop and consult the trainer'),
+                            _buildTipItem(
+                              'Warm up before executing the exercise',
+                            ),
+                            _buildTipItem(
+                              'Focus on the correct technique, not on the weight',
+                            ),
+                            _buildTipItem(
+                              'Maintain constant control throughout the exercise',
+                            ),
+                            _buildTipItem(
+                              'If you feel pain, stop and consult the trainer',
+                            ),
                           ],
                         ),
                       ),
@@ -190,35 +174,6 @@ class ExerciseDetailScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderImage() {
-    return Container(
-      height: 300,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.fitness_center,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'No image',
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: 14,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -275,7 +230,11 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInstructionCard(String number, String title, String description) {
+  Widget _buildInstructionCard(
+    String number,
+    String title,
+    String description,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -360,10 +319,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           Expanded(
             child: Text(
               tip,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[800],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[800]),
             ),
           ),
         ],

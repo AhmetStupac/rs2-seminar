@@ -122,25 +122,23 @@ namespace eCommerce.Services
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Now assign roles if any are specified
-            if (request.RoleIds != null && request.RoleIds.Count > 0)
+            // Registration default role: always assign role with Id = 2
+            const int defaultRoleId = 2;
+            var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
+            if (!defaultRoleExists)
             {
-                foreach (var roleId in request.RoleIds)
-                {
-                    // Check if role exists
-                    if (await _context.Roles.AnyAsync(r => r.Id == roleId))
-                    {
-                        var userRole = new UserRole
-                        {
-                            UserId = user.Id,
-                            RoleId = roleId,
-                            DateAssigned = DateTime.UtcNow
-                        };
-                        _context.UserRoles.Add(userRole);
-                    }
-                }
-                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Default role (Id = 2) not found.");
             }
+
+            var userRole = new UserRole
+            {
+                UserId = user.Id,
+                RoleId = defaultRoleId,
+                DateAssigned = DateTime.UtcNow
+            };
+
+            _context.UserRoles.Add(userRole);
+            await _context.SaveChangesAsync();
 
             return await GetUserResponseWithRolesAsync(user.Id);
         }

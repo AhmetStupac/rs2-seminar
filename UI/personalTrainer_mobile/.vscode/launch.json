@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter (Stripe)",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+        "--dart-define",
+        "STRIPE_PUBLISHABLE_KEY=pk_test_51T3mm2J0jiiSNJ3blaJUkoD6Wb3vlb7TXbuaVPRvZcqcnR97wbKE9SUGS6zFy6Zo39yYKTxT9Ak8SvuOBe0pyqqK00qlBz8Evl"
+      ]
+    }
+  ]
+}

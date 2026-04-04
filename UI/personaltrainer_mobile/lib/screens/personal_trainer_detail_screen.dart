@@ -4,6 +4,7 @@ import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_rating_provider.dart';
 import 'package:personaltrainer_mobile/screens/purchase_options_screen.dart';
 import 'package:personaltrainer_mobile/screens/training_session_booking_screen.dart';
+import 'package:personaltrainer_mobile/services/membership_access_service.dart';
 
 class PersonalTrainerDetailScreen extends StatefulWidget {
   final PersonalTrainer trainer;
@@ -26,11 +27,14 @@ class _PersonalTrainerDetailScreenState
   List<PersonalTrainerRatingResponse> _allRatings = [];
   bool _isLoadingRating = false;
   bool _showCommentField = false;
+  bool _hasMembership = false;
+  bool _isMembershipLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadRatingData();
+    _loadMembershipStatus();
   }
 
   @override
@@ -133,9 +137,7 @@ class _PersonalTrainerDetailScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete rating'),
-        content: const Text(
-          'Are you sure you want to delete your rating?',
-        ),
+        content: const Text('Are you sure you want to delete your rating?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -186,6 +188,92 @@ class _PersonalTrainerDetailScreenState
         );
       }
       setState(() => _isLoadingRating = false);
+    }
+  }
+
+  Future<void> _loadMembershipStatus() async {
+    final trainerId = widget.trainer.id;
+
+    if (trainerId == null) {
+      if (!mounted) return;
+      setState(() {
+        _hasMembership = false;
+        _isMembershipLoading = false;
+      });
+      return;
+    }
+
+    final hasMembership = await MembershipAccessService.hasMembershipForTrainer(
+      trainerId,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _hasMembership = hasMembership;
+      _isMembershipLoading = false;
+    });
+  }
+
+  Future<void> _handleBookTraining() async {
+    final trainerId = widget.trainer.id;
+    if (trainerId == null) return;
+
+    final hasMembership = await MembershipAccessService.hasMembershipForTrainer(
+      trainerId,
+    );
+
+    if (!mounted) return;
+
+    if (hasMembership) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              TrainingSessionBookingScreen(trainer: widget.trainer),
+        ),
+      );
+      return;
+    }
+
+    final shouldBuyMembership = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Membership required'),
+        content: const Text(
+          'You need to buy a membership from this trainer before booking a session.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Buy membership'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldBuyMembership != true || !mounted) return;
+
+    final purchaseResult = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PurchaseOptionsScreen(trainer: widget.trainer),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (purchaseResult == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              TrainingSessionBookingScreen(trainer: widget.trainer),
+        ),
+      );
     }
   }
 
@@ -396,8 +484,7 @@ class _PersonalTrainerDetailScreenState
                                       controller: _commentController,
                                       maxLines: 3,
                                       decoration: InputDecoration(
-                                        hintText:
-                                            'Add comment (optional)',
+                                        hintText: 'Add comment (optional)',
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                             8,
@@ -474,43 +561,34 @@ class _PersonalTrainerDetailScreenState
                     ],
 
                     // Book Training Session Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    TrainingSessionBookingScreen(
-                                      trainer: widget.trainer,
-                                    ),
+                    if (!_isMembershipLoading && _hasMembership) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _handleBookTraining,
+                            icon: const Icon(Icons.calendar_today, size: 20),
+                            label: const Text(
+                              'Book training',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
-                            );
-                          },
-                          icon: const Icon(Icons.calendar_today, size: 20),
-                          label: const Text(
-                            'Book training',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE8B44A),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE8B44A),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
+                    ],
 
                     // Purchase Plans / Membership Button
                     Padding(
@@ -518,8 +596,8 @@ class _PersonalTrainerDetailScreenState
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
+                          onPressed: () async {
+                            final purchaseResult = await Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PurchaseOptionsScreen(
@@ -527,8 +605,15 @@ class _PersonalTrainerDetailScreenState
                                 ),
                               ),
                             );
+
+                            if (purchaseResult == true) {
+                              _loadMembershipStatus();
+                            }
                           },
-                          icon: const Icon(Icons.shopping_cart_outlined, size: 20),
+                          icon: const Icon(
+                            Icons.shopping_cart_outlined,
+                            size: 20,
+                          ),
                           label: const Text(
                             'Buy plan / Membership',
                             style: TextStyle(

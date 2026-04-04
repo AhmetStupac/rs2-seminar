@@ -5,19 +5,15 @@ import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
+import 'package:personaltrainer_mobile/config/stripe_config.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
 import 'package:personaltrainer_mobile/screens/forgot_password_screen.dart';
 import 'package:personaltrainer_mobile/screens/register_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Stripe publishable key from environment (pass via --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...)
-  const stripeKey = String.fromEnvironment(
-    'STRIPE_PUBLISHABLE_KEY',
-    defaultValue: '',
-  );
-  if (stripeKey.isNotEmpty) {
-    Stripe.publishableKey = stripeKey;
+  if (StripeConfig.isValid) {
+    Stripe.publishableKey = StripeConfig.publishableKey;
     try {
       await Stripe.instance.applySettings();
     } catch (e) {

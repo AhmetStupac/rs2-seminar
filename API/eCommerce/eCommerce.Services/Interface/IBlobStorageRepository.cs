@@ -12,5 +12,6 @@ namespace eCommerce.Services.Interface
         Task UploadFileMetaDataAsync(Image image);
         Task<bool> DeleteFileMetaData(int id);
         Task<List<Image>> GetImagesByUserIdAsync(int userId);
+        Task<Image?> GetImageByIdAsync(int id);
     }
 }

@@ -61,5 +61,22 @@ namespace eCommerce.Services
                 UserId = x.UserId
             });
         }
+
+        public async Task<ImageResponse?> GetByIdAsync(int id)
+        {
+            var image = await _blobStorageRepository.GetImageByIdAsync(id);
+            if (image == null)
+                return null;
+
+            return new ImageResponse
+            {
+                Id = image.Id,
+                Url = image.Url,
+                Name = image.Name,
+                IsHeader = image.IsHeader,
+                Size = image.Size,
+                UserId = image.UserId
+            };
+        }
     }
 }

@@ -5,11 +5,14 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using MapsterMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Stripe;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.Services
@@ -18,12 +21,14 @@ namespace eCommerce.Services
     {
         private readonly IB210033DbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public PaymentService(IB210033DbContext context, IMapper mapper, IConfiguration configuration)
+        public PaymentService(IB210033DbContext context, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
             : base(context, mapper)
         {
             _context = context;
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
             StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
         }
 
@@ -91,10 +96,87 @@ namespace eCommerce.Services
             if (record == null)
                 throw new KeyNotFoundException($"No payment record found for intent '{request.StripePaymentIntentId}'.");
 
-            record.Status = "succeeded";
+            var currentUserId = GetCurrentUserId();
+            var isAdmin = IsCurrentUserAdmin();
+            if (!isAdmin && record.UserId != currentUserId)
+                throw new UnauthorizedAccessException("You are not allowed to confirm this payment.");
+
+            var stripeService = new PaymentIntentService();
+            var intent = await stripeService.GetAsync(request.StripePaymentIntentId);
+
+            if (intent == null)
+                throw new InvalidOperationException("Stripe PaymentIntent was not found.");
+
+            if (intent.Amount != record.AmountInCents)
+                throw new InvalidOperationException("Stripe payment amount does not match the stored payment record.");
+
+            record.Status = intent.Status;
+
+            if (!string.Equals(intent.Status, "succeeded", StringComparison.OrdinalIgnoreCase))
+            {
+                await _context.SaveChangesAsync();
+                throw new InvalidOperationException($"Payment is not successful on Stripe. Current status: {intent.Status}");
+            }
+
+            await ApplyPurchaseEffectsAsync(record);
+
             await _context.SaveChangesAsync();
 
             return MapToResponse(record);
+        }
+
+        private async Task ApplyPurchaseEffectsAsync(Payment record)
+        {
+            if (!record.ItemId.HasValue)
+                return;
+
+            switch (record.ItemType)
+            {
+                case PaymentItemType.NutritionPlan:
+                {
+                    var plan = await _context.Set<Database.NutritionPlan>().FindAsync(record.ItemId.Value);
+                    if (plan == null)
+                        throw new KeyNotFoundException($"NutritionPlan with id {record.ItemId.Value} not found.");
+
+                    plan.UserId = record.UserId;
+                    break;
+                }
+
+                case PaymentItemType.TrainingPlan:
+                {
+                    var plan = await _context.Set<Database.TrainingPlan>().FindAsync(record.ItemId.Value);
+                    if (plan == null)
+                        throw new KeyNotFoundException($"TrainingPlan with id {record.ItemId.Value} not found.");
+
+                    plan.UserId = record.UserId;
+                    break;
+                }
+
+                case PaymentItemType.Membership:
+                default:
+                    break;
+            }
+        }
+
+        private int GetCurrentUserId()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user?.Identity?.IsAuthenticated != true)
+                throw new UnauthorizedAccessException("Unauthorized user.");
+
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? user.FindFirst("nameid")?.Value;
+
+            if (!int.TryParse(userIdClaim, out var userId))
+                throw new UnauthorizedAccessException("Invalid user identity.");
+
+            return userId;
+        }
+
+        private bool IsCurrentUserAdmin()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            return user?.IsInRole("SuperAdmin") == true || user?.IsInRole("Administrator") == true || user?.IsInRole("Admin") == true;
         }
 
         // -----------------------------------------------------------------------

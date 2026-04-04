@@ -38,7 +38,7 @@ class _GroupTrainingSessionDetailScreenState
 
     setState(() => _isLoading = true);
     try {
-      final updated = await _provider.join(_session.id, userId);
+      final updated = await _provider.join(_session.id);
       setState(() {
         _session = updated;
         _isLoading = false;
@@ -72,8 +72,9 @@ class _GroupTrainingSessionDetailScreenState
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Leave Session'),
-        content:
-            const Text('Are you sure you want to leave this group session?'),
+        content: const Text(
+          'Are you sure you want to leave this group session?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -92,7 +93,7 @@ class _GroupTrainingSessionDetailScreenState
 
     setState(() => _isLoading = true);
     try {
-      await _provider.leave(_session.id, userId);
+      await _provider.leave(_session.id);
       // Reload session to reflect updated participants
       final result = await _provider.get(filter: {'Id': _session.id});
       if (result.result.isNotEmpty) {
@@ -141,8 +142,7 @@ class _GroupTrainingSessionDetailScreenState
                   const SizedBox(height: 20),
                   _buildInfoSection(),
                   const SizedBox(height: 20),
-                  if (_session.notes != null &&
-                      _session.notes!.isNotEmpty) ...[
+                  if (_session.notes != null && _session.notes!.isNotEmpty) ...[
                     _buildNotesSection(),
                     const SizedBox(height: 20),
                   ],
@@ -196,16 +196,17 @@ class _GroupTrainingSessionDetailScreenState
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     _session.trainingType,
-                    style: const TextStyle(
-                        color: Colors.white70, fontSize: 13),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ),
               ],
@@ -311,10 +312,7 @@ class _GroupTrainingSessionDetailScreenState
               color: Colors.black87,
             ),
           ),
-          Text(
-            unit,
-            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
-          ),
+          Text(unit, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
         ],
       ),
     );
@@ -336,11 +334,7 @@ class _GroupTrainingSessionDetailScreenState
       ),
       child: Column(
         children: [
-          _buildInfoRow(
-            Icons.location_on_outlined,
-            'Location',
-            _session.place,
-          ),
+          _buildInfoRow(Icons.location_on_outlined, 'Location', _session.place),
           const Divider(height: 20),
           _buildInfoRow(
             Icons.calendar_today_outlined,
@@ -410,8 +404,11 @@ class _GroupTrainingSessionDetailScreenState
               color: Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
             ),
-            child:
-                Icon(Icons.note_alt_outlined, size: 18, color: Colors.blue.shade600),
+            child: Icon(
+              Icons.note_alt_outlined,
+              size: 18,
+              color: Colors.blue.shade600,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -426,7 +423,10 @@ class _GroupTrainingSessionDetailScreenState
                 Text(
                   _session.notes!,
                   style: const TextStyle(
-                      fontSize: 14, color: Colors.black87, height: 1.4),
+                    fontSize: 14,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -481,8 +481,7 @@ class _GroupTrainingSessionDetailScreenState
           ),
           if (_isMySession)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFFE8B44A).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(20),
@@ -551,12 +550,10 @@ class _GroupTrainingSessionDetailScreenState
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: _session.participants.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 1, indent: 58),
+              separatorBuilder: (_, __) => const Divider(height: 1, indent: 58),
               itemBuilder: (context, index) {
                 final participant = _session.participants[index];
-                final isCurrentUser =
-                    participant.userId == AuthProvider.userId;
+                final isCurrentUser = participant.userId == AuthProvider.userId;
                 return ListTile(
                   leading: CircleAvatar(
                     radius: 18,
@@ -583,8 +580,7 @@ class _GroupTrainingSessionDetailScreenState
                   ),
                   subtitle: Text(
                     'Joined ${DateFormat('dd MMM yyyy').format(participant.joinedAt)}',
-                    style:
-                        const TextStyle(fontSize: 11, color: Colors.black38),
+                    style: const TextStyle(fontSize: 11, color: Colors.black38),
                   ),
                   trailing: isCurrentUser
                       ? const Text(
@@ -616,12 +612,14 @@ class _GroupTrainingSessionDetailScreenState
       child: SizedBox(
         height: 52,
         child: ElevatedButton(
-          onPressed: _isLoading ? null : (_hasJoined ? _handleLeave : _handleJoin),
+          onPressed: _isLoading
+              ? null
+              : (_hasJoined ? _handleLeave : _handleJoin),
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                _hasJoined ? Colors.white : const Color(0xFFE8B44A),
-            foregroundColor:
-                _hasJoined ? Colors.red : Colors.white,
+            backgroundColor: _hasJoined
+                ? Colors.white
+                : const Color(0xFFE8B44A),
+            foregroundColor: _hasJoined ? Colors.red : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
               side: _hasJoined

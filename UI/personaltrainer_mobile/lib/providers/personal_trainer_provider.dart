@@ -10,8 +10,8 @@ class PersonalTrainerProvider extends BaseProvider<PersonalTrainer> {
     return PersonalTrainer.fromJson(data);
   }
 
-  Future<PersonalTrainer?> recommend(int userId) async {
-    var url = "${BaseProvider.baseUrl}PersonalTrainer/recommend/$userId";
+  Future<PersonalTrainer?> recommend() async {
+    var url = "${BaseProvider.baseUrl}PersonalTrainer/recommend";
     var uri = Uri.parse(url);
     var headers = createHeaders();
 

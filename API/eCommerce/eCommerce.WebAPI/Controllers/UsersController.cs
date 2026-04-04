@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -41,10 +42,19 @@ namespace eCommerce.WebAPI.Controllers
                 
             return user;
         }
+
+
+        //register
         [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<UserResponse>> Create(UserUpsertRequest request)
         {
+            // Only allow role assignment when the caller is authenticated and has the SuperAdmin role.
+            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole("SuperAdmin")))
+            {
+                request.RoleIds = new List<int>();
+            }
+
             var createdUser = await _userService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
         }
@@ -54,6 +64,22 @@ namespace eCommerce.WebAPI.Controllers
         [HttpPut("update/{id}")]
         public async Task<ActionResult<UserResponse>> Update(int id, UserUpsertRequest request)
         {
+            var currentUserIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                     ?? User?.FindFirst("nameid")?.Value;
+
+            if (!int.TryParse(currentUserIdClaim, out var currentUserId))
+                return Forbid();
+
+            var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Administrator") || User.IsInRole("Admin");
+            if (!isAdmin && currentUserId != id)
+                return Forbid();
+
+            // Prevent non-admins from modifying roles
+            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole("SuperAdmin")))
+            {
+                request.RoleIds = new List<int>();
+            }
+
             var updatedUser = await _userService.UpdateAsync(id, request);
             
             if (updatedUser == null)
@@ -89,7 +115,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         // Restore deleted user
-       // [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = "SuperAdmin")]
         [HttpPost("restore/{id}")]
         public async Task<ActionResult> RestoreUser(int id)
         {

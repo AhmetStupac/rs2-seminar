@@ -11,7 +11,6 @@ class PaymentProvider extends BaseProvider<dynamic> {
   /// Creates a Stripe PaymentIntent via the backend.
   /// [itemType]: 0 = TrainingPlan, 1 = NutritionPlan, 2 = Membership
   Future<PaymentIntentResponse> createPaymentIntent({
-    required int userId,
     required int itemType,
     int? itemId,
     int? customAmountInCents,
@@ -21,7 +20,6 @@ class PaymentProvider extends BaseProvider<dynamic> {
     final headers = createHeaders();
 
     final body = jsonEncode({
-      'userId': userId,
       'itemType': itemType,
       if (itemId != null) 'itemId': itemId,
       if (customAmountInCents != null)
@@ -48,9 +46,7 @@ class PaymentProvider extends BaseProvider<dynamic> {
     final uri = Uri.parse(url);
     final headers = createHeaders();
 
-    final body = jsonEncode({
-      'stripePaymentIntentId': stripePaymentIntentId,
-    });
+    final body = jsonEncode({'stripePaymentIntentId': stripePaymentIntentId});
 
     final response = await BaseProvider.client.post(
       uri,

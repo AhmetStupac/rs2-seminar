@@ -105,9 +105,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to select file.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to select file.')));
       }
     }
   }
@@ -133,12 +133,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      int? userId = auth_provider.AuthProvider.userId;
-
       final result = await _blobStorageProvider.uploadFile(
         _fileBytes!,
         _selectedFile!.name,
-        userId,
         false, // isHeader
       );
 
@@ -176,18 +173,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String? _validate() {
-    if (_firstNameController.text.trim().isEmpty) return 'First name cannot be empty.';
-    if (_lastNameController.text.trim().isEmpty) return 'Last name cannot be empty.';
+    if (_firstNameController.text.trim().isEmpty)
+      return 'First name cannot be empty.';
+    if (_lastNameController.text.trim().isEmpty)
+      return 'Last name cannot be empty.';
     if (_emailController.text.trim().isEmpty) return 'Email cannot be empty.';
-    final emailComRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$');
+    final emailComRegex = RegExp(
+      r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$',
+    );
     final emailEduRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@edu\.fit\.ba$');
     final email = _emailController.text.trim();
     if (!emailComRegex.hasMatch(email) && !emailEduRegex.hasMatch(email))
       return 'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
-    if (_phoneController.text.trim().isEmpty) return 'Phone number cannot be empty.';
+    if (_phoneController.text.trim().isEmpty)
+      return 'Phone number cannot be empty.';
     final phoneRegex = RegExp(r'^\+387 6[0-9] [0-9]{3} [0-9]{3}$');
-    if (!phoneRegex.hasMatch(_phoneController.text.trim())) return 'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
-    if (_usernameController.text.trim().isEmpty) return 'Username cannot be empty.';
+    if (!phoneRegex.hasMatch(_phoneController.text.trim()))
+      return 'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
+    if (_usernameController.text.trim().isEmpty)
+      return 'Username cannot be empty.';
     return null;
   }
 
@@ -200,7 +204,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(validationError),
             ],
@@ -573,7 +581,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: _emailController,
                             decoration: const InputDecoration(
                               labelText: 'Email',
-                              hintText: 'e.g. john.doe@gmail.com or john.doe@edu.fit.ba',
+                              hintText:
+                                  'e.g. john.doe@gmail.com or john.doe@edu.fit.ba',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,

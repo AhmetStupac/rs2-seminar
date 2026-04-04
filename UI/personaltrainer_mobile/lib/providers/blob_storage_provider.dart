@@ -23,7 +23,6 @@ class BlobStorageProvider with ChangeNotifier {
   Future<Map<String, dynamic>> uploadFile(
     Uint8List fileBytes,
     String fileName,
-    int? userId,
     bool? isHeader,
   ) async {
     var url = "${_baseUrl}BlobStorage/upload";
@@ -43,10 +42,7 @@ class BlobStorageProvider with ChangeNotifier {
     );
 
     // Add image name as string field
-    request.fields['image'] = jsonEncode({
-      'userId': userId,
-      'isHeader': isHeader,
-    });
+    request.fields['image'] = jsonEncode({'isHeader': isHeader});
 
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);

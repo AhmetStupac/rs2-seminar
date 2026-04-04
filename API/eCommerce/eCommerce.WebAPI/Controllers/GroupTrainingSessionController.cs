@@ -4,6 +4,7 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -21,16 +22,32 @@ namespace eCommerce.WebAPI.Controllers
             _groupTrainingSessionService = service;
         }
 
-        [HttpPost("{id}/join/{userId}")]
-        public async Task<GroupTrainingSessionResponse> Join(int id, int userId)
+        [HttpPost("{id}/join")]
+        public async Task<ActionResult<GroupTrainingSessionResponse>> Join(int id)
         {
-            return await _groupTrainingSessionService.JoinAsync(id, userId);
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Forbid();
+
+            return await _groupTrainingSessionService.JoinAsync(id, userId.Value);
         }
 
-        [HttpDelete("{id}/leave/{userId}")]
-        public async Task<bool> Leave(int id, int userId)
+        [HttpDelete("{id}/leave")]
+        public async Task<ActionResult<bool>> Leave(int id)
         {
-            return await _groupTrainingSessionService.LeaveAsync(id, userId);
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Forbid();
+
+            return await _groupTrainingSessionService.LeaveAsync(id, userId.Value);
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User?.FindFirst("nameid")?.Value;
+
+            return int.TryParse(claim, out var userId) ? userId : null;
         }
     }
 }

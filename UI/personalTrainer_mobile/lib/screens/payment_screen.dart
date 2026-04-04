@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:personaltrainer_mobile/config/stripe_config.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/payment_provider.dart';
+import 'package:personaltrainer_mobile/services/membership_access_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   /// 0 = TrainingPlan, 1 = NutritionPlan, 2 = Membership
@@ -49,6 +51,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Future<void> _startPayment() async {
+    if (!StripeConfig.isValid) {
+      setState(() {
+        _errorMessage =
+            'Stripe is not configured. Start the app with --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...';
+      });
+      return;
+    }
+
     final userId = AuthProvider.userId;
     if (userId == null) {
       setState(() {
@@ -63,9 +73,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
+      // Initialize Stripe locally from compile-time config to avoid getter exceptions.
+      Stripe.publishableKey = StripeConfig.publishableKey;
+      await Stripe.instance.applySettings();
+
       // Step 1: Create payment intent on backend
       final intentResponse = await _paymentProvider.createPaymentIntent(
-        userId: userId,
         itemType: widget.itemType,
         itemId: widget.itemId,
         customAmountInCents: widget.customAmountInCents,
@@ -91,9 +104,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final paymentIntentId = intentResponse.clientSecret.split('_secret_')[0];
       await _paymentProvider.confirmPayment(paymentIntentId);
 
+      if (widget.itemType == 2 && widget.itemId != null) {
+        await MembershipAccessService.grantMembershipForTrainer(widget.itemId!);
+      }
+
       setState(() {
         _paymentSuccess = true;
         _isLoading = false;
+      });
+    } on StripeConfigException {
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            'Stripe is not configured. Start the app with --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...';
       });
     } on StripeException catch (e) {
       setState(() {

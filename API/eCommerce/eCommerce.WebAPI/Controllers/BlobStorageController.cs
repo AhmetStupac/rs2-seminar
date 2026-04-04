@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace eCommerce.WebAPI.Controllers
 {
@@ -28,18 +29,29 @@ namespace eCommerce.WebAPI.Controllers
             if (file == null || file.Length == 0) 
                 return BadRequest("File is empty");
 
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return Forbid();
+
+            var isAdmin = IsCurrentUserAdmin();
+
             var imageObj = JsonConvert.DeserializeObject<Image>(image);
             if (imageObj == null) 
                 return BadRequest("Invalid image metadata payload");
 
+            if (imageObj.UserId.HasValue && imageObj.UserId.Value > 0 && !isAdmin && imageObj.UserId.Value != currentUserId.Value)
+                return Forbid();
+
+            var effectiveUserId = isAdmin ? imageObj.UserId : currentUserId;
+
             // Check if UserId is provided
-            var hasUser = imageObj.UserId.HasValue && imageObj.UserId.Value > 0;
+            var hasUser = effectiveUserId.HasValue && effectiveUserId.Value > 0;
 
             // Generate unique blob name with folder structure
             var safeOriginal = Path.GetFileName(file.FileName);
             var unique = $"{Guid.NewGuid():N}-{safeOriginal}";
             var blobName = hasUser
-                ? $"users/{imageObj.UserId}/{unique}"
+                ? $"users/{effectiveUserId}/{unique}"
                 : $"general/{unique}";
 
             // Upload to Azure Blob Storage
@@ -49,7 +61,7 @@ namespace eCommerce.WebAPI.Controllers
             // Save metadata to database
             var imageToSql = new Image
             {
-                UserId = imageObj.UserId,
+                UserId = effectiveUserId,
                 Name = blobName,
                 Url = url,
                 Size = file.Length,
@@ -67,6 +79,20 @@ namespace eCommerce.WebAPI.Controllers
         {
             if (string.IsNullOrEmpty(fileName))
                 return BadRequest("File name is required");
+
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return Forbid();
+
+            var image = await _imageMetadataService.GetByIdAsync(id);
+            if (image == null)
+                return NotFound("Image metadata not found");
+
+            if (!IsCurrentUserAdmin() && image.UserId != currentUserId.Value)
+                return Forbid();
+
+            if (!string.Equals(image.Name, fileName, StringComparison.Ordinal))
+                return BadRequest("fileName does not match image metadata");
 
             // Delete from Azure Blob Storage
             var deleted = await _blobStorageService.DeleteFileAsync(fileName);
@@ -109,11 +135,28 @@ namespace eCommerce.WebAPI.Controllers
             return File(fileStream, contentType ?? "application/octet-stream", Path.GetFileName(fileName));
         }
 
-        [HttpGet("user/{userId:int}")]
-        public async Task<IActionResult> ListByUser(int userId)
+        [HttpGet("user")]
+        public async Task<IActionResult> ListByUser()
         {
-            var images = await _imageMetadataService.GetByUserIdAsync(userId);
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return Forbid();
+
+            var images = await _imageMetadataService.GetByUserIdAsync(userId.Value);
             return Ok(images);
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User?.FindFirst("nameid")?.Value;
+
+            return int.TryParse(claim, out var userId) ? userId : null;
+        }
+
+        private bool IsCurrentUserAdmin()
+        {
+            return User.IsInRole("SuperAdmin") || User.IsInRole("Administrator") || User.IsInRole("Admin");
         }
     }
 }
