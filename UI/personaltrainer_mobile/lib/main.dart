@@ -16,15 +16,8 @@ void main() async {
     Stripe.publishableKey = StripeConfig.publishableKey;
     try {
       await Stripe.instance.applySettings();
-    } catch (e) {
-      debugPrint('WARNING: Stripe initialization failed: $e');
-    }
-  } else {
-    debugPrint(
-      'WARNING: STRIPE_PUBLISHABLE_KEY not set. Pass it via --dart-define. '
-      'Stripe features will be unavailable.',
-    );
-  }
+    } catch (e) {}
+  } else {}
   runApp(const MyApp());
 }
 

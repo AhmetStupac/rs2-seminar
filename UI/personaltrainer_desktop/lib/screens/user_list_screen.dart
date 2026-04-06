@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:personaltrainer_desktop/providers/admin_provider.dart';
@@ -28,14 +28,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
     super.initState();
     _loadUsers();
 
-    // Debug: Print online users
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final signalR = Provider.of<SignalRProvider>(context, listen: false);
-      print("🔍 DEBUG: SignalR connected? ${signalR.isConnected}");
-      print("🔍 DEBUG: Online users count: ${signalR.onlineUsers.length}");
-      print(
-        "🔍 DEBUG: Online user IDs: ${signalR.onlineUsers.map((u) => u.userId).toList()}",
-      );
 
       // Periodic UI refresh to show online status
       // (Backend sends events, we just need to refresh UI)
@@ -68,8 +62,11 @@ class _UsersListScreenState extends State<UsersListScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
+        final message = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška pri učitavanju korisnika.')),
+          SnackBar(
+            content: Text('GreĹˇka pri uÄŤitavanju korisnika: $message'),
+          ),
         );
       }
     }
@@ -175,7 +172,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText:
-                                    'Pretraži po username, email, imenu ili prezimenu...',
+                                    'PretraĹľi po username, email, imenu ili prezimenu...',
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: _searchQuery.isNotEmpty
                                     ? IconButton(
@@ -228,17 +225,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                             signalRProvider.onlineUsers.any(
                                               (u) => u.userId == userId,
                                             );
-
-                                        // Debug logging
-                                        if (index == 0) {
-                                          print(
-                                            "🔍 Checking user: ${user['username']} (ID: $userId)",
-                                          );
-                                          print(
-                                            "🔍 Online users: ${signalRProvider.onlineUsers.map((u) => u.userId).toList()}",
-                                          );
-                                          print("🔍 Is online? $isOnline");
-                                        }
 
                                         return Card(
                                           margin: const EdgeInsets.symmetric(
@@ -372,7 +358,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                                       Icons.delete,
                                                       color: Colors.red,
                                                     ),
-                                                    tooltip: 'Obriši korisnika',
+                                                    tooltip:
+                                                        'ObriĹˇi korisnika',
                                                     onPressed: () =>
                                                         _showDeleteDialog(user),
                                                   ),
@@ -434,12 +421,12 @@ class _UsersListScreenState extends State<UsersListScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Unbanuj korisnika'),
         content: Text(
-          'Da li ste sigurni da želite da unbanuјete ${user['username']}?',
+          'Da li ste sigurni da Ĺľelite da unbanuŃete ${user['username']}?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Otkaži'),
+            child: const Text('OtkaĹľi'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -457,7 +444,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Uspešno unbanovano'),
+              content: Text(result['message'] ?? 'UspeĹˇno unbanovano'),
               backgroundColor: Colors.green,
             ),
           );
@@ -465,7 +452,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Greška'),
+              content: Text(result['message'] ?? 'GreĹˇka'),
               backgroundColor: Colors.red,
             ),
           );
@@ -478,19 +465,19 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Obriši korisnika'),
+        title: const Text('ObriĹˇi korisnika'),
         content: Text(
-          'Da li ste sigurni da želite da obrišete korisnika ${user['username']}?\n\nOvo je soft delete operacija.',
+          'Da li ste sigurni da Ĺľelite da obriĹˇete korisnika ${user['username']}?\n\nOvo je soft delete operacija.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Otkaži'),
+            child: const Text('OtkaĹľi'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Obriši'),
+            child: const Text('ObriĹˇi'),
           ),
         ],
       ),
@@ -503,7 +490,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Uspešno obrisano'),
+              content: Text(result['message'] ?? 'UspeĹˇno obrisano'),
               backgroundColor: Colors.green,
             ),
           );
@@ -511,7 +498,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Greška'),
+              content: Text(result['message'] ?? 'GreĹˇka'),
               backgroundColor: Colors.red,
             ),
           );
@@ -526,12 +513,12 @@ class _UsersListScreenState extends State<UsersListScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Vrati korisnika'),
         content: Text(
-          'Da li ste sigurni da želite da vratite korisnika ${user['username']}?',
+          'Da li ste sigurni da Ĺľelite da vratite korisnika ${user['username']}?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Otkaži'),
+            child: const Text('OtkaĹľi'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -549,7 +536,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Uspešno vraćeno'),
+              content: Text(result['message'] ?? 'UspeĹˇno vraÄ‡eno'),
               backgroundColor: Colors.green,
             ),
           );
@@ -557,7 +544,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'Greška'),
+              content: Text(result['message'] ?? 'GreĹˇka'),
               backgroundColor: Colors.red,
             ),
           );

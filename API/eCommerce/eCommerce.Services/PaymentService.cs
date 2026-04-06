@@ -2,6 +2,7 @@ using eCommerce.Model.Enums;
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Constants;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using MapsterMapper;
@@ -176,7 +177,7 @@ namespace eCommerce.Services
         private bool IsCurrentUserAdmin()
         {
             var user = _httpContextAccessor.HttpContext?.User;
-            return user?.IsInRole("SuperAdmin") == true || user?.IsInRole("Administrator") == true || user?.IsInRole("Admin") == true;
+            return user?.IsInRole(Roles.SuperAdmin) == true || user?.IsInRole(Roles.Administrator) == true;
         }
 
         // -----------------------------------------------------------------------

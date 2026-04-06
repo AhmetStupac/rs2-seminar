@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -23,24 +24,28 @@ namespace eCommerce.WebAPI.Filters
         public override void OnException(ExceptionContext context)
         {
             _logger.LogError(context.Exception, context.Exception.Message);
-            
-            if(context.Exception is UserException) 
-            {
-                context.ModelState.AddModelError("userError", context.Exception.Message);
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }
-            else
-            {
-                context.ModelState.AddModelError("ERROR", "Server side error, please check logs");
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            }
 
-            var list = context.ModelState.Where(x => x.Value.Errors.Count > 0)
-                .ToDictionary(x => x.Key, y => y.Value.Errors.Select(z => z.ErrorMessage));
+            var (statusCode, key, message) = context.Exception switch
+            {
+                UnauthorizedAccessException ex => (HttpStatusCode.Forbidden, "unauthorized", ex.Message),
+                KeyNotFoundException ex => (HttpStatusCode.NotFound, "notFound", ex.Message),
+                ArgumentException ex => (HttpStatusCode.BadRequest, "validation", ex.Message),
+                InvalidOperationException ex => (HttpStatusCode.BadRequest, "invalidOperation", ex.Message),
+                UserException ex => (HttpStatusCode.BadRequest, "userError", ex.Message),
+                _ => (HttpStatusCode.InternalServerError, "error", "Server side error, please check logs")
+            };
 
-            context.Result = new JsonResult(new {
-                errors = list
-            });
+            var errors = new Dictionary<string, IEnumerable<string>>
+            {
+                [key] = new[] { message }
+            };
+
+            context.Result = new JsonResult(new { errors })
+            {
+                StatusCode = (int)statusCode
+            };
+
+            context.ExceptionHandled = true;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Constants;
 using eCommerce.Services;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -50,7 +51,7 @@ namespace eCommerce.WebAPI.Controllers
         public async Task<ActionResult<UserResponse>> Create(UserUpsertRequest request)
         {
             // Only allow role assignment when the caller is authenticated and has the SuperAdmin role.
-            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole("SuperAdmin")))
+            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole(Roles.SuperAdmin)))
             {
                 request.RoleIds = new List<int>();
             }
@@ -70,12 +71,12 @@ namespace eCommerce.WebAPI.Controllers
             if (!int.TryParse(currentUserIdClaim, out var currentUserId))
                 return Forbid();
 
-            var isAdmin = User.IsInRole("SuperAdmin") || User.IsInRole("Administrator") || User.IsInRole("Admin");
+            var isAdmin = User.IsInRole(Roles.SuperAdmin) || User.IsInRole(Roles.Administrator);
             if (!isAdmin && currentUserId != id)
                 return Forbid();
 
             // Prevent non-admins from modifying roles
-            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole("SuperAdmin")))
+            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole(Roles.SuperAdmin)))
             {
                 request.RoleIds = new List<int>();
             }
@@ -89,7 +90,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         // soft delete
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpDelete("soft/{id}")]
         public async Task<ActionResult> Delete(int id)
         {
@@ -102,7 +103,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         // Permanentno brisanje - samo za SuperAdmin
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpDelete("{id}/permanent")]
         public async Task<ActionResult> PermanentDelete(int id)
         {
@@ -115,7 +116,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         // Restore deleted user
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpPost("restore/{id}")]
         public async Task<ActionResult> RestoreUser(int id)
         {
@@ -128,7 +129,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         // View deleted users
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpGet("deleted")]
         public async Task<ActionResult<List<UserResponse>>> GetDeletedUsers()
         {
@@ -164,7 +165,7 @@ namespace eCommerce.WebAPI.Controllers
 
         // Ban user
         
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpPost("ban-user")]
         public async Task<IActionResult> BanUser([FromBody] BanUserResponse dto)
         {
@@ -176,7 +177,7 @@ namespace eCommerce.WebAPI.Controllers
             return Ok(new { message = "User successfully banned" });
         }
 
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpPost("unban-user/{userId}")]
         public async Task<IActionResult> UnbanUser(int userId)
         {

@@ -5,6 +5,8 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using eCommerce.Services.Repository;
 using eCommerce.Services.SignalR;
+using eCommerce.WebAPI.Filters;
+using eCommerce.WebAPI.HostedServices;
 using eCommerce.WebAPI.Middleware;
 using FluentValidation;
 using Mapster;
@@ -34,23 +36,23 @@ catch (FileNotFoundException) { /* Docker supplies env vars directly */ }
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-//builder.Services.AddTransient<IProductService, ProductService>();
-builder.Services.AddTransient<IUserService, UserService>();
-//builder.Services.AddTransient<IProductTypeService, ProductTypeService>();
-builder.Services.AddTransient<IRoleService, RoleService>();
-//builder.Services.AddTransient<IUnitOfMeasureService, UnitOfMeasureService>();
+//builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
+//builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+//builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
 
-//builder.Services.AddTransient<BaseProductState>();
-//builder.Services.AddTransient<InitialProductState>();
-//builder.Services.AddTransient<DraftProductState>();
-//builder.Services.AddTransient<ActiveProductState>();
-//builder.Services.AddTransient<DeactivatedProductState>();
-builder.Services.AddTransient<IPersonalTrainerService, PersonalTrainerService>();
-builder.Services.AddTransient<ITrainingPlanService, TrainingPlanService>();
-builder.Services.AddTransient<IExerciseService, ExerciseService>();
-builder.Services.AddTransient<IMuscleGroupService, MuscleGroupService>();
-builder.Services.AddTransient<IEquipmentService, EquipmentService>();
-builder.Services.AddTransient<ITrainingService, TrainingService>();
+//builder.Services.AddScoped<BaseProductState>();
+//builder.Services.AddScoped<InitialProductState>();
+//builder.Services.AddScoped<DraftProductState>();
+//builder.Services.AddScoped<ActiveProductState>();
+//builder.Services.AddScoped<DeactivatedProductState>();
+builder.Services.AddScoped<IPersonalTrainerService, PersonalTrainerService>();
+builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
+builder.Services.AddScoped<IExerciseService, ExerciseService>();
+builder.Services.AddScoped<IMuscleGroupService, MuscleGroupService>();
+builder.Services.AddScoped<IEquipmentService, EquipmentService>();
+builder.Services.AddScoped<ITrainingService, TrainingService>();
 builder.Services.AddScoped<IImageMetadataService, ImageMetadataService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IBlobStorageRepository, BlobStorageRepository>();
@@ -59,7 +61,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INutritionPlanService, NutritionPlanService>();
-builder.Services.AddTransient<IGymService, GymService>();
+builder.Services.AddScoped<IGymService, GymService>();
 builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPersonalTrainerRatingService, PersonalTrainerRatingService>();
@@ -68,6 +70,7 @@ builder.Services.AddScoped<IGroupTrainingSessionService, GroupTrainingSessionSer
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
 builder.Services.AddScoped<IDashboardReportService, DashboardReportService>();
+builder.Services.AddHostedService<RecommenderTrainingHostedService>();
 builder.Services.AddHttpContextAccessor();
 
 
@@ -130,7 +133,10 @@ builder.Services.AddAuthorization(options =>
 
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ExceptionFilter>();
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -219,15 +225,5 @@ app.UseMiddleware<BanCheckMiddleware>();
 app.MapControllers();
 app.MapHub<PresenceHub>("/hubs/presence");
 app.MapHub<MessageHub>("/hubs/messages");
-
-// Train the personal trainer recommender model in background after startup
-_ = Task.Run(async () =>
-{
-    await Task.Delay(2000);
-    using (var trainingScope = app.Services.CreateScope())
-    {
-        PersonalTrainerService.TrainRecommenderAtStartup(trainingScope.ServiceProvider);
-    }
-});
 
 app.Run();

@@ -17,13 +17,9 @@ class MonthlyTrainingStatisticsProvider
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET Request to: $url");
-    print("🔍 Headers: ${headers.keys.join(', ')}");
 
     var response = await BaseProvider.client.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
-    print("🔍 Response body: ${response.body}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body) as List;
@@ -42,13 +38,9 @@ class MonthlyTrainingStatisticsProvider
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET Request to: $url");
-    print("🔍 Headers: ${headers.keys.join(', ')}");
 
     var response = await BaseProvider.client.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
-    print("🔍 Response body: ${response.body}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body) as List;

@@ -28,5 +28,13 @@ namespace eCommerce.Services.Repository
         {
             return await context.Users.FindAsync(id);
         }
+
+        public async Task<List<User>> GetUsersByIdsAsync(IEnumerable<int> ids)
+        {
+            var userIds = ids.Distinct().ToList();
+            return await context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToListAsync();
+        }
     }
 }

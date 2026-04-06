@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/models/nutrition_plan.dart';
 import 'package:personaltrainer_desktop/models/user.dart';
@@ -67,13 +67,11 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
 
     try {
       final result = await _userProvider.get();
-      print('Fetched users count: ${result.count}');
       setState(() {
         _users = result.result;
         _loadingUsers = false;
       });
     } catch (e) {
-      print('Error fetching users: $e');
       setState(() {
         _usersError = _errorReason(e);
         _loadingUsers = false;
@@ -88,23 +86,12 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     });
 
     try {
-      print('🔍 Fetching personal trainers from API...');
-      print('🔍 Endpoint: ${_personalTrainerProvider.runtimeType}');
       final result = await _personalTrainerProvider.get();
-      print('✅ Fetched personal trainers count: ${result.count}');
-      print('✅ Personal trainers list length: ${result.result.length}');
-      if (result.result.isNotEmpty) {
-      } else {
-        print('⚠️ Personal trainers list is empty!');
-      }
       setState(() {
         _personalTrainers = result.result;
         _loadingTrainers = false;
       });
-    } catch (e, stackTrace) {
-      print('❌ Error fetching personal trainers: $e');
-      print('❌ Error type: ${e.runtimeType}');
-      print('❌ Stack trace: $stackTrace');
+    } catch (e) {
       setState(() {
         _trainersError = _errorReason(e);
         _loadingTrainers = false;
@@ -131,14 +118,6 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     });
     try {
       final result = await _nutritionProvider.get();
-      print('📋 Fetched ${result.result.length} nutrition plans');
-      if (result.result.isNotEmpty) {
-        final firstPlan = result.result[0];
-        print(
-          '📋 First plan personalTrainerId: ${firstPlan.personalTrainerId}',
-        );
-        print('📋 First plan userId: ${firstPlan.userId}');
-      }
       setState(() {
         _availablePlans = result.result;
         _loadingPlans = false;
@@ -155,12 +134,6 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
 
   void _selectPlan(NutritionPlan plan) {
     if (plan.id == null) return;
-    print('🔍 Selecting plan: ${plan.title}');
-    print('🔍 Plan personalTrainerId: ${plan.personalTrainerId}');
-    print('🔍 Plan userId: ${plan.userId}');
-    print(
-      '🔍 Available trainers: ${_personalTrainers.map((t) => t.id).toList()}',
-    );
     setState(() {
       _selectedPlanId = plan.id;
       TitleController.text = plan.title ?? '';
@@ -172,7 +145,6 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
       PriceController.text = plan.price?.toString() ?? '';
       _selectedUserId = plan.userId;
       _selectedPersonalTrainerId = plan.personalTrainerId;
-      print('✅ Set _selectedPersonalTrainerId to: $_selectedPersonalTrainerId');
     });
   }
 
@@ -206,11 +178,6 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
       errorMessage = null;
     });
 
-    print(
-      '📋 Creating nutrition plan with personalTrainerId: $_selectedPersonalTrainerId',
-    );
-    print('📋 Current token: ${AuthProvider.token?.substring(0, 20)}...');
-
     final NutritionPlan plan = NutritionPlan(
       title: title,
       description: desc,
@@ -225,13 +192,11 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     );
 
     final planJson = plan.toJson();
-    print('📋 Plan JSON: ${jsonEncode(planJson)}');
 
     try {
       if (_selectedPlanId != null) {
         // Update existing plan
         plan.id = _selectedPlanId;
-        print('📋 Updating plan with payload: ${jsonEncode(planJson)}');
         final updated = await _nutritionProvider.update(
           _selectedPlanId!,
           planJson,
@@ -246,7 +211,6 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
         );
       } else {
         // Insert new plan
-        print('📋 Inserting plan with payload: ${jsonEncode(planJson)}');
         final inserted = await _nutritionProvider.insert(planJson);
         setState(() {
           isLoading = false;
@@ -569,7 +533,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
             ),
             SizedBox(height: 16),
             Text(
-              'Price (€)',
+              'Price (â‚¬)',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
@@ -578,7 +542,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                prefixText: '€ ',
+                prefixText: 'â‚¬ ',
               ),
             ),
             SizedBox(height: 24),
@@ -602,21 +566,27 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                     onPressed: isLoading
                         ? null
                         : () {
-                            final match = _availablePlans
-                                .where((p) => p.id == _selectedPlanId);
+                            final match = _availablePlans.where(
+                              (p) => p.id == _selectedPlanId,
+                            );
                             if (match.isNotEmpty) _deletePlan(match.first);
                           },
-                    icon: Icon(Icons.delete_outline, size: 18, color: Colors.red[700]),
-                    label: Text('Delete', style: TextStyle(color: Colors.red[700])),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Colors.red[700],
+                    ),
+                    label: Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red[700]),
+                    ),
                   ),
                   SizedBox(width: 8),
                 ],
                 ElevatedButton.icon(
                   onPressed: isLoading ? null : posaljiNaAPI,
                   icon: Icon(_selectedPlanId != null ? Icons.save : Icons.send),
-                  label: Text(
-                    _selectedPlanId != null ? 'Update' : 'Send',
-                  ),
+                  label: Text(_selectedPlanId != null ? 'Update' : 'Send'),
                 ),
               ],
             ),
@@ -717,7 +687,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '€ ${plan.price?.toStringAsFixed(2) ?? "0.00"}',
+                                'â‚¬ ${plan.price?.toStringAsFixed(2) ?? "0.00"}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -729,7 +699,10 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                             ],
                           ),
                           IconButton(
-                            icon: Icon(Icons.delete_outline, color: Colors.red[400]),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Colors.red[400],
+                            ),
                             tooltip: 'Delete plan',
                             onPressed: () => _deletePlan(plan),
                           ),

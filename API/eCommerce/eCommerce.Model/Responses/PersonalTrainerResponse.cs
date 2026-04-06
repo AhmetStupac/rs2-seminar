@@ -12,6 +12,7 @@ namespace eCommerce.Model.Responses
         public string UserFirstName { get; set; }
         public int YearsOfExperience { get; set; }
         public bool? IsActive { get; set; }
+        public string? Gender { get; set; }
         public string? Certifications { get; set; }
         public string? Sport { get; set; }
         

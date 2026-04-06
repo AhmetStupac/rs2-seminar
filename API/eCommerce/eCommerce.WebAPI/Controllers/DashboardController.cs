@@ -1,5 +1,6 @@
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using eCommerce.Model.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,7 @@ namespace eCommerce.WebAPI.Controllers
 
         /// <summary>SuperAdmin only – platform-wide overview + top 3 trainers.</summary>
         [HttpGet("report")]
-        [Authorize(Roles = "SuperAdmin")]
+        [Authorize(Roles = Roles.SuperAdmin)]
         public async Task<IActionResult> GetReport()
         {
             var report = await _dashboardReportService.GetReportAsync();
@@ -33,7 +34,7 @@ namespace eCommerce.WebAPI.Controllers
 
         /// <summary>Administrator (PersonalTrainer) – own stats only.</summary>
         [HttpGet("trainer-dashboard")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> GetTrainerDashboard()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

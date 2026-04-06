@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/models/gym.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/providers/gym_provider.dart';
@@ -41,20 +41,11 @@ class _GymListScreenState extends State<GymListScreen> {
         _gyms = result.result ?? [];
         _isLoading = false;
       });
-
-      // Debug print za svaku teretanu
-      print('🏋️ Loaded ${_gyms.length} gyms');
-      for (var gym in _gyms) {
-        print('  Gym: ${gym.name}');
-        print('    imageId: ${gym.imageId}');
-        print('    imageUrl: ${gym.imageUrl}');
-        print('---');
-      }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Greška pri učitavanju teretana.')),
+          SnackBar(content: Text('GreĹˇka pri uÄŤitavanju teretana.')),
         );
       }
     }
@@ -82,7 +73,7 @@ class _GymListScreenState extends State<GymListScreen> {
   Future<void> _deleteGym(Gym gym) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      barrierDismissible: false, // Ne može se zatvoriti klikom izvan
+      barrierDismissible: false, // Ne moĹľe se zatvoriti klikom izvan
       builder: (context) => AlertDialog(
         icon: Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
         title: const Text(
@@ -94,7 +85,7 @@ class _GymListScreenState extends State<GymListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Jeste li sigurni da želite obrisati teretanu?',
+              'Jeste li sigurni da Ĺľelite obrisati teretanu?',
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 12),
@@ -134,7 +125,7 @@ class _GymListScreenState extends State<GymListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Otkaži'),
+            child: const Text('OtkaĹľi'),
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.of(context).pop(true),
@@ -144,7 +135,7 @@ class _GymListScreenState extends State<GymListScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             icon: const Icon(Icons.delete_forever),
-            label: const Text('Obriši teretanu'),
+            label: const Text('ObriĹˇi teretanu'),
           ),
         ],
       ),
@@ -155,14 +146,14 @@ class _GymListScreenState extends State<GymListScreen> {
         await _gymProvider.delete(gym.id!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Teretana uspješno obrisana')),
+            const SnackBar(content: Text('Teretana uspjeĹˇno obrisana')),
           );
           _loadGyms();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Greška pri brisanju teretane.')),
+            SnackBar(content: Text('GreĹˇka pri brisanju teretane.')),
           );
         }
       }
@@ -229,7 +220,7 @@ class _GymListScreenState extends State<GymListScreen> {
                         controller: _searchController,
                         decoration: InputDecoration(
                           hintText:
-                              'Pretraži po nazivu, gradu, državi ili adresi...',
+                              'PretraĹľi po nazivu, gradu, drĹľavi ili adresi...',
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
@@ -275,7 +266,7 @@ class _GymListScreenState extends State<GymListScreen> {
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   onPressed: _loadGyms,
-                  tooltip: 'Osvježi',
+                  tooltip: 'OsvjeĹľi',
                 ),
               ],
             ),
@@ -454,7 +445,7 @@ class _GymListScreenState extends State<GymListScreen> {
                   IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () => _deleteGym(gym),
-                    tooltip: 'Obriši',
+                    tooltip: 'ObriĹˇi',
                     color: Colors.red[700],
                   ),
                 ],

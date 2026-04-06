@@ -1,4 +1,4 @@
-import 'package:http/http.dart' as http;
+﻿import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/screens/banned_screen.dart';
@@ -11,25 +11,22 @@ class AuthInterceptor extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    print('🔍 Interceptor: ${request.method} ${request.url}');
     
     final response = await _client.send(request);
 
     // Provera bana - 403 Forbidden
     if (response.statusCode == 403) {
-      print('⛔ Interceptor: Detected 403 - User might be banned');
       
-      // Pročitaj response body
+      // ProÄŤitaj response body
       final responseBody = await response.stream.bytesToString();
       
       try {
         final jsonResponse = jsonDecode(responseBody);
         
-        // Proveri da li je poruka o banu (a ne neka druga 403 greška)
+        // Proveri da li je poruka o banu (a ne neka druga 403 greĹˇka)
         final message = jsonResponse['message']?.toString().toLowerCase() ?? '';
         
         if (message.contains('banovan') || message.contains('banned')) {
-          print('🚫 User is banned! Redirecting to BannedScreen...');
           
           // Prebaci na Ban screen
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -51,7 +48,6 @@ class AuthInterceptor extends http.BaseClient {
           });
         }
       } catch (e) {
-        print('❌ Error parsing ban response: $e');
       }
 
       // Vrati response sa novim stream-om
@@ -68,3 +64,4 @@ class AuthInterceptor extends http.BaseClient {
     return response;
   }
 }
+

@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:personaltrainer_desktop/models/user.dart';
@@ -67,7 +67,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           user.profileImage!.url!,
         );
       } catch (e) {
-        print('Error loading profile image: $e');
       }
     }
 
@@ -156,9 +155,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload image.'),
+            content: Text('Failed to upload image: $errorMessage'),
             backgroundColor: Colors.red,
           ),
         );
@@ -687,3 +687,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+

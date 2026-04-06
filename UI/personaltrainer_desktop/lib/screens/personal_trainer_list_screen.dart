@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 import 'package:personaltrainer_desktop/models/personal_trainer.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
@@ -37,24 +37,23 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading personal trainers: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Greška pri učitavanju.')));
+        ).showSnackBar(SnackBar(content: Text('GreĹˇka pri uÄŤitavanju.')));
       }
     }
   }
 
   Future<void> _deletePersonalTrainer(PersonalTrainer trainer) async {
-    // Nepovratna akcija - prvo prikaži dijalog za potvrdu
+    // Nepovratna akcija - prvo prikaĹľi dijalog za potvrdu
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Potvrda brisanja'),
         content: Text(
-          'Da li ste sigurni da želite da obrišete personalnog trenera "${trainer.userFirstName ?? 'ID: ${trainer.id}'}"?\n\nOva akcija je nepovratna!',
+          'Da li ste sigurni da Ĺľelite da obriĹˇete personalnog trenera "${trainer.userFirstName ?? 'ID: ${trainer.id}'}"?\n\nOva akcija je nepovratna!',
         ),
         actions: [
           TextButton(
@@ -67,7 +66,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Obriši'),
+            child: const Text('ObriĹˇi'),
           ),
         ],
       ),
@@ -79,18 +78,18 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Personalni trener je uspješno obrisan!'),
+              content: Text('Personalni trener je uspjeĹˇno obrisan!'),
               backgroundColor: Colors.green,
             ),
           );
-          // Ponovno učitaj listu
+          // Ponovno uÄŤitaj listu
           _loadPersonalTrainers();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Greška pri brisanju.'),
+              content: Text('GreĹˇka pri brisanju.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -267,7 +266,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                                   Icons.delete,
                                   color: Colors.red,
                                 ),
-                                tooltip: 'Obriši',
+                                tooltip: 'ObriĹˇi',
                                 onPressed: () =>
                                     _deletePersonalTrainer(trainer),
                               ),
@@ -287,7 +286,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                 builder: (context) => const PersonalTrainerScreen(),
               ),
             );
-            // Nakon povratka, ponovno učitaj listu
+            // Nakon povratka, ponovno uÄŤitaj listu
             _loadPersonalTrainers();
           },
           icon: const Icon(Icons.add),
@@ -298,3 +297,4 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
     );
   }
 }
+

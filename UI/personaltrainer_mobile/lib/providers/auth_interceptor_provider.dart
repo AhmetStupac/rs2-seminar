@@ -13,13 +13,11 @@ class AuthInterceptor extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    print('🔍 Interceptor: ${request.method} ${request.url}');
     
     final response = await _client.send(request);
 
     // Provera bana - 403 Forbidden
     if (response.statusCode == 403) {
-      print('⛔ Interceptor: Detected 403 - User might be banned');
       
       // Pročitaj response body
       final responseBody = await response.stream.bytesToString();
@@ -31,7 +29,6 @@ class AuthInterceptor extends http.BaseClient {
         final message = jsonResponse['message']?.toString().toLowerCase() ?? '';
         
         if (message.contains('banovan') || message.contains('banned')) {
-          print('🚫 User is banned!');
           
           // TODO: Redirect to BannedScreen when implemented
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,7 +57,6 @@ class AuthInterceptor extends http.BaseClient {
           });
         }
       } catch (e) {
-        print('❌ Error parsing ban response: $e');
       }
 
       // Vrati response sa novim stream-om

@@ -1,20 +1,16 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart' hide Image;
 import 'package:http/http.dart' as http;
+import 'package:personaltrainer_desktop/config/app_config.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 import '../models/image.dart';
 
 class BlobStorageProvider with ChangeNotifier {
-  static String? _baseUrl;
-
-  BlobStorageProvider() {
-    _baseUrl = const String.fromEnvironment(
-      "baseUrl",
-      defaultValue: "https://localhost:7093/",
-    );
-  }
+  final String _baseUrl = AppConfig.serverBaseUrl.endsWith('/')
+      ? AppConfig.serverBaseUrl
+      : '${AppConfig.serverBaseUrl}/';
 
   Image fromJson(data) {
     return Image.fromJson(data);
@@ -26,7 +22,6 @@ class BlobStorageProvider with ChangeNotifier {
     bool? isHeader,
   ) async {
     var url = "${_baseUrl}BlobStorage/upload";
-    print("Uploading to: $url");
     var uri = Uri.parse(url);
     var headers = _createHeaders();
 
@@ -47,13 +42,11 @@ class BlobStorageProvider with ChangeNotifier {
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
 
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
 
     if (response.statusCode < 299) {
       var data = jsonDecode(response.body);
 
-      // Vrati mapu sa podacima koje backend šalje
+      // Vrati mapu sa podacima koje backend Ĺˇalje
       return {
         'imageId': data['imageId'],
         'fileUrl': data['fileUrl'],
@@ -69,25 +62,15 @@ class BlobStorageProvider with ChangeNotifier {
   // Metoda za preuzimanje slike sa URL-a kao bytes
   Future<Uint8List?> downloadImageBytes(String imageUrl) async {
     try {
-      print('📥 BlobStorageProvider: Downloading image from: $imageUrl');
       final response = await http.get(Uri.parse(imageUrl));
 
-      print('📥 BlobStorageProvider: Response status: ${response.statusCode}');
-      print(
-        '📥 BlobStorageProvider: Content-Type: ${response.headers['content-type']}',
-      );
-      print(
-        '📥 BlobStorageProvider: Body length: ${response.bodyBytes.length}',
-      );
 
       if (response.statusCode == 200) {
         return response.bodyBytes;
       } else {
-        print('❌ Failed to download image: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('❌ Error downloading image: $e');
       return null;
     }
   }
@@ -104,3 +87,4 @@ class BlobStorageProvider with ChangeNotifier {
     return headers;
   }
 }
+

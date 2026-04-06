@@ -17,6 +17,13 @@ namespace eCommerce.Model.Validators
             RuleFor(x => x.Sport)
                 .Matches(@"[a-zA-Z]").When(x => !string.IsNullOrEmpty(x.Sport))
                 .WithMessage("Sport must contain at least one letter.");
+
+            RuleFor(x => x.Gender)
+                .Must(g => string.IsNullOrWhiteSpace(g) ||
+                           string.Equals(g, "Male", System.StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(g, "Female", System.StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(g, "Other", System.StringComparison.OrdinalIgnoreCase))
+                .WithMessage("Gender must be Male, Female or Other.");
         }
     }
 }

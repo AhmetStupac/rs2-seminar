@@ -1,26 +1,22 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:personaltrainer_desktop/config/app_config.dart';
 import 'package:personaltrainer_desktop/models/search_result.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 abstract class BaseProvider<T> with ChangeNotifier {
-  static String? _baseUrl;
   String _endpoint = "";
 
-  static String get baseUrl => _baseUrl ?? "http://localhost:7093/api/";
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
   BaseProvider(String endpoint) {
     _endpoint = endpoint;
-    _baseUrl = const String.fromEnvironment(
-      "baseUrl",
-      defaultValue: "http://localhost:7093/api/",
-    );
   }
 
   Future<SearchResult<T>> get({dynamic filter}) async {
-    var url = "$_baseUrl$_endpoint";
+    var url = "$baseUrl$_endpoint";
 
     if (filter != null) {
       var queryString = getQueryString(filter);
@@ -30,16 +26,9 @@ abstract class BaseProvider<T> with ChangeNotifier {
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET Request to: $url");
-    print("🔍 Headers: ${headers.keys.join(', ')}");
-    print("🔍 Auth header value: ${headers['Authorization']}");
 
     var response = await http.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
-    print(
-      "🔍 Response body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}",
-    );
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -58,17 +47,12 @@ abstract class BaseProvider<T> with ChangeNotifier {
   }
 
   Future<T> getById(int id) async {
-    var url = "$_baseUrl$_endpoint/$id";
+    var url = "$baseUrl$_endpoint/$id";
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET by ID Request to: $url");
     var response = await http.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
-    print(
-      "🔍 Response body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}",
-    );
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -79,7 +63,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
   }
 
   Future<T> insert(dynamic request) async {
-    var url = "$_baseUrl$_endpoint";
+    var url = "$baseUrl$_endpoint";
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
@@ -95,7 +79,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
   }
 
   Future<T> update(int id, [dynamic request]) async {
-    var url = "$_baseUrl$_endpoint/$id";
+    var url = "$baseUrl$_endpoint/$id";
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
@@ -111,7 +95,7 @@ abstract class BaseProvider<T> with ChangeNotifier {
   }
 
   Future<void> delete(int id) async {
-    var url = "$_baseUrl$_endpoint/$id";
+    var url = "$baseUrl$_endpoint/$id";
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
@@ -173,56 +157,39 @@ abstract class BaseProvider<T> with ChangeNotifier {
     if (response.statusCode < 299) {
       return true;
     } else if (response.statusCode == 401) {
-      print("❌ 401 UNAUTHORIZED ERROR");
-      print("❌ Request URL: ${response.request?.url}");
-      print("❌ Response body: '${response.body}'");
-      print("❌ Response headers: ${response.headers}");
-      print(
-        "❌ Current token set: ${AuthProvider.token != null && AuthProvider.token!.isNotEmpty}",
-      );
       throw Exception("Unauthorized");
     } else if (response.statusCode == 403) {
-      // ⭐ Proveri da li je ban
+      // â­ Proveri da li je ban
       _handleBanRedirect(response);
       throw Exception("Access forbidden - User banned");
     } else {
-      print("❌ Error ${response.statusCode}: ${response.body}");
       throw Exception(_extractErrorMessage(response.body));
     }
   }
 
-  // ⭐ Handling bana
+  // â­ Handling bana
   void _handleBanRedirect(Response response) {
     try {
       final data = jsonDecode(response.body);
       final message = data['message']?.toString().toLowerCase() ?? '';
 
       if (message.contains('banovan') || message.contains('banned')) {
-        print('🚫 User is banned! Details: ${data['reason']}');
         // Note: Ban handling should be done at the UI level when user tries to login
         // or through a proper error state management system
         // Direct navigation from a provider is not compatible with GoRouter
       }
     } catch (e) {
-      print('Error handling ban redirect: $e');
     }
   }
 
   Map<String, String> createHeaders() {
     String token = AuthProvider.token ?? "";
 
-    print("Creating headers with JWT Bearer token");
-    print(
-      "Token is ${token.isNotEmpty ? 'set (${token.length} chars)' : 'EMPTY'}",
-    );
 
     var headers = {"Content-Type": "application/json"};
 
     if (token.isNotEmpty) {
       headers["Authorization"] = "Bearer $token";
-      print(
-        "Authorization header: Bearer ${token.substring(0, token.length > 20 ? 20 : token.length)}...",
-      );
     }
 
     return headers;
@@ -266,3 +233,4 @@ abstract class BaseProvider<T> with ChangeNotifier {
     return query;
   }
 }
+

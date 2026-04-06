@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
@@ -54,12 +54,9 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     final mgResult = await mgProvider.get();
     final eqResult = await eqProvider.get();
 
-    print('Muscle groups count: ${mgResult.result.length}');
-    print('Equipment count: ${eqResult.result.length}');
 
     if (eqResult.result.isNotEmpty) {
       for (var eq in eqResult.result) {
-        print('Equipment: id=${eq.id}, name=${eq.name}');
       }
     }
 
@@ -88,7 +85,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     });
 
     try {
-      // uploadFile sada vraća Map<String, dynamic> umjesto Image objekta
+      // uploadFile sada vraÄ‡a Map<String, dynamic> umjesto Image objekta
       final result = await _blobStorageProvider.uploadFile(
         _fileBytes!,
         _selectedFile!.name,
@@ -107,9 +104,10 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to upload image.')));
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload image: $errorMessage')),
+      );
     } finally {
       setState(() {
         _isUploading = false;
@@ -161,7 +159,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Potvrda slanja'),
-          content: Text('Da li ste sigurni da želite poslati podatke?'),
+          content: Text('Da li ste sigurni da Ĺľelite poslati podatke?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -169,7 +167,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Pošalji'),
+              child: Text('PoĹˇalji'),
             ),
           ],
         ),
@@ -214,9 +212,10 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to create exercise.')));
+          final errorMessage = e.toString().replaceFirst('Exception: ', '');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to create exercise: $errorMessage')),
+          );
         }
       } finally {
         if (mounted) {
@@ -474,3 +473,4 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     );
   }
 }
+

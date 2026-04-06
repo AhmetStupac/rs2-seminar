@@ -3,6 +3,7 @@ using eCommerce.Services.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Security.Claims;
 
 namespace eCommerce.Services.SignalR
@@ -43,19 +44,24 @@ namespace eCommerce.Services.SignalR
 
                 // Send list of currently online users to the new connection
                 var onlineUsers = new List<object>();
-                foreach (var onlineUserId in _userConnections.Keys)
+                var onlineUserIdMap = _userConnections.Keys
+                    .Select(id => new { IdString = id, Parsed = int.TryParse(id, out var parsedId) ? parsedId : (int?)null })
+                    .Where(x => x.Parsed.HasValue)
+                    .ToList();
+
+                var usersById = (await _userRepository.GetUsersByIdsAsync(onlineUserIdMap.Select(x => x.Parsed!.Value)))
+                    .ToDictionary(u => u.Id);
+
+                foreach (var onlineUserId in onlineUserIdMap)
                 {
-                    if (int.TryParse(onlineUserId, out var id))
+                    usersById.TryGetValue(onlineUserId.Parsed!.Value, out var onlineUser);
+                    onlineUsers.Add(new
                     {
-                        var onlineUser = await _userRepository.GetUserByIdAsync(id);
-                        onlineUsers.Add(new
-                        {
-                            UserId = onlineUserId,
-                            Email = onlineUser?.Email,
-                            FirstName = onlineUser?.FirstName,
-                            LastName = onlineUser?.LastName
-                        });
-                    }
+                        UserId = onlineUserId.IdString,
+                        Email = onlineUser?.Email,
+                        FirstName = onlineUser?.FirstName,
+                        LastName = onlineUser?.LastName
+                    });
                 }
                 await Clients.Caller.SendAsync("OnlineUsers", onlineUsers);
             }

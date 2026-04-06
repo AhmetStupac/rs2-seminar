@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/training_session.dart';
 import 'package:personaltrainer_mobile/providers/training_session_provider.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
@@ -64,7 +65,6 @@ class _TrainingSessionsListScreenState
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading training sessions: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -124,9 +124,7 @@ class _TrainingSessionsListScreenState
           await _messagesProvider.disconnect();
 
           messageSent = true;
-          print('✅ Cancellation notification sent to trainer');
         } catch (e) {
-          print('⚠️ Failed to send cancellation notification: $e');
           // Don't show error to user, as cancellation was successful
         }
       }
@@ -161,14 +159,37 @@ class _TrainingSessionsListScreenState
   }
 
   Future<void> _rescheduleSession(TrainingSession session) async {
-    // Navigate to booking screen for rescheduling
-    // In a real app, you might want to pass the session to pre-fill some data
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reschedule feature - coming soon'),
-          duration: Duration(seconds: 2),
+    if (session.id == null || session.personalTrainerId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to reschedule this session.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final trainer = PersonalTrainer(
+      id: session.personalTrainerId,
+      userFirstName: session.trainerName,
+    );
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TrainingSessionBookingScreen(
+          trainer: trainer,
+          existingSession: session,
         ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      await _loadTrainingSessions();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session rescheduled successfully.')),
       );
     }
   }

@@ -1,5 +1,6 @@
 ﻿using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using eCommerce.Model.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -156,7 +157,7 @@ namespace eCommerce.WebAPI.Controllers
 
         private bool IsCurrentUserAdmin()
         {
-            return User.IsInRole("SuperAdmin") || User.IsInRole("Administrator") || User.IsInRole("Admin");
+            return User.IsInRole(Roles.SuperAdmin) || User.IsInRole(Roles.Administrator);
         }
     }
 }

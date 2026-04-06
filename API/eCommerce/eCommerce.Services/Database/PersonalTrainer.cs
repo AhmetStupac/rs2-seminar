@@ -17,9 +17,9 @@ namespace eCommerce.Services.Database
         public User? User { get; set; }
         public int YearsOfExperience { get; set; }
         public bool? IsActive { get; set; }
+        public string? Gender { get; set; }
         public string? Certifications { get; set; }
         public string? Sport { get; set; }
-        public int? MyProperty { get; set; }
 
         // Navigation property for ratings
         public ICollection<PersonalTrainerRating> Ratings { get; set; } = new List<PersonalTrainerRating>();

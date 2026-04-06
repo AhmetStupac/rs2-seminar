@@ -57,40 +57,26 @@ class SignalRProvider with ChangeNotifier {
       _isConnected = true;
       _error = null;
 
-      print("✅ SignalR Connected successfully");
-      print("🔍 Connection ID: ${_hubConnection!.connectionId}");
-      print("🔍 Connection State: ${_hubConnection!.state}");
 
       // Wait for backend to send initial OnlineUsers list
       await Future.delayed(const Duration(milliseconds: 800));
 
-      print("⏰ Waited for initial online users list");
-      print("👥 Current online users count: ${_onlineUsers.length}");
       if (_onlineUsers.isEmpty) {
-        print(
-          "⚠️ No online users received yet - this might be normal if no one else is online",
-        );
       } else {
-        print(
-          "👥 Online user IDs: ${_onlineUsers.map((u) => u.userId).toList()}",
-        );
       }
 
       notifyListeners();
     } catch (e) {
       _error = e.toString();
       _isConnected = false;
-      print("❌ SignalR Connection error: $e");
       notifyListeners();
     }
   }
 
   void _registerHandlers() {
-    print("🔍 DEBUG: Registering SignalR event handlers...");
 
     // Add onclose handler
     _hubConnection!.onclose(({error}) {
-      print("🔌 SignalR connection closed: $error");
       _isConnected = false;
       _onlineUsers.clear();
       notifyListeners();
@@ -98,7 +84,6 @@ class SignalRProvider with ChangeNotifier {
 
     // Handle user coming online - try multiple event name variations
     void handleUserOnline(List<dynamic>? arguments) {
-      print("🔍 DEBUG: UserOnline event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final rawData = arguments[0];
@@ -115,15 +100,11 @@ class SignalRProvider with ChangeNotifier {
           if (onlineUser != null) {
             if (!_onlineUsers.any((u) => u.userId == onlineUser!.userId)) {
               _onlineUsers.add(onlineUser);
-              print("👤 User online: ${onlineUser.userId}");
-              print("👥 Total online users now: ${_onlineUsers.length}");
               notifyListeners();
             } else {
-              print("ℹ️ User ${onlineUser.userId} already in online list");
             }
           }
         } catch (e) {
-          print("❌ Error parsing UserOnline: $e");
         }
       }
     }
@@ -135,7 +116,6 @@ class SignalRProvider with ChangeNotifier {
 
     // Handle user going offline - try multiple event name variations
     void handleUserOffline(List<dynamic>? arguments) {
-      print("🔍 DEBUG: UserOffline event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
           final rawData = arguments[0];
@@ -152,12 +132,9 @@ class SignalRProvider with ChangeNotifier {
 
           if (userId != null) {
             _onlineUsers.removeWhere((u) => u.userId == userId);
-            print("👤 User offline: $userId");
-            print("👥 Total online users now: ${_onlineUsers.length}");
             notifyListeners();
           }
         } catch (e) {
-          print("❌ Error parsing UserOffline: $e");
         }
       }
     }
@@ -175,17 +152,14 @@ class SignalRProvider with ChangeNotifier {
           final message = Message.fromJson(data);
           message.isPrivate = true;
           _messages.add(message);
-          print("🔒 Private message received: ${message.message}");
           notifyListeners();
         } catch (e) {
-          print("❌ Error parsing ReceivePrivateMessage: $e");
         }
       }
     });
 
     // Handle initial list of online users - try multiple event name variations
     void handleOnlineUsers(List<dynamic>? arguments) {
-      print("🔍 DEBUG: OnlineUsers event received! Arguments: $arguments");
       if (arguments != null && arguments.isNotEmpty) {
         try {
           _onlineUsers.clear();
@@ -204,14 +178,10 @@ class SignalRProvider with ChangeNotifier {
             }
           }
 
-          print("👥 Online users received: ${_onlineUsers.length}");
-          print("👥 User IDs: ${_onlineUsers.map((u) => u.userId).toList()}");
           notifyListeners();
         } catch (e) {
-          print("❌ Error parsing OnlineUsers: $e");
         }
       } else {
-        print("⚠️ OnlineUsers called with empty or null arguments");
       }
     }
 
@@ -221,7 +191,6 @@ class SignalRProvider with ChangeNotifier {
     _hubConnection!.on("onlineusers", handleOnlineUsers);
     _hubConnection!.on("GetOnlineUsers", handleOnlineUsers);
 
-    print("✅ All SignalR event handlers registered");
   }
 
   Future<void> sendMessage(String message) async {
@@ -233,10 +202,8 @@ class SignalRProvider with ChangeNotifier {
 
     try {
       await _hubConnection!.invoke("SendMessage", args: [message]);
-      print("📤 Message sent via SignalR: $message");
     } catch (e) {
       _error = e.toString();
-      print("❌ Error sending message via SignalR: $e");
       notifyListeners();
     }
   }
@@ -264,15 +231,12 @@ class SignalRProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        print("📤 HTTP Broadcast message sent: $message");
       } else {
         _error = "Failed to send message: ${response.statusCode}";
-        print("❌ Error sending HTTP message: ${response.body}");
         notifyListeners();
       }
     } catch (e) {
       _error = e.toString();
-      print("❌ Error sending HTTP message: $e");
       notifyListeners();
     }
   }
@@ -312,32 +276,26 @@ class SignalRProvider with ChangeNotifier {
           ),
         );
 
-        print("📤 Private message sent to $toUserId via HTTP: $message");
         notifyListeners();
       } else {
         _error = "Failed to send message: ${response.statusCode}";
-        print("❌ Error sending private message: ${response.body}");
         notifyListeners();
       }
     } catch (e) {
       _error = e.toString();
-      print("❌ Error sending private message: $e");
       notifyListeners();
     }
   }
 
   Future<void> refreshOnlineUsers() async {
     if (!_isConnected) {
-      print("⚠️ Cannot refresh - not connected");
       return;
     }
 
-    print("🔄 Manually refreshing online users...");
 
     // Try to invoke GetOnlineUsers method if backend supports it
     try {
       final result = await _hubConnection!.invoke("GetOnlineUsers");
-      print("📥 GetOnlineUsers result: $result");
       if (result is List) {
         _onlineUsers.clear();
         for (var item in result) {
@@ -349,12 +307,9 @@ class SignalRProvider with ChangeNotifier {
             _onlineUsers.add(OnlineUser(userId: item.toString()));
           }
         }
-        print("✅ Manually fetched ${_onlineUsers.length} online users");
         notifyListeners();
       }
     } catch (e) {
-      print("⚠️ GetOnlineUsers method not available or failed: $e");
-      print("ℹ️ This is normal if backend doesn't support this method");
     }
 
     notifyListeners();
@@ -367,10 +322,8 @@ class SignalRProvider with ChangeNotifier {
         _isConnected = false;
         _messages.clear();
         _onlineUsers.clear();
-        print("🔌 SignalR Disconnected");
         notifyListeners();
       } catch (e) {
-        print("❌ Error disconnecting: $e");
       }
     }
   }

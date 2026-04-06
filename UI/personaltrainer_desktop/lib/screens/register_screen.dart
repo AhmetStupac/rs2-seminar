@@ -133,9 +133,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to upload image.'),
+            content: Text('Failed to upload image: $errorMessage'),
             backgroundColor: Colors.red,
           ),
         );

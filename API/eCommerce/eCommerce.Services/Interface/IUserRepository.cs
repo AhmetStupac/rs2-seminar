@@ -12,6 +12,7 @@ namespace eCommerce.Services.Interface
         //void Update(User user);
         //Task<PaginatedResult<Member>> GetMembersAsync(MemberParams memberParams);
         Task<User?> GetUserByIdAsync(int id);
+        Task<List<User>> GetUsersByIdsAsync(IEnumerable<int> ids);
         //Task<IReadOnlyList<Photo>> GetPhotosForMemberAsync(string memberId, bool isCurrentUser);
         //Task<Member?> GetMemberForUpdate(string id);
         Task<bool> Complete();

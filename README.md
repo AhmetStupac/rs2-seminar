@@ -74,6 +74,10 @@ Za testiranje plaćanja u mobilnoj aplikaciji koristite sljedeće podatke:
 
 4. ZIP kod: bilo koji petocifreni broj
 
+Ukoliko kupac zeli da kupi trening plan, plan ishrane ili clanarinu kod nekog od trenera. Potrebno je da prvo preko mobilne aplikacije 
+kupi npr. Plan ishrane, tek mu se nakon toga prikazuje u određenom screen-u da ima taj trening plan.
+Izuzetak je u rezervaciji trening planova,
+Ukoliko klijent zeli da uradi filtraciju po cijeni, filtracija ce samo raditi ako određeni trener vec ima zakazane trening sesije sa drugim klijentima.
 ---
 
 #### 📩 RabbitMQ integracija

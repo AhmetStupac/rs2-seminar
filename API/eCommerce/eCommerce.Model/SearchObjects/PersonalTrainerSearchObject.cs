@@ -8,5 +8,9 @@ namespace eCommerce.Model.SearchObjects
     {
         public string? Name { get; set; }
         public string? Sport { get; set; }
+        public double? MinRating { get; set; }
+        public string? Gender { get; set; }
+        public float? MinPrice { get; set; }
+        public float? MaxPrice { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -148,43 +148,25 @@ class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
     // Check initial link
     try {
       final uri = await _appLinks.getInitialLink();
-      print('📱 Initial link: $uri');
       if (uri != null) {
         _handleDeepLink(uri);
       }
-    } catch (e) {
-      print('❌ Error getting initial link: $e');
-    }
+    } catch (e) {}
 
     // Listen for incoming links
-    _linkSubscription = _appLinks.uriLinkStream.listen(
-      (uri) {
-        print('📱 Incoming link: $uri');
-        _handleDeepLink(uri);
-      },
-      onError: (err) {
-        print('❌ Error listening to links: $err');
-      },
-    );
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleDeepLink(uri);
+    }, onError: (err) {});
   }
 
   void _handleDeepLink(Uri uri) {
-    print('📱 Handling deep link: $uri');
-    print('📱 Scheme: ${uri.scheme}');
-    print('📱 Host: ${uri.host}');
-    print('📱 Path: ${uri.path}');
-    print('📱 Query params: ${uri.queryParameters}');
-
     // Handle custom scheme: personaltrainerapp://reset-password?token=xxx
     if (uri.scheme == 'personaltrainerapp' && uri.host == 'reset-password') {
       final token = uri.queryParameters['token'];
-      print('📱 Reset token: ${token?.substring(0, 30)}...');
 
       final email = uri.queryParameters['email'];
-      print('📱 Email from deep link: $email');
 
       if (email != null && email.isNotEmpty && mounted) {
-        print('✅ Navigating to password reset screen');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => ChangePasswordScreen(email: email),
@@ -196,10 +178,8 @@ class _MobileDeepLinkHandlerState extends State<_MobileDeepLinkHandler> {
     else if ((uri.scheme == 'http' || uri.scheme == 'https') &&
         uri.path.contains('reset-password')) {
       final email = uri.queryParameters['email'];
-      print('📱 Email from HTTP: $email');
 
       if (email != null && email.isNotEmpty && mounted) {
-        print('✅ Navigating to password reset screen');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => ChangePasswordScreen(email: email),
@@ -239,46 +219,24 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
 
   void _handleWebUrl() {
     final uri = Uri.base;
-    print('🌐 ========== WEB URL HANDLER ==========');
-    print('🌐 Full URI: $uri');
-    print('🌐 Fragment: "${uri.fragment}"');
-    print('🌐 Fragment isEmpty: ${uri.fragment.isEmpty}');
 
     if (uri.fragment.isNotEmpty) {
       try {
         final fragmentPath = uri.fragment;
-        print('🌐 Raw fragment: "$fragmentPath"');
 
         final parts = fragmentPath.split('?');
         final path = parts[0];
 
-        print('🌐 Path from fragment: "$path"');
-        print('🌐 Number of parts: ${parts.length}');
-
         if (path == '/reset-password') {
-          print('🌐 ✓ Path matches /reset-password');
-
           if (parts.length > 1) {
             final queryString = parts[1];
-            print(
-              '🌐 Query string: "${queryString.substring(0, queryString.length > 50 ? 50 : queryString.length)}..."',
-            );
 
             final queryParams = Uri.splitQueryString(queryString);
-            print('🌐 Parsed query params keys: ${queryParams.keys.toList()}');
 
             final token = queryParams['token'];
 
             if (token != null) {
-              print(
-                '🌐 Token found: ${token.substring(0, token.length > 30 ? 30 : token.length)}...',
-              );
-              print('🌐 Token length: ${token.length}');
-
               if (token.isNotEmpty) {
-                print(
-                  '✅ All checks passed - Navigating to password reset screen',
-                );
                 final email = uri.queryParameters['email'];
 
                 Future.delayed(Duration(milliseconds: 100), () {
@@ -292,29 +250,12 @@ class _WebUrlHandlerState extends State<_WebUrlHandler> {
                   }
                 });
                 return;
-              } else {
-                print('❌ Token is empty');
-              }
-            } else {
-              print('❌ Token is null');
-            }
-          } else {
-            print(
-              '❌ No query parameters found (parts.length = ${parts.length})',
-            );
-          }
-        } else {
-          print('❌ Path "$path" does not match /reset-password');
-        }
-      } catch (e, stack) {
-        print('❌ Error handling URL: $e');
-        print('Stack trace: $stack');
-      }
-    } else {
-      print('🌐 Fragment is empty - staying on login page');
-    }
-
-    print('🌐 ========== END URL HANDLER ==========');
+              } else {}
+            } else {}
+          } else {}
+        } else {}
+      } catch (e, stack) {}
+    } else {}
   }
 
   @override
@@ -366,20 +307,11 @@ class LoginPage extends StatelessWidget {
                       UserProvider userProvider = UserProvider();
                       var username = _usernameController.text;
                       var password = _passwordController.text;
-                      print("Attempting login with: $username");
                       try {
                         // Call the proper login endpoint
                         var data = await userProvider.login(username, password);
-                        print("✅ Login successful");
-                        print("Login response: $data");
 
                         // JWT token is already stored by userProvider.login via AuthProvider.applyLoginResponse
-                        print(
-                          "📝 JWT token stored - User ID: ${AuthProvider.userId}",
-                        );
-                        print(
-                          "📝 Token present: ${AuthProvider.token != null ? 'Yes' : 'No'}",
-                        );
 
                         // Connect to SignalR after login
                         final signalRProvider = Provider.of<SignalRProvider>(
@@ -394,7 +326,6 @@ class LoginPage extends StatelessWidget {
                           ),
                         );
                       } on Exception catch (e) {
-                        print("❌ Login failed: $e");
                         final errMsg = e.toString().replaceFirst(
                           'Exception: ',
                           '',
@@ -637,10 +568,6 @@ class _MyHomePageState extends State<MyHomePage> {
           // center the children vertically; the main axis here is the vertical
           // axis because Columns are vertical (the cross axis would be
           // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
             const Text('You have pushed the button this many times:'),

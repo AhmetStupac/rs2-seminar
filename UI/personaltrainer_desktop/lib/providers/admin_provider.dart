@@ -1,22 +1,44 @@
-import 'package:http/http.dart' as http;
+﻿import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:personaltrainer_desktop/providers/auth_provider.dart'; // ⭐ Dodaj import
+import 'package:personaltrainer_desktop/config/app_config.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart'; // â­ Dodaj import
 
 class AdminProvider {
-  final String baseUrl = const String.fromEnvironment(
-    "baseUrl",
-    defaultValue: "https://localhost:7093/api/",
-  );
+  final String baseUrl = AppConfig.apiBaseUrl;
+
+  String get _apiBaseUrl => baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
+
+  bool _isWrongTlsVersionError(Object error) {
+    final msg = error.toString().toLowerCase();
+    return msg.contains('handshakeexception') &&
+        msg.contains('wrong_version_number');
+  }
+
+  Uri _toggleHttpScheme(Uri uri) {
+    final toggledScheme = uri.scheme == 'https' ? 'http' : 'https';
+    return uri.replace(scheme: toggledScheme);
+  }
+
+  Future<http.Response> _getWithProtocolFallback(String url) async {
+    final headers = _createHeaders();
+    final uri = Uri.parse(url);
+
+    try {
+      return await http.get(uri, headers: headers);
+    } catch (e) {
+      if (!_isWrongTlsVersionError(e)) rethrow;
+
+      final fallbackUri = _toggleHttpScheme(uri);
+      return await http.get(fallbackUri, headers: headers);
+    }
+  }
 
   // Create headers with JWT Bearer token
   Map<String, String> _createHeaders() {
     String token = AuthProvider.token ?? "";
 
-    print("AdminProvider using JWT token: ${token.isNotEmpty ? 'present' : 'missing'}");
 
-    var headers = {
-      "Content-Type": "application/json",
-    };
+    var headers = {"Content-Type": "application/json"};
 
     if (token.isNotEmpty) {
       headers["Authorization"] = "Bearer $token";
@@ -25,7 +47,7 @@ class AdminProvider {
     return headers;
   }
 
-  // ⭐ Banovanje korisnika
+  // â­ Banovanje korisnika
   Future<Map<String, dynamic>> banUser({
     required int userId,
     required String reason,
@@ -43,10 +65,7 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Korisnik uspešno banovan',
-        };
+        return {'success': true, 'message': 'Korisnik uspeĹˇno banovan'};
       } else if (response.statusCode == 403) {
         final data = jsonDecode(response.body);
         return {
@@ -54,21 +73,14 @@ class AdminProvider {
           'message': data['message'] ?? 'Pristup zabranjen',
         };
       } else if (response.statusCode == 404) {
-        return {
-          'success': false,
-          'message': 'Korisnik nije pronađen',
-        };
+        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
       } else {
-        return {
-          'success': false,
-          'message': 'Greška: ${response.statusCode}',
-        };
+        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
       }
     } catch (e) {
-      print('Error in banUser: $e');
       return {
         'success': false,
-        'message': 'Greška pri komunikaciji sa serverom: $e',
+        'message': 'GreĹˇka pri komunikaciji sa serverom: $e',
       };
     }
   }
@@ -82,27 +94,14 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Korisnik uspešno unbanovan',
-        };
+        return {'success': true, 'message': 'Korisnik uspeĹˇno unbanovan'};
       } else if (response.statusCode == 404) {
-        return {
-          'success': false,
-          'message': 'Korisnik nije pronađen',
-        };
+        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
       } else {
-        return {
-          'success': false,
-          'message': 'Greška: ${response.statusCode}',
-        };
+        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
       }
     } catch (e) {
-      print('Error in unbanUser: $e');
-      return {
-        'success': false,
-        'message': 'Greška: $e',
-      };
+      return {'success': false, 'message': 'GreĹˇka: $e'};
     }
   }
 
@@ -132,36 +131,26 @@ class AdminProvider {
         return {
           'success': false,
           'isBanned': false,
-          'message': 'Greška pri proveri bana',
+          'message': 'GreĹˇka pri proveri bana',
         };
       }
     } catch (e) {
-      print('Error in checkBan: $e');
-      return {
-        'success': false,
-        'isBanned': false,
-        'message': 'Greška: $e',
-      };
+      return {'success': false, 'isBanned': false, 'message': 'GreĹˇka: $e'};
     }
   }
 
   // Dobavi sve korisnike
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     try {
-      print('Calling getAllUsers endpoint...');
-      final response = await http.get(
-        Uri.parse('${baseUrl}users'),
-        headers: _createHeaders(),
-      );
+      final requestUrl = '${_apiBaseUrl}users';
+      final response = await _getWithProtocolFallback(requestUrl);
 
-      print('getAllUsers response status: ${response.statusCode}');
       if (response.statusCode != 200) {
-        print('getAllUsers error body: ${response.body}');
       }
 
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
-        
+
         // Proveri da li je response lista ili objekat sa 'items'
         if (decodedData is List) {
           return decodedData.cast<Map<String, dynamic>>();
@@ -175,28 +164,22 @@ class AdminProvider {
         throw Exception('Failed to load users: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in getAllUsers: $e');
-      return [];
+      rethrow;
     }
   }
 
   // Dobavi sve obrisane korisnike
   Future<List<Map<String, dynamic>>> getDeletedUsers() async {
     try {
-      print('Calling getDeletedUsers endpoint...');
-      final response = await http.get(
-        Uri.parse('${baseUrl}users/deleted'),
-        headers: _createHeaders(),
-      );
+      final requestUrl = '${_apiBaseUrl}users/deleted';
+      final response = await _getWithProtocolFallback(requestUrl);
 
-      print('getDeletedUsers response status: ${response.statusCode}');
       if (response.statusCode != 200) {
-        print('getDeletedUsers error body: ${response.body}');
       }
 
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
-        
+
         // Proveri da li je response lista ili objekat sa 'items'
         if (decodedData is List) {
           return decodedData.cast<Map<String, dynamic>>();
@@ -210,8 +193,7 @@ class AdminProvider {
         throw Exception('Failed to load deleted users: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in getDeletedUsers: $e');
-      return [];
+      rethrow;
     }
   }
 
@@ -226,23 +208,17 @@ class AdminProvider {
       if (response.statusCode == 200 || response.statusCode == 204) {
         // Ako je prazan body ili 204, vrati uspeh
         if (response.body.isEmpty) {
-          return {
-            'success': true,
-            'message': 'Korisnik uspešno obrisan',
-          };
+          return {'success': true, 'message': 'Korisnik uspeĹˇno obrisan'};
         }
-        // Ako ima body, pokušaj da ga parsiraš
+        // Ako ima body, pokuĹˇaj da ga parsiraĹˇ
         try {
           final data = jsonDecode(response.body);
           return {
             'success': true,
-            'message': data['message'] ?? 'Korisnik uspešno obrisan',
+            'message': data['message'] ?? 'Korisnik uspeĹˇno obrisan',
           };
         } catch (_) {
-          return {
-            'success': true,
-            'message': 'Korisnik uspešno obrisan',
-          };
+          return {'success': true, 'message': 'Korisnik uspeĹˇno obrisan'};
         }
       } else if (response.statusCode == 403) {
         if (response.body.isNotEmpty) {
@@ -252,26 +228,16 @@ class AdminProvider {
             'message': data['message'] ?? 'Pristup zabranjen',
           };
         }
-        return {
-          'success': false,
-          'message': 'Pristup zabranjen',
-        };
+        return {'success': false, 'message': 'Pristup zabranjen'};
       } else if (response.statusCode == 404) {
-        return {
-          'success': false,
-          'message': 'Korisnik nije pronađen',
-        };
+        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
       } else {
-        return {
-          'success': false,
-          'message': 'Greška: ${response.statusCode}',
-        };
+        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
       }
     } catch (e) {
-      print('Error in softDeleteUser: $e');
       return {
         'success': false,
-        'message': 'Greška pri komunikaciji sa serverom: $e',
+        'message': 'GreĹˇka pri komunikaciji sa serverom: $e',
       };
     }
   }
@@ -285,10 +251,7 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200) {
-        return {
-          'success': true,
-          'message': 'Korisnik uspešno vraćen',
-        };
+        return {'success': true, 'message': 'Korisnik uspeĹˇno vraÄ‡en'};
       } else if (response.statusCode == 403) {
         final data = jsonDecode(response.body);
         return {
@@ -296,22 +259,16 @@ class AdminProvider {
           'message': data['message'] ?? 'Pristup zabranjen',
         };
       } else if (response.statusCode == 404) {
-        return {
-          'success': false,
-          'message': 'Korisnik nije pronađen',
-        };
+        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
       } else {
-        return {
-          'success': false,
-          'message': 'Greška: ${response.statusCode}',
-        };
+        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
       }
     } catch (e) {
-      print('Error in restoreUser: $e');
       return {
         'success': false,
-        'message': 'Greška pri komunikaciji sa serverom: $e',
+        'message': 'GreĹˇka pri komunikaciji sa serverom: $e',
       };
-      }
+    }
   }
 }
+

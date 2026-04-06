@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/models/exercise.dart';
 import 'package:personaltrainer_desktop/models/exercise_plan.dart';
 import 'package:personaltrainer_desktop/providers/exerciseProvider.dart';
@@ -125,11 +125,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.edit,
-                      color: Colors.orange[700],
-                      size: 20,
-                    ),
+                    Icon(Icons.edit, color: Colors.orange[700], size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -150,7 +146,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Price (€):',
+                    'Price (â‚¬):',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
@@ -161,7 +157,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     ),
                     decoration: InputDecoration(
                       hintText: 'Enter price',
-                      prefixText: '€ ',
+                      prefixText: 'â‚¬ ',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -442,9 +438,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       bool isSelected = _selectedTrainingPlanId == plan.id;
                       return GestureDetector(
                         onTap: () async {
-                          print('Plan clicked: ${plan.toJson()}');
                           if (plan.id == null) {
-                            print('WARNING: Selected plan has no ID set!');
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -479,13 +473,6 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                             exercisePlans.clear();
                             if (plan.exercises != null &&
                                 plan.exercises!.isNotEmpty) {
-                              print(
-                                'Loading ${plan.exercises!.length} exercises from plan',
-                              );
-                              print(
-                                'Available exercises in memory: ${exercises.length}',
-                              );
-
                               // Load all exercises from the training plan
                               for (var ep in plan.exercises!) {
                                 // Update trainingPlanId to current plan
@@ -493,33 +480,20 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
 
                                 // Find and populate the full Exercise object from the exercises list
                                 if (ep.exerciseId != null) {
-                                  print(
-                                    'Looking for exercise with ID: ${ep.exerciseId}',
-                                  );
                                   final matchingExercise = exercises.firstWhere(
                                     (ex) => ex.id == ep.exerciseId,
                                     orElse: () => Exercise(),
                                   );
 
                                   if (matchingExercise.id != null) {
-                                    print(
-                                      'Found matching exercise: ${matchingExercise.name} (ID: ${matchingExercise.id})',
-                                    );
                                     ep.exercise = matchingExercise;
-                                  } else {
-                                    print(
-                                      'WARNING: No matching exercise found for ID: ${ep.exerciseId}',
-                                    );
-                                  }
+                                  } else {}
                                 }
 
                                 exercisePlans.add(ep);
                                 if (ep.id != null) {
                                   _originalExercisePlanIds.add(ep.id!);
                                 }
-                                print(
-                                  'Added exercise plan. Total plans: ${exercisePlans.length}',
-                                );
                               }
 
                               // Optionally populate Duration and Note from first exercise
@@ -610,7 +584,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                                   ),
                                 ),
                                 Text(
-                                  '€ ${plan.basePrice?.toStringAsFixed(2) ?? ''}',
+                                  'â‚¬ ${plan.basePrice?.toStringAsFixed(2) ?? ''}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -676,11 +650,6 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
   }
 
   Widget _buildExerciseCard(Exercise exercise, ExercisePlan exercisePlan) {
-    // Debug print za image url
-    print(
-      'Exercise: "+(exercise.name ?? "")+" | imageId: "+(exercise.imageId?.toString() ?? "null")+" | image.url: "+(exercise.image?.url ?? "null")',
-    );
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -716,9 +685,6 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                       exercise.image!.url!,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        print(
-                          'Image load error for url: ${exercise.image!.url!}',
-                        );
                         return Icon(
                           Icons.fitness_center,
                           color: Colors.red,
@@ -992,11 +958,12 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
           .where((ep) => ep.id != null)
           .map((ep) => ep.id!)
           .toSet();
-      Set<int> deletedIds = _originalExercisePlanIds.difference(currentExercisePlanIds);
+      Set<int> deletedIds = _originalExercisePlanIds.difference(
+        currentExercisePlanIds,
+      );
 
       // Delete removed exercises
       for (var deletedId in deletedIds) {
-        print('Deleting exercise plan ID: $deletedId');
         await provider.delete(deletedId);
       }
 
@@ -1004,11 +971,9 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       for (var plan in exercisePlans) {
         if (plan.id != null) {
           // Update existing exercise plan
-          print('Updating exercise plan ID: ${plan.id}');
           await provider.update(plan.id!, plan);
         } else {
           // Insert new exercise plan
-          print('Inserting new exercise plan for exercise ID: ${plan.exerciseId}');
           await provider.insert(plan);
         }
       }

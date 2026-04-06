@@ -96,7 +96,7 @@ namespace eCommerce.Services
             await base.BeforeUpdate(entity, request);
         }
 
-        protected override IQueryable<Database.NutritionPlan> ApplyFilter(IQueryable<Database.NutritionPlan> query, NutritionPlanSearchObject search)
+        protected override async Task<IQueryable<Database.NutritionPlan>> ApplyFilterAsync(IQueryable<Database.NutritionPlan> query, NutritionPlanSearchObject search)
         {
             // Include related entities for better query performance
             query = query.Include(np => np.PersonalTrainer)
@@ -115,10 +115,10 @@ namespace eCommerce.Services
                 if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
                 {
                     // Check if user is a personal trainer
-                    var personalTrainerId = _context.PersonalTrainers
+                    var personalTrainerId = await _context.PersonalTrainers
                         .Where(pt => pt.UserId == userId)
                         .Select(pt => pt.Id)
-                        .FirstOrDefault();
+                        .FirstOrDefaultAsync();
 
                     if (personalTrainerId > 0)
                     {

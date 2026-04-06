@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 import 'package:personaltrainer_desktop/models/personal_trainer.dart';
 import 'package:personaltrainer_desktop/models/user.dart';
@@ -52,7 +52,6 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
         _isLoadingUsers = false;
       });
     } catch (e) {
-      print('Error loading users: $e');
       setState(() => _isLoadingUsers = false);
       if (mounted) {
         ScaffoldMessenger.of(
@@ -295,3 +294,4 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
     );
   }
 }
+

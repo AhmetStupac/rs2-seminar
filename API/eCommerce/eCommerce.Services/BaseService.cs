@@ -25,7 +25,7 @@ namespace eCommerce.Services
         public virtual async Task<PagedResult<T>> GetAsync(TSearch search)
         {
             var query = _context.Set<TEntity>().AsQueryable();
-            query = ApplyFilter(query, search);
+            query = await ApplyFilterAsync(query, search);
 
             int? totalCount = null;
             if (search.IncludeTotalCount){
@@ -57,6 +57,11 @@ namespace eCommerce.Services
         protected virtual IQueryable<TEntity> ApplyFilter(IQueryable<TEntity> query, TSearch search)
         {
             return query;
+        }
+
+        protected virtual Task<IQueryable<TEntity>> ApplyFilterAsync(IQueryable<TEntity> query, TSearch search)
+        {
+            return Task.FromResult(ApplyFilter(query, search));
         }
 
         public virtual async Task<T?> GetByIdAsync(int id)

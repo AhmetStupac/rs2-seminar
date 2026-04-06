@@ -39,8 +39,47 @@ namespace eCommerce.Services
 
         protected override IQueryable<PersonalTrainer> ApplyFilter(IQueryable<PersonalTrainer> query, PersonalTrainerSearchObject search)
         {
-            return query.Include(pt => pt.User)
-                        .Include(pt => pt.Ratings);
+            query = query.Include(pt => pt.User)
+                         .Include(pt => pt.Ratings);
+
+            if (!string.IsNullOrWhiteSpace(search.Name))
+            {
+                query = query.Where(pt => pt.User != null &&
+                                          ((pt.User.FirstName + " " + pt.User.LastName).Contains(search.Name) ||
+                                           pt.User.FirstName.Contains(search.Name) ||
+                                           pt.User.LastName.Contains(search.Name)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Sport))
+            {
+                query = query.Where(pt => pt.Sport != null && pt.Sport.Contains(search.Sport));
+            }
+
+            if (!string.IsNullOrWhiteSpace(search.Gender))
+            {
+                query = query.Where(pt => pt.Gender != null && pt.Gender.Equals(search.Gender));
+            }
+
+            if (search.MinRating.HasValue)
+            {
+                query = query.Where(pt => pt.Ratings.Any() && pt.Ratings.Average(r => r.Rating) >= search.MinRating.Value);
+            }
+
+            if (search.MinPrice.HasValue)
+            {
+                query = query.Where(pt => (_context.TrainingSessions
+                    .Where(ts => ts.PersonalTrainerId == pt.Id && ts.Price.HasValue)
+                    .Average(ts => (float?)ts.Price) ?? 0f) >= search.MinPrice.Value);
+            }
+
+            if (search.MaxPrice.HasValue)
+            {
+                query = query.Where(pt => (_context.TrainingSessions
+                    .Where(ts => ts.PersonalTrainerId == pt.Id && ts.Price.HasValue)
+                    .Average(ts => (float?)ts.Price) ?? 0f) <= search.MaxPrice.Value);
+            }
+
+            return query;
         }
 
         protected override PersonalTrainerResponse MapToResponse(PersonalTrainer entity)

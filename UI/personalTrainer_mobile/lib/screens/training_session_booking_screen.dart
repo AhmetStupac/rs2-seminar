@@ -10,8 +10,13 @@ import 'package:personaltrainer_mobile/services/membership_access_service.dart';
 
 class TrainingSessionBookingScreen extends StatefulWidget {
   final PersonalTrainer trainer;
+  final TrainingSession? existingSession;
 
-  const TrainingSessionBookingScreen({super.key, required this.trainer});
+  const TrainingSessionBookingScreen({
+    super.key,
+    required this.trainer,
+    this.existingSession,
+  });
 
   @override
   State<TrainingSessionBookingScreen> createState() =>
@@ -33,9 +38,23 @@ class _TrainingSessionBookingScreenState
   bool _isCheckingMembership = true;
   bool _hasMembership = false;
 
+  bool get _isEditMode => widget.existingSession != null;
+
   @override
   void initState() {
     super.initState();
+
+    final scheduledDateTime = widget.existingSession?.scheduledDateTime;
+    if (scheduledDateTime != null) {
+      _selectedDate = DateTime(
+        scheduledDateTime.year,
+        scheduledDateTime.month,
+        scheduledDateTime.day,
+      );
+      _selectedHour = scheduledDateTime.hour;
+      _isAvailable = true;
+    }
+
     _initializeLocale();
   }
 
@@ -88,13 +107,21 @@ class _TrainingSessionBookingScreenState
         _isLoadingSlots = false;
       });
     } catch (e) {
-      print('Error loading available slots: $e');
       setState(() => _isLoadingSlots = false);
     }
   }
 
   Future<void> _checkAvailability(int hour) async {
     if (widget.trainer.id == null || !_hasMembership) return;
+
+    if (_isOriginalSlotSelected(hour)) {
+      setState(() {
+        _selectedHour = hour;
+        _isCheckingAvailability = false;
+        _isAvailable = true;
+      });
+      return;
+    }
 
     setState(() {
       _selectedHour = hour;
@@ -121,7 +148,6 @@ class _TrainingSessionBookingScreenState
         _isCheckingAvailability = false;
       });
     } catch (e) {
-      print('Error checking availability: $e');
       setState(() {
         _isCheckingAvailability = false;
         _isAvailable = false;
@@ -129,7 +155,17 @@ class _TrainingSessionBookingScreenState
     }
   }
 
-  Future<void> _bookTrainingSession() async {
+  bool _isOriginalSlotSelected(int hour) {
+    final original = widget.existingSession?.scheduledDateTime;
+    if (original == null) return false;
+
+    return original.year == _selectedDate.year &&
+        original.month == _selectedDate.month &&
+        original.day == _selectedDate.day &&
+        original.hour == hour;
+  }
+
+  Future<void> _saveTrainingSession() async {
     if (!_hasMembership) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -141,6 +177,10 @@ class _TrainingSessionBookingScreenState
           ),
         );
       }
+      return;
+    }
+
+    if (_isEditMode && widget.existingSession?.id == null) {
       return;
     }
 
@@ -163,15 +203,26 @@ class _TrainingSessionBookingScreenState
         personalTrainerId: widget.trainer.id,
         scheduledDateTime: scheduledDateTime,
         durationMinutes: 60,
-        status: 0, // Pending
+        status: _isEditMode ? (widget.existingSession?.status ?? 0) : 0,
       );
 
-      await _trainingSessionProvider.insert(request);
+      if (_isEditMode) {
+        await _trainingSessionProvider.update(
+          widget.existingSession!.id!,
+          request,
+        );
+      } else {
+        await _trainingSessionProvider.insert(request);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Training session booked successfully!'),
+          SnackBar(
+            content: Text(
+              _isEditMode
+                  ? 'Training session rescheduled successfully!'
+                  : 'Training session booked successfully!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -181,11 +232,14 @@ class _TrainingSessionBookingScreenState
         ); // Return true to indicate booking was made
       }
     } catch (e) {
-      print('Error booking training session: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to book training session: $e'),
+            content: Text(
+              _isEditMode
+                  ? 'Failed to reschedule training session: $e'
+                  : 'Failed to book training session: $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -219,9 +273,9 @@ class _TrainingSessionBookingScreenState
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Calendar',
-          style: TextStyle(
+        title: Text(
+          _isEditMode ? 'Reschedule session' : 'Calendar',
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -304,7 +358,7 @@ class _TrainingSessionBookingScreenState
                     if (_isAvailable == true)
                       Center(
                         child: ElevatedButton(
-                          onPressed: _isBooking ? null : _bookTrainingSession,
+                          onPressed: _isBooking ? null : _saveTrainingSession,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE8B44A),
                             foregroundColor: Colors.white,
@@ -325,9 +379,9 @@ class _TrainingSessionBookingScreenState
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text(
-                                  'Book slot',
-                                  style: TextStyle(
+                              : Text(
+                                  _isEditMode ? 'Reschedule slot' : 'Book slot',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),

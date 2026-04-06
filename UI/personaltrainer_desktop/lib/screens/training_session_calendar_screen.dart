@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personaltrainer_desktop/models/training_session.dart';
 import 'package:personaltrainer_desktop/models/gym.dart';
@@ -62,16 +62,13 @@ class _TrainingSessionCalendarScreenState
 
       filter.removeWhere((key, value) => value == null);
 
-      print('🔍 Loading sessions with filter: $filter');
       final result = await _trainingSessionProvider.get(filter: filter);
-      print('🔍 Loaded ${result.result.length ?? 0} sessions');
 
       setState(() {
         _sessions = result.result ?? [];
         _isLoading = false;
       });
     } catch (e) {
-      print('❌ Error loading training sessions: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(
@@ -1009,7 +1006,6 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading data: $e');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(
@@ -1028,7 +1024,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
     if (_selectedTime.hour < 6 || _selectedTime.hour >= 21) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Treninzi se mogu zakazati samo između 6:00 i 21:00!'),
+          content: Text('Treninzi se mogu zakazati samo izmeÄ‘u 6:00 i 21:00!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -1105,7 +1101,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Treninzi se mogu zakazati samo između 6:00 i 21:00!',
+                'Treninzi se mogu zakazati samo izmeÄ‘u 6:00 i 21:00!',
               ),
               backgroundColor: Colors.orange,
             ),
@@ -1345,3 +1341,4 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
     );
   }
 }
+

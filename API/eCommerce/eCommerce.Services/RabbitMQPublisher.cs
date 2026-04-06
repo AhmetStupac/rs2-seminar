@@ -5,6 +5,7 @@ using RabbitMQ.Client;
 using System;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace eCommerce.Services
@@ -12,104 +13,165 @@ namespace eCommerce.Services
     public class RabbitMQPublisher : IRabbitMQPublisher, IDisposable
     {
         private readonly ILogger<RabbitMQPublisher> _logger;
-       private readonly IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
         private IConnection _connection;
         private IModel _channel;
+        private readonly SemaphoreSlim _connectionSemaphore = new SemaphoreSlim(1, 1);
         private bool _disposed;
-       private readonly object _lock = new object();
-       private bool _connectionAttempted;
 
         public RabbitMQPublisher(IConfiguration configuration, ILogger<RabbitMQPublisher> logger)
         {
             _logger = logger;
-           _configuration = configuration;
+            _configuration = configuration;
         }
 
-        public Task PublishAsync<T>(T message, string queueName)
+        public async Task PublishAsync<T>(T message, string queueName)
         {
-           EnsureConnection();
-
-           if (_channel == null)
-           {
-               _logger.LogError("Cannot publish message to queue '{Queue}': RabbitMQ connection is not available.", queueName);
-               throw new InvalidOperationException("RabbitMQ connection is not available.");
-           }
-
-            _channel.QueueDeclare(
-                queue: queueName,
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null);
-
             var json = JsonSerializer.Serialize(message);
             var body = Encoding.UTF8.GetBytes(json);
 
-            var properties = _channel.CreateBasicProperties();
-            properties.Persistent = true;
+            const int maxRetries = 5;
+            var delay = TimeSpan.FromSeconds(1);
 
-            _channel.BasicPublish(
-                exchange: "",
-                routingKey: queueName,
-                basicProperties: properties,
-                body: body);
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    await EnsureConnectionAsync();
 
-            _logger.LogInformation("Published message to queue '{Queue}'.", queueName);
-            return Task.CompletedTask;
+                    if (_channel == null || !_channel.IsOpen)
+                        throw new InvalidOperationException("RabbitMQ channel is not available.");
+
+                    // RabbitMQ.Client uses synchronous publishing APIs.
+                    // Run on a worker thread to keep caller path non-blocking.
+                    await Task.Run(() =>
+                    {
+                        _channel.QueueDeclare(
+                            queue: queueName,
+                            durable: true,
+                            exclusive: false,
+                            autoDelete: false,
+                            arguments: null);
+
+                        var properties = _channel.CreateBasicProperties();
+                        properties.Persistent = true;
+
+                        _channel.BasicPublish(
+                            exchange: "",
+                            routingKey: queueName,
+                            basicProperties: properties,
+                            body: body);
+                    });
+
+                    _logger.LogInformation("Published message to queue '{Queue}'.", queueName);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Publish attempt {Attempt}/{Max} to queue '{Queue}' failed.", attempt, maxRetries, queueName);
+                    InvalidateConnection();
+
+                    if (attempt == maxRetries)
+                    {
+                        _logger.LogError("Cannot publish message to queue '{Queue}': RabbitMQ connection is not available.", queueName);
+                        throw;
+                    }
+
+                    await Task.Delay(delay);
+                    delay = TimeSpan.FromMilliseconds(Math.Min(delay.TotalMilliseconds * 2, 30000));
+                }
+            }
         }
 
-       private void EnsureConnection()
-       {
-           if (_channel != null || _connectionAttempted)
-               return;
+        private async Task EnsureConnectionAsync()
+        {
+            if (IsConnectionOpen())
+                return;
 
-           lock (_lock)
-           {
-               if (_channel != null || _connectionAttempted)
-                   return;
+            await _connectionSemaphore.WaitAsync();
+            try
+            {
+                if (IsConnectionOpen())
+                    return;
 
-               _connectionAttempted = true;
+                InvalidateConnection();
 
-               var factory = new ConnectionFactory
-               {
-                   HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
-                   UserName = _configuration["RabbitMQ:Username"] ?? "guest",
-                   Password = _configuration["RabbitMQ:Password"] ?? "guest",
-                   Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
-                   RequestedHeartbeat = TimeSpan.FromSeconds(60),
-                   AutomaticRecoveryEnabled = true
-               };
+                var factory = new ConnectionFactory
+                {
+                    HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
+                    UserName = _configuration["RabbitMQ:Username"] ?? "guest",
+                    Password = _configuration["RabbitMQ:Password"] ?? "guest",
+                    Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
+                    RequestedHeartbeat = TimeSpan.FromSeconds(60),
+                    AutomaticRecoveryEnabled = true
+                };
 
-               const int maxRetries = 3;
-               for (int attempt = 1; attempt <= maxRetries; attempt++)
-               {
-                   try
-                   {
-                       _connection = factory.CreateConnection();
-                       _channel = _connection.CreateModel();
-                       _logger.LogInformation("RabbitMQ publisher connected successfully.");
-                       return;
-                   }
-                   catch (Exception ex)
-                   {
-                       _logger.LogWarning(ex, "RabbitMQ publisher connection attempt {Attempt}/{Max} failed.", attempt, maxRetries);
-                       
-                       if (attempt < maxRetries)
-                       {
-                           System.Threading.Thread.Sleep(2000);
-                       }
-                   }
-               }
+                const int maxRetries = 5;
+                var delay = TimeSpan.FromSeconds(1);
 
-               _logger.LogError("RabbitMQ publisher failed to connect after all retry attempts.");
-           }
-       }
+                for (int attempt = 1; attempt <= maxRetries; attempt++)
+                {
+                    try
+                    {
+                        _connection = factory.CreateConnection();
+                        _channel = _connection.CreateModel();
+                        _logger.LogInformation("RabbitMQ publisher connected successfully.");
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "RabbitMQ publisher connection attempt {Attempt}/{Max} failed.", attempt, maxRetries);
+
+                        if (attempt == maxRetries)
+                            throw;
+
+                        await Task.Delay(delay);
+                        delay = TimeSpan.FromMilliseconds(Math.Min(delay.TotalMilliseconds * 2, 30000));
+                    }
+                }
+            }
+            finally
+            {
+                _connectionSemaphore.Release();
+            }
+        }
+
+        private bool IsConnectionOpen()
+        {
+            return _connection?.IsOpen == true && _channel?.IsOpen == true;
+        }
+
+        private void InvalidateConnection()
+        {
+            try
+            {
+                _channel?.Close();
+            }
+            catch { }
+            finally
+            {
+                _channel?.Dispose();
+                _channel = null;
+            }
+
+            try
+            {
+                _connection?.Close();
+            }
+            catch { }
+            finally
+            {
+                _connection?.Dispose();
+                _connection = null;
+            }
+        }
 
         public void Dispose()
         {
             if (_disposed) return;
-            _channel?.Close();
-            _connection?.Close();
+
+            InvalidateConnection();
+            _connectionSemaphore.Dispose();
             _disposed = true;
         }
     }

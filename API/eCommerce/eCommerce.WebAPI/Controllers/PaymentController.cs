@@ -1,6 +1,7 @@
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Constants;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
@@ -104,7 +105,7 @@ namespace eCommerce.WebAPI.Controllers
         /// <summary>
         /// Returns all payment records (admin only).
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Roles.Administrator)]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll()
         {

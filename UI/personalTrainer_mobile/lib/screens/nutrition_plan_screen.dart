@@ -45,13 +45,7 @@ class _NutritionPlanScreenState extends State<NutritionPlanScreen> {
         filter: {'userId': AuthProvider.userId.toString()},
       );
 
-      print(
-        '📋 Loaded ${result.result.length} nutrition plans for user ${AuthProvider.userId}',
-      );
       for (var plan in result.result) {
-        print(
-          '  - Plan ID: ${plan.id}, Title: ${plan.title}, UserId: ${plan.userId}',
-        );
       }
 
       setState(() {

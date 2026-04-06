@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
@@ -18,6 +20,8 @@ class PersonalTrainerSearchScreen extends StatefulWidget {
 class _PersonalTrainerSearchScreenState
     extends State<PersonalTrainerSearchScreen> {
   final _searchController = TextEditingController();
+  final _minPriceController = TextEditingController();
+  final _maxPriceController = TextEditingController();
   final _personalTrainerProvider = PersonalTrainerProvider();
   final _ratingProvider = PersonalTrainerRatingProvider();
   List<PersonalTrainer> _trainers = [];
@@ -26,21 +30,64 @@ class _PersonalTrainerSearchScreenState
   bool _isLoading = false;
   String? _errorMessage;
   String? _selectedSport;
+  String? _selectedGender;
+  double? _selectedMinRating;
+  double? _selectedMinPrice;
+  double? _selectedMaxPrice;
   PersonalTrainer? _recommendedTrainer;
   bool _isLoadingRecommendation = false;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _loadTrainers();
     _loadRecommendation();
-    _searchController.addListener(_filterTrainers);
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
+    _minPriceController.dispose();
+    _maxPriceController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (mounted) {
+        _loadTrainers();
+      }
+    });
+  }
+
+  Map<String, dynamic> _buildSearchFilter() {
+    final filter = <String, dynamic>{};
+    final query = _searchController.text.trim();
+
+    if (query.isNotEmpty) {
+      filter['Name'] = query;
+    }
+    if (_selectedSport != null && _selectedSport!.isNotEmpty) {
+      filter['Sport'] = _selectedSport;
+    }
+    if (_selectedGender != null && _selectedGender!.isNotEmpty) {
+      filter['Gender'] = _selectedGender;
+    }
+    if (_selectedMinRating != null) {
+      filter['MinRating'] = _selectedMinRating;
+    }
+    if (_selectedMinPrice != null) {
+      filter['MinPrice'] = _selectedMinPrice;
+    }
+    if (_selectedMaxPrice != null) {
+      filter['MaxPrice'] = _selectedMaxPrice;
+    }
+
+    return filter;
   }
 
   Future<void> _loadTrainers() async {
@@ -50,7 +97,9 @@ class _PersonalTrainerSearchScreenState
     });
 
     try {
-      final result = await _personalTrainerProvider.get();
+      final result = await _personalTrainerProvider.get(
+        filter: _buildSearchFilter(),
+      );
       setState(() {
         _trainers = result.result;
         _filteredTrainers = result.result;
@@ -85,7 +134,6 @@ class _PersonalTrainerSearchScreenState
         _isLoadingRecommendation = false;
       });
     } catch (e) {
-      print('Error loading recommendation: $e');
       setState(() {
         _isLoadingRecommendation = false;
       });
@@ -103,7 +151,6 @@ class _PersonalTrainerSearchScreenState
           );
           ratingsMap[trainer.id!] = stats;
         } catch (e) {
-          print('Error loading rating for trainer ${trainer.id}: $e');
           // Continue loading other ratings even if one fails
         }
       }
@@ -111,26 +158,6 @@ class _PersonalTrainerSearchScreenState
 
     setState(() {
       _ratingsMap = ratingsMap;
-    });
-  }
-
-  void _filterTrainers() {
-    final query = _searchController.text.toLowerCase().trim();
-
-    setState(() {
-      _filteredTrainers = _trainers.where((trainer) {
-        // Filter by name
-        final name = trainer.userFirstName?.toLowerCase() ?? '';
-        final matchesName = query.isEmpty || name.contains(query);
-
-        // Filter by sport
-        final matchesSport =
-            _selectedSport == null ||
-            _selectedSport == 'All sports' ||
-            trainer.sport == _selectedSport;
-
-        return matchesName && matchesSport;
-      }).toList();
     });
   }
 
@@ -145,51 +172,190 @@ class _PersonalTrainerSearchScreenState
   }
 
   void _showFilterDialog() {
+    final selectedSport = _selectedSport ?? 'All sports';
+    final selectedGender = _selectedGender ?? 'Any';
+    final selectedMinRating = _selectedMinRating;
+    _minPriceController.text = _selectedMinPrice?.toString() ?? '';
+    _maxPriceController.text = _selectedMaxPrice?.toString() ?? '';
     final sports = _getUniqueSports();
+    const genders = ['Any', 'Male', 'Female'];
+    const ratingOptions = <double?>[null, 3.0, 4.0, 4.5];
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Filter by sport'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: sports.map((sport) {
-                return ListTile(
-                  title: Text(sport),
-                  leading: Radio<String>(
-                    value: sport,
-                    groupValue: _selectedSport ?? 'All sports',
-                    onChanged: (String? value) {
-                      setState(() {
-                        _selectedSport = value == 'All sports' ? null : value;
-                      });
-                      _filterTrainers();
-                      Navigator.of(context).pop();
+        String tempSport = selectedSport;
+        String tempGender = selectedGender;
+        double? tempMinRating = selectedMinRating;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Filters'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Sport',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: tempSport,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    items: sports
+                        .map(
+                          (sport) => DropdownMenuItem(
+                            value: sport,
+                            child: Text(sport),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() => tempSport = value);
                     },
                   ),
-                  onTap: () {
-                    setState(() {
-                      _selectedSport = sport == 'All sports' ? null : sport;
-                    });
-                    _filterTrainers();
-                    Navigator.of(context).pop();
-                  },
-                );
-              }).toList(),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Gender',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: tempGender,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    items: genders
+                        .map(
+                          (gender) => DropdownMenuItem(
+                            value: gender,
+                            child: Text(gender),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setDialogState(() => tempGender = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Minimum rating',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<double?>(
+                    value: tempMinRating,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                    ),
+                    items: ratingOptions
+                        .map(
+                          (rating) => DropdownMenuItem<double?>(
+                            value: rating,
+                            child: Text(
+                              rating == null
+                                  ? 'Any'
+                                  : rating.toStringAsFixed(1),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setDialogState(() => tempMinRating = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Price range',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _minPriceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Min price',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _maxPriceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Max price',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedSport = null;
+                    _selectedGender = null;
+                    _selectedMinRating = null;
+                    _selectedMinPrice = null;
+                    _selectedMaxPrice = null;
+                  });
+                  Navigator.of(context).pop();
+                  _loadTrainers();
+                },
+                child: const Text('Reset'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final minPrice = double.tryParse(
+                    _minPriceController.text.trim(),
+                  );
+                  final maxPrice = double.tryParse(
+                    _maxPriceController.text.trim(),
+                  );
+
+                  setState(() {
+                    _selectedSport = tempSport == 'All sports'
+                        ? null
+                        : tempSport;
+                    _selectedGender = tempGender == 'Any' ? null : tempGender;
+                    _selectedMinRating = tempMinRating;
+                    _selectedMinPrice = minPrice;
+                    _selectedMaxPrice = maxPrice;
+                  });
+
+                  Navigator.of(context).pop();
+                  _loadTrainers();
+                },
+                child: const Text('Apply'),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
         );
       },
     );
   }
+
+  bool get _hasActiveFilters =>
+      _selectedSport != null ||
+      _selectedGender != null ||
+      _selectedMinRating != null ||
+      _selectedMinPrice != null ||
+      _selectedMaxPrice != null;
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +411,7 @@ class _PersonalTrainerSearchScreenState
                           icon: Stack(
                             children: [
                               const Icon(Icons.tune, color: Colors.grey),
-                              if (_selectedSport != null)
+                              if (_hasActiveFilters)
                                 Positioned(
                                   right: 0,
                                   top: 0,
@@ -277,27 +443,71 @@ class _PersonalTrainerSearchScreenState
           const SizedBox(height: 16),
 
           // Active filter chip
-          if (_selectedSport != null)
+          if (_hasActiveFilters)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Wrap(
                 spacing: 8,
                 children: [
-                  Chip(
-                    label: Text(_selectedSport!),
-                    deleteIcon: const Icon(Icons.close, size: 18),
-                    onDeleted: () {
-                      setState(() {
-                        _selectedSport = null;
-                      });
-                      _filterTrainers();
-                    },
-                    backgroundColor: Colors.orange.shade100,
-                  ),
+                  if (_selectedSport != null)
+                    Chip(
+                      label: Text(_selectedSport!),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () {
+                        setState(() {
+                          _selectedSport = null;
+                        });
+                        _loadTrainers();
+                      },
+                      backgroundColor: Colors.orange.shade100,
+                    ),
+                  if (_selectedGender != null)
+                    Chip(
+                      label: Text(_selectedGender!),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () {
+                        setState(() {
+                          _selectedGender = null;
+                        });
+                        _loadTrainers();
+                      },
+                      backgroundColor: Colors.orange.shade100,
+                    ),
+                  if (_selectedMinRating != null)
+                    Chip(
+                      label: Text(
+                        'Rating >= ${_selectedMinRating!.toStringAsFixed(1)}',
+                      ),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () {
+                        setState(() {
+                          _selectedMinRating = null;
+                        });
+                        _loadTrainers();
+                      },
+                      backgroundColor: Colors.orange.shade100,
+                    ),
+                  if (_selectedMinPrice != null || _selectedMaxPrice != null)
+                    Chip(
+                      label: Text(
+                        'Price ${_selectedMinPrice?.toStringAsFixed(0) ?? '0'}-${_selectedMaxPrice?.toStringAsFixed(0) ?? '∞'}',
+                      ),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () {
+                        setState(() {
+                          _selectedMinPrice = null;
+                          _selectedMaxPrice = null;
+                          _minPriceController.clear();
+                          _maxPriceController.clear();
+                        });
+                        _loadTrainers();
+                      },
+                      backgroundColor: Colors.orange.shade100,
+                    ),
                 ],
               ),
             ),
-          if (_selectedSport != null) const SizedBox(height: 12),
+          if (_hasActiveFilters) const SizedBox(height: 12),
 
           // Recommended trainer
           if (_isLoadingRecommendation)

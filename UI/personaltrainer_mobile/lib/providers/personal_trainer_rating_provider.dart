@@ -16,11 +16,9 @@ class PersonalTrainerRatingProvider extends BaseProvider<PersonalTrainerRatingRe
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET My Rating Request to: $url");
     
     var response = await BaseProvider.client.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
 
     if (response.statusCode == 404) {
       // No rating found
@@ -41,11 +39,9 @@ class PersonalTrainerRatingProvider extends BaseProvider<PersonalTrainerRatingRe
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET Trainer Ratings Request to: $url");
     
     var response = await BaseProvider.client.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body) as List;
@@ -61,12 +57,9 @@ class PersonalTrainerRatingProvider extends BaseProvider<PersonalTrainerRatingRe
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 GET Trainer Rating Stats Request to: $url");
     
     var response = await BaseProvider.client.get(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
-    print("🔍 Response body: ${response.body}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -83,12 +76,9 @@ class PersonalTrainerRatingProvider extends BaseProvider<PersonalTrainerRatingRe
     var headers = createHeaders();
 
     var jsonRequest = jsonEncode(request.toJson());
-    print("🔍 POST Create Rating Request to: $url");
-    print("🔍 Request body: $jsonRequest");
     
     var response = await BaseProvider.client.post(uri, headers: headers, body: jsonRequest);
 
-    print("🔍 Response status: ${response.statusCode}");
 
     if (isValidResponse(response)) {
       var data = jsonDecode(response.body);
@@ -112,12 +102,9 @@ class PersonalTrainerRatingProvider extends BaseProvider<PersonalTrainerRatingRe
     var headers = createHeaders();
 
     var jsonRequest = jsonEncode(request.toJson());
-    print("🔍 PUT Update Rating Request to: $url");
-    print("🔍 Request body: $jsonRequest");
     
     var response = await BaseProvider.client.put(uri, headers: headers, body: jsonRequest);
 
-    print("🔍 Response status: ${response.statusCode}");
 
     if (response.statusCode == 404) {
       return null;
@@ -137,11 +124,9 @@ class PersonalTrainerRatingProvider extends BaseProvider<PersonalTrainerRatingRe
     var uri = Uri.parse(url);
     var headers = createHeaders();
 
-    print("🔍 DELETE Rating Request to: $url");
     
     var response = await BaseProvider.client.delete(uri, headers: headers);
 
-    print("🔍 Response status: ${response.statusCode}");
 
     if (response.statusCode == 204) {
       return true;

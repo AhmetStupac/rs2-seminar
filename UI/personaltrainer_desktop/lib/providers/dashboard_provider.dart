@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:personaltrainer_desktop/models/dashboard_report.dart';
 import 'package:personaltrainer_desktop/models/trainer_dashboard.dart';
@@ -38,10 +38,7 @@ class DashboardProvider extends BaseProvider<DashboardReport> {
     try {
       final rawUrl = '${BaseProvider.baseUrl}Dashboard/report';
       final url = Uri.parse(rawUrl);
-      print('📊 Dashboard GET: $rawUrl');
       final response = await http.get(url, headers: createHeaders());
-      print('📊 Dashboard response: ${response.statusCode}');
-      print('📊 Dashboard body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -69,10 +66,7 @@ class DashboardProvider extends BaseProvider<DashboardReport> {
     try {
       final rawUrl = '${BaseProvider.baseUrl}Dashboard/trainer-dashboard';
       final url = Uri.parse(rawUrl);
-      print('📊 Trainer Dashboard GET: $rawUrl');
       final response = await http.get(url, headers: createHeaders());
-      print('📊 Trainer Dashboard response: ${response.statusCode}');
-      print('📊 Trainer Dashboard body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -94,3 +88,4 @@ class DashboardProvider extends BaseProvider<DashboardReport> {
     notifyListeners();
   }
 }
+

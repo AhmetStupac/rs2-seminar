@@ -51,13 +51,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
         filter: {'userId': AuthProvider.userId.toString()},
       );
 
-      print(
-        '📋 Loaded ${result.result.length} training plans for user ${AuthProvider.userId}',
-      );
       for (var plan in result.result) {
-        print(
-          '  - Plan ID: ${plan.id}, Title: ${plan.title}, UserId: ${plan.userId}',
-        );
       }
 
       setState(() {
@@ -77,7 +71,6 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       _isLoadingExercises = true;
     });
 
-    print('🔍 Loading exercise plans for trainingPlanId: $trainingPlanId');
 
     try {
       // First try with includeProperties
@@ -88,37 +81,22 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
         },
       );
 
-      print(
-        '📋 Loaded ${result.result.length} exercise plans with includeProperties',
-      );
 
       // If no results, try without includeProperties
       if (result.result.isEmpty) {
-        print('🔄 Trying without includeProperties...');
         result = await _exercisePlanProvider.get(
           filter: {'trainingPlanId': trainingPlanId.toString()},
-        );
-        print(
-          '📋 Loaded ${result.result.length} exercise plans without includeProperties',
         );
       }
 
       // If still no results, try getting ALL exercise plans to debug
       if (result.result.isEmpty) {
-        print('🔄 Getting ALL exercise plans to debug...');
         final allPlans = await _exercisePlanProvider.get();
-        print('📋 Total exercise plans in system: ${allPlans.result.length}');
         for (var plan in allPlans.result) {
-          print(
-            '  - Plan ID: ${plan.id}, TrainingPlanId: ${plan.trainingPlanId}, ExerciseId: ${plan.exerciseId}',
-          );
         }
       }
 
       for (var plan in result.result) {
-        print(
-          '  ✓ Exercise Plan ID: ${plan.id}, Exercise: ${plan.exercise?.name ?? "NULL"}, ExerciseId: ${plan.exerciseId}',
-        );
       }
 
       setState(() {
@@ -126,7 +104,6 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
         _isLoadingExercises = false;
       });
     } catch (e) {
-      print('❌ Error loading exercise plans: $e');
       setState(() {
         _exercisePlans = [];
         _isLoadingExercises = false;

@@ -63,8 +63,6 @@ class UserProvider extends BaseProvider<User> {
 
     var body = jsonEncode({"username": username, "password": password});
 
-    print("🔐 Attempting login to: $url");
-    print("🔐 Username: $username");
 
     var response = await BaseProvider.client.post(
       uri,
@@ -72,8 +70,6 @@ class UserProvider extends BaseProvider<User> {
       body: body,
     );
 
-    print("🔐 Login response status: ${response.statusCode}");
-    print("🔐 Login response body: ${response.body}");
 
     if (response.statusCode == 200 || response.statusCode == 204) {
       // Handle JWT response
@@ -157,26 +153,18 @@ class UserProvider extends BaseProvider<User> {
       }
       var bodyEncoded = jsonEncode(body);
 
-      print("🔄 Updating user: $userId");
-      print("🔄 URL: $url");
       var response = await BaseProvider.client.put(
         uri,
         headers: headers,
         body: bodyEncoded,
       );
-      print("🔄 Update user response status: ${response.statusCode}");
-      print("🔄 Update user response body: ${response.body}");
 
       if (response.statusCode == 200) {
-        print("✅ User updated successfully");
         return true;
       } else {
-        print("❌ Failed to update user: ${response.body}");
         return false;
       }
     } catch (e) {
-      print("❌ Error updating user: $e");
-      print("❌ Error type: ${e.runtimeType}");
       return false;
     }
   }
@@ -205,23 +193,18 @@ class UserProvider extends BaseProvider<User> {
         "roleIds": [], // Empty array to maintain current roles
       });
 
-      print("🔑 Changing password for user: $userId");
       var response = await BaseProvider.client.put(
         uri,
         headers: headers,
         body: body,
       );
-      print("🔑 Change password response status: ${response.statusCode}");
 
       if (response.statusCode == 200) {
-        print("✅ Password changed successfully");
         return true;
       } else {
-        print("❌ Failed to change password: ${response.body}");
         return false;
       }
     } catch (e) {
-      print("❌ Error changing password: $e");
       return false;
     }
   }
@@ -235,9 +218,6 @@ class UserProvider extends BaseProvider<User> {
 
       var body = jsonEncode({"email": email});
 
-      print("📧 Sending password reset email to: $email");
-      print("📧 URL: $url");
-      print("📧 Request body: $body");
 
       var response = await BaseProvider.client.post(
         uri,
@@ -245,15 +225,11 @@ class UserProvider extends BaseProvider<User> {
         body: body,
       );
 
-      print("📧 Forgot password response status: ${response.statusCode}");
-      print("📧 Forgot password response body: ${response.body}");
 
       // Backend returns 200 for both success and "email not found" cases for security
       if (response.statusCode == 200) {
-        print("✅ Password reset email sent successfully");
         return true;
       } else {
-        print("❌ Failed to send password reset email: ${response.body}");
         var errorMessage = "Unknown error";
         try {
           var errorData = jsonDecode(response.body);
@@ -262,12 +238,9 @@ class UserProvider extends BaseProvider<User> {
         } catch (e) {
           errorMessage = response.body;
         }
-        print("❌ Error details: $errorMessage");
         return false;
       }
     } catch (e) {
-      print("❌ Error sending password reset email: $e");
-      print("❌ Error type: ${e.runtimeType}");
       return false;
     }
   }
@@ -289,23 +262,18 @@ class UserProvider extends BaseProvider<User> {
         "confirmPassword": confirmPassword,
       });
 
-      print("🔑 Resetting password with token");
       var response = await BaseProvider.client.post(
         uri,
         headers: headers,
         body: body,
       );
-      print("🔑 Reset password response status: ${response.statusCode}");
 
       if (response.statusCode == 200) {
-        print("✅ Password reset successfully");
         return true;
       } else {
-        print("❌ Failed to reset password: ${response.body}");
         return false;
       }
     } catch (e) {
-      print("❌ Error resetting password: $e");
       return false;
     }
   }
@@ -329,26 +297,18 @@ class UserProvider extends BaseProvider<User> {
         "ConfirmPassword": confirmPassword,
       });
 
-      print("🔑 Resetting password with verification code for: $email");
-      print("🔑 URL: $url");
       var response = await BaseProvider.client.post(
         uri,
         headers: headers,
         body: body,
       );
-      print("🔑 Reset password response status: ${response.statusCode}");
-      print("🔑 Reset password response body: ${response.body}");
 
       if (response.statusCode == 200) {
-        print("✅ Password reset successfully");
         return true;
       } else {
-        print("❌ Failed to reset password: ${response.body}");
         return false;
       }
     } catch (e) {
-      print("❌ Error resetting password: $e");
-      print("❌ Error type: ${e.runtimeType}");
       return false;
     }
   }

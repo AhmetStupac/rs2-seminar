@@ -71,7 +71,6 @@ class _PersonalTrainerDetailScreenState
         _isLoadingRating = false;
       });
     } catch (e) {
-      print('Error loading rating data: $e');
       setState(() => _isLoadingRating = false);
     }
   }

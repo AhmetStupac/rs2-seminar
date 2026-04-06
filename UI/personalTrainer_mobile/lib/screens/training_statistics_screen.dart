@@ -50,7 +50,6 @@ class _TrainingStatisticsScreenState extends State<TrainingStatisticsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading statistics: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -485,7 +484,6 @@ class _TrainingStatisticsScreenState extends State<TrainingStatisticsScreen> {
         );
       }
     } catch (e) {
-      print('Error saving comment: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

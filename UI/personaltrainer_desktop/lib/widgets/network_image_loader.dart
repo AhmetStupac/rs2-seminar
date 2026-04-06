@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+﻿import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
 
@@ -35,11 +35,9 @@ class _NetworkImageLoaderState extends State<NetworkImageLoader> {
 
   Future<void> _loadImage() async {
     try {
-      print('📥 NetworkImageLoader: Loading image from: ${widget.imageUrl}');
       final blobProvider = BlobStorageProvider();
       final bytes = await blobProvider.downloadImageBytes(widget.imageUrl);
 
-      print('📥 NetworkImageLoader: Received bytes: ${bytes?.length ?? 0}');
 
       if (mounted) {
         setState(() {
@@ -49,7 +47,6 @@ class _NetworkImageLoaderState extends State<NetworkImageLoader> {
         });
       }
     } catch (e) {
-      print('❌ NetworkImageLoader: Error loading image: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -90,3 +87,4 @@ class _NetworkImageLoaderState extends State<NetworkImageLoader> {
     );
   }
 }
+

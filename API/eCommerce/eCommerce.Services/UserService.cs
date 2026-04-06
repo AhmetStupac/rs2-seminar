@@ -55,6 +55,21 @@ namespace eCommerce.Services
                     u.Username.Contains(search.FTS) || 
                     u.Email.Contains(search.FTS));
             }
+
+            query = query.OrderBy(u => u.Id);
+
+            if (!search.RetrieveAll)
+            {
+                if (search.Page.HasValue && search.PageSize.HasValue)
+                {
+                    query = query.Skip(search.Page.Value * search.PageSize.Value)
+                                 .Take(search.PageSize.Value);
+                }
+                else if (search.PageSize.HasValue)
+                {
+                    query = query.Take(search.PageSize.Value);
+                }
+            }
             
             var users = await query.ToListAsync();
             return users.Select(MapToResponse).ToList();
@@ -71,7 +86,7 @@ namespace eCommerce.Services
         private string HashPassword(string password, out byte[] salt)
         {
             salt = new byte[SaltSize];
-            using (var rng = new RNGCryptoServiceProvider())
+            using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(salt);
             }
@@ -86,6 +101,8 @@ namespace eCommerce.Services
 
         public async Task<UserResponse> CreateAsync(UserUpsertRequest request)
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
             // Check for duplicate email and username
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
@@ -118,10 +135,6 @@ namespace eCommerce.Services
                 user.PasswordSalt = Convert.ToBase64String(salt);
             }
 
-            // Add user to database first to get the ID
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
             // Registration default role: always assign role with Id = 2
             const int defaultRoleId = 2;
             var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
@@ -130,21 +143,23 @@ namespace eCommerce.Services
                 throw new InvalidOperationException("Default role (Id = 2) not found.");
             }
 
-            var userRole = new UserRole
+            user.UserRoles.Add(new UserRole
             {
-                UserId = user.Id,
                 RoleId = defaultRoleId,
                 DateAssigned = DateTime.UtcNow
-            };
+            });
 
-            _context.UserRoles.Add(userRole);
+            _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             return await GetUserResponseWithRolesAsync(user.Id);
         }
 
         public async Task<UserResponse?> UpdateAsync(int id, UserUpsertRequest request)
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return null;
@@ -201,6 +216,7 @@ namespace eCommerce.Services
             }
             
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
             return await GetUserResponseWithRolesAsync(user.Id);
         }
 
@@ -400,7 +416,12 @@ namespace eCommerce.Services
         {
             var salt = Convert.FromBase64String(passwordSalt);
             var hash = Convert.FromBase64String(passwordHash);
-            var hashBytes = new Rfc2898DeriveBytes(password, salt, Iterations).GetBytes(KeySize);
+            byte[] hashBytes;
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations))
+            {
+                hashBytes = pbkdf2.GetBytes(KeySize);
+            }
+
             return hash.SequenceEqual(hashBytes);
         }
 
@@ -515,8 +536,7 @@ namespace eCommerce.Services
 
         private string GenerateVerificationCode()
         {
-            var random = new Random();
-            return random.Next(100000, 999999).ToString();
+            return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         }
 
     }
