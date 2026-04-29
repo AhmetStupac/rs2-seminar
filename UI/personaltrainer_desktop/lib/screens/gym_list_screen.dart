@@ -44,9 +44,9 @@ class _GymListScreenState extends State<GymListScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('GreĹˇka pri uÄŤitavanju teretana.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading gyms.')));
       }
     }
   }
@@ -73,11 +73,11 @@ class _GymListScreenState extends State<GymListScreen> {
   Future<void> _deleteGym(Gym gym) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      barrierDismissible: false, // Ne moĹľe se zatvoriti klikom izvan
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         icon: Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
         title: const Text(
-          'Potvrda brisanja',
+          'Confirm Deletion',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -85,7 +85,7 @@ class _GymListScreenState extends State<GymListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Jeste li sigurni da Ĺľelite obrisati teretanu?',
+              'Are you sure you want to delete this gym?',
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 12),
@@ -113,7 +113,7 @@ class _GymListScreenState extends State<GymListScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Ova akcija je nepovratna!',
+              'This action cannot be undone!',
               style: TextStyle(
                 color: Colors.red[700],
                 fontWeight: FontWeight.w600,
@@ -125,7 +125,7 @@ class _GymListScreenState extends State<GymListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('OtkaĹľi'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton.icon(
             onPressed: () => Navigator.of(context).pop(true),
@@ -135,7 +135,7 @@ class _GymListScreenState extends State<GymListScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             icon: const Icon(Icons.delete_forever),
-            label: const Text('ObriĹˇi teretanu'),
+            label: const Text('Delete Gym'),
           ),
         ],
       ),
@@ -146,15 +146,15 @@ class _GymListScreenState extends State<GymListScreen> {
         await _gymProvider.delete(gym.id!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Teretana uspjeĹˇno obrisana')),
+            const SnackBar(content: Text('Gym deleted successfully')),
           );
           _loadGyms();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('GreĹˇka pri brisanju teretane.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error deleting gym.')));
         }
       }
     }
@@ -174,7 +174,7 @@ class _GymListScreenState extends State<GymListScreen> {
   Widget build(BuildContext context) {
     if (!AuthProvider.isSuperAdmin) {
       return NavBar(
-        'Teretane',
+        'Gyms',
         Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -197,7 +197,7 @@ class _GymListScreenState extends State<GymListScreen> {
     }
 
     return NavBar(
-      'Teretane',
+      'Gyms',
       Column(
         children: [
           Container(
@@ -209,7 +209,7 @@ class _GymListScreenState extends State<GymListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Pretraga teretana',
+                        'Search Gyms',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -220,7 +220,7 @@ class _GymListScreenState extends State<GymListScreen> {
                         controller: _searchController,
                         decoration: InputDecoration(
                           hintText:
-                              'PretraĹľi po nazivu, gradu, drĹľavi ili adresi...',
+                              'Search by name, city, country, or address...',
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
@@ -252,7 +252,7 @@ class _GymListScreenState extends State<GymListScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _navigateToGymScreen(),
                   icon: const Icon(Icons.add),
-                  label: const Text('Dodaj teretanu'),
+                  label: const Text('Add Gym'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -266,7 +266,7 @@ class _GymListScreenState extends State<GymListScreen> {
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   onPressed: _loadGyms,
-                  tooltip: 'OsvjeĹľi',
+                  tooltip: 'Refresh',
                 ),
               ],
             ),
@@ -289,8 +289,8 @@ class _GymListScreenState extends State<GymListScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   _searchQuery.isNotEmpty
-                                      ? 'Nema rezultata pretrage'
-                                      : 'Nema teretana',
+                                      ? 'No search results'
+                                      : 'No gyms found',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.grey[600],
@@ -301,7 +301,7 @@ class _GymListScreenState extends State<GymListScreen> {
                                   ElevatedButton.icon(
                                     onPressed: () => _navigateToGymScreen(),
                                     icon: const Icon(Icons.add),
-                                    label: const Text('Dodaj prvu teretanu'),
+                                    label: const Text('Add First Gym'),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.black,
                                       foregroundColor: Colors.white,
@@ -439,13 +439,13 @@ class _GymListScreenState extends State<GymListScreen> {
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () => _navigateToGymScreen(gym),
-                    tooltip: 'Uredi',
+                    tooltip: 'Edit',
                     color: Colors.blue[700],
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () => _deleteGym(gym),
-                    tooltip: 'ObriĹˇi',
+                    tooltip: 'Delete',
                     color: Colors.red[700],
                   ),
                 ],

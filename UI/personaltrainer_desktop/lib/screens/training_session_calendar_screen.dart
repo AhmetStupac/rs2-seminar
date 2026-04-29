@@ -682,9 +682,9 @@ class _TrainingSessionCalendarScreenState
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to cancel session.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to cancel session.')));
         }
       }
     }
@@ -982,6 +982,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
   int? _selectedGymId;
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  String? _timeValidationError;
   int _durationMinutes = 60;
   String _notes = '';
   String _trainerNotes = '';
@@ -1016,18 +1017,14 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
   }
 
   Future<void> _saveSession() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    final formIsValid = _formKey.currentState!.validate();
+    final timeError = _validateSelectedDateTime(_selectedDate, _selectedTime);
 
-    // Validate time restriction
-    if (_selectedTime.hour < 6 || _selectedTime.hour >= 21) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Treninzi se mogu zakazati samo izmeÄ‘u 6:00 i 21:00!'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    setState(() {
+      _timeValidationError = timeError;
+    });
+
+    if (!formIsValid || timeError != null) {
       return;
     }
 
@@ -1085,6 +1082,10 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+        _timeValidationError = _validateSelectedDateTime(
+          _selectedDate,
+          _selectedTime,
+        );
       });
     }
   }
@@ -1095,24 +1096,34 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
       initialTime: _selectedTime,
     );
     if (picked != null && picked != _selectedTime) {
-      // Validate time is between 6 AM and 9 PM
-      if (picked.hour < 6 || picked.hour >= 21) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Treninzi se mogu zakazati samo izmeÄ‘u 6:00 i 21:00!',
-              ),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
-      }
       setState(() {
         _selectedTime = picked;
+        _timeValidationError = _validateSelectedDateTime(
+          _selectedDate,
+          _selectedTime,
+        );
       });
     }
+  }
+
+  String? _validateSelectedDateTime(DateTime date, TimeOfDay time) {
+    final scheduledDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+
+    if (scheduledDateTime.isBefore(DateTime.now())) {
+      return 'Training cannot be scheduled in the past.';
+    }
+
+    if (time.hour < 6 || time.hour >= 21) {
+      return 'Training sessions can only be scheduled between 6:00 and 21:00.';
+    }
+
+    return null;
   }
 
   @override
@@ -1194,36 +1205,33 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      // Date and Time Row
-                      Row(
+                      // Date and Time
+                      Column(
                         children: [
-                          Expanded(
-                            child: InkWell(
-                              onTap: _selectDate,
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date *',
-                                  border: OutlineInputBorder(),
-                                ),
-                                child: Text(
-                                  DateFormat(
-                                    'MMM dd, yyyy',
-                                  ).format(_selectedDate),
-                                ),
+                          InkWell(
+                            onTap: _selectDate,
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Date *',
+                                border: OutlineInputBorder(),
+                              ),
+                              child: Text(
+                                DateFormat(
+                                  'MMM dd, yyyy',
+                                ).format(_selectedDate),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: InkWell(
-                              onTap: _selectTime,
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Time *',
-                                  border: OutlineInputBorder(),
-                                ),
-                                child: Text(_selectedTime.format(context)),
+                          const SizedBox(height: 16),
+                          InkWell(
+                            onTap: _selectTime,
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: 'Time *',
+                                border: const OutlineInputBorder(),
+                                errorText: _timeValidationError,
                               ),
+                              child: Text(_selectedTime.format(context)),
                             ),
                           ),
                         ],
@@ -1341,4 +1349,3 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
     );
   }
 }
-

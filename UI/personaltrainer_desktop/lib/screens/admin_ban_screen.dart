@@ -5,7 +5,11 @@ class BanUserScreen extends StatefulWidget {
   final int userId;
   final String username;
 
-  const BanUserScreen({super.key, required this.userId, required this.username});
+  const BanUserScreen({
+    super.key,
+    required this.userId,
+    required this.username,
+  });
 
   @override
   State<BanUserScreen> createState() => _BanUserScreenState();
@@ -18,6 +22,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
 
   bool _isPermanent = true;
   DateTime? _expiryDate;
+  String? _expiryDateValidationError;
   bool _isLoading = false;
 
   // Unban related state
@@ -54,19 +59,17 @@ class _BanUserScreenState extends State<BanUserScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Potvrda'),
-        content: Text(
-          'Da li ste sigurni da želite da unbanuјete ${widget.username}?',
-        ),
+        title: const Text('Confirmation'),
+        content: Text('Are you sure you want to unban ${widget.username}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Otkaži'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Unbanuj'),
+            child: const Text('Unban'),
           ),
         ],
       ),
@@ -85,14 +88,14 @@ class _BanUserScreenState extends State<BanUserScreen> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Korisnik uspešno unbanovan'),
+            content: Text(result['message'] ?? 'User unbanned successfully'),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Greška pri unbanovanju'),
+            content: Text(result['message'] ?? 'Error while unbanning user'),
             backgroundColor: Colors.red,
           ),
         );
@@ -100,7 +103,10 @@ class _BanUserScreenState extends State<BanUserScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri unbanovanju.'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Error while unbanning user.'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {
@@ -113,16 +119,21 @@ class _BanUserScreenState extends State<BanUserScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_isPermanent && _expiryDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Izaberite datum isteka bana')),
-      );
+      setState(() {
+        _expiryDateValidationError = 'Select a ban expiry date';
+      });
       return;
+    }
+
+    if (_expiryDateValidationError != null) {
+      setState(() {
+        _expiryDateValidationError = null;
+      });
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // ⭐ Ispravljeno: koristi named parametre
       final result = await _adminProvider.banUser(
         userId: widget.userId,
         reason: _reasonController.text,
@@ -135,14 +146,14 @@ class _BanUserScreenState extends State<BanUserScreen> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Korisnik uspešno banovan'),
+            content: Text(result['message'] ?? 'User banned successfully'),
             backgroundColor: Colors.green,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Greška pri banovanju'),
+            content: Text(result['message'] ?? 'Error while banning user'),
             backgroundColor: Colors.red,
           ),
         );
@@ -150,7 +161,10 @@ class _BanUserScreenState extends State<BanUserScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Greška pri banovanju.'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Error while banning user.'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {
@@ -170,26 +184,24 @@ class _BanUserScreenState extends State<BanUserScreen> {
     if (_isCheckingBan) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Upravljanje banom'),
+          title: const Text('Ban Management'),
           backgroundColor: Colors.grey.shade700,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // Ako je korisnik banovan, prikaži unban ekran
     if (_isBanned) {
       return _buildUnbanScreen();
     }
 
-    // Inače prikaži ban formu
     return _buildBanScreen();
   }
 
   Widget _buildUnbanScreen() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Unbanuj korisnika'),
+        title: const Text('Unban User'),
         backgroundColor: Colors.green.shade700,
       ),
       body: SingleChildScrollView(
@@ -231,7 +243,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Text(
-                                  'BANOVAN',
+                                  'BANNED',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -246,27 +258,27 @@ class _BanUserScreenState extends State<BanUserScreen> {
                     ),
                     const Divider(height: 24),
                     _buildBanInfoRow(
-                      'Razlog:',
-                      _banInfo?['reason'] ?? 'Nije naveden',
+                      'Reason:',
+                      _banInfo?['reason'] ?? 'Not provided',
                     ),
                     const SizedBox(height: 8),
                     _buildBanInfoRow(
-                      'Banovan:',
+                      'Banned At:',
                       _banInfo?['bannedAt'] != null
                           ? _formatDateTime(_banInfo!['bannedAt'])
-                          : 'Nepoznato',
+                          : 'Unknown',
                     ),
                     const SizedBox(height: 8),
                     _buildBanInfoRow(
-                      'Tip bana:',
+                      'Ban Type:',
                       (_banInfo?['isPermanent'] ?? true)
-                          ? 'Permanentan'
-                          : 'Privremeni',
+                          ? 'Permanent'
+                          : 'Temporary',
                     ),
                     if (_banInfo?['expiresAt'] != null) ...[
                       const SizedBox(height: 8),
                       _buildBanInfoRow(
-                        'Ističe:',
+                        'Expires:',
                         _formatDateTime(_banInfo!['expiresAt']),
                       ),
                     ],
@@ -276,7 +288,6 @@ class _BanUserScreenState extends State<BanUserScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Unban dugme
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -293,7 +304,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
                       )
                     : const Icon(Icons.check_circle),
                 label: Text(
-                  _isLoading ? 'Unbanovavanje...' : 'Unbanuj korisnika',
+                  _isLoading ? 'Unbanning...' : 'Unban User',
                   style: const TextStyle(fontSize: 16),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -341,7 +352,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
   Widget _buildBanScreen() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Banuj korisnika'),
+        title: const Text('Ban User'),
         backgroundColor: Colors.red.shade700,
       ),
       body: SingleChildScrollView(
@@ -351,7 +362,6 @@ class _BanUserScreenState extends State<BanUserScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Info card
               Card(
                 color: Colors.red.shade50,
                 child: Padding(
@@ -365,7 +375,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Korisnik: ${widget.username}',
+                              'User: ${widget.username}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -388,39 +398,42 @@ class _BanUserScreenState extends State<BanUserScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Razlog
               TextFormField(
                 controller: _reasonController,
                 decoration: const InputDecoration(
-                  labelText: 'Razlog banovanja *',
-                  hintText: 'npr. Kršenje pravila zajednice',
+                  labelText: 'Ban Reason *',
+                  hintText: 'e.g. Violation of community guidelines',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.description),
                 ),
                 maxLines: 3,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Razlog je obavezan';
+                    return 'Reason is required';
                   }
                   if (value.length < 10) {
-                    return 'Razlog mora imati minimum 10 karaktera';
+                    return 'Reason must be at least 10 characters';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 24),
 
-              // Tip bana
               Card(
                 child: Column(
                   children: [
                     SwitchListTile(
-                      title: const Text('Permanentno banovanje'),
-                      subtitle: const Text('Ban bez vremenskog ograničenja'),
+                      title: const Text('Permanent Ban'),
+                      subtitle: const Text('Ban without time limit'),
                       value: _isPermanent,
                       activeThumbColor: Colors.red.shade700,
                       onChanged: (value) {
-                        setState(() => _isPermanent = value);
+                        setState(() {
+                          _isPermanent = value;
+                          if (_isPermanent) {
+                            _expiryDateValidationError = null;
+                          }
+                        });
                       },
                     ),
                     if (!_isPermanent) ...[
@@ -429,8 +442,8 @@ class _BanUserScreenState extends State<BanUserScreen> {
                         leading: const Icon(Icons.calendar_today),
                         title: Text(
                           _expiryDate == null
-                              ? 'Izaberi datum isteka'
-                              : 'Ističe: ${_formatDate(_expiryDate!)}',
+                              ? 'Select expiry date'
+                              : 'Expires: ${_formatDate(_expiryDate!)}',
                         ),
                         subtitle: _expiryDate != null
                             ? Text(_getTimeDifference())
@@ -438,13 +451,26 @@ class _BanUserScreenState extends State<BanUserScreen> {
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: _selectExpiryDate,
                       ),
+                      if (_expiryDateValidationError != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _expiryDateValidationError!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ],
                 ),
               ),
               const SizedBox(height: 32),
 
-              // Dugme za banovanje
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -461,7 +487,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
                         )
                       : const Icon(Icons.block),
                   label: Text(
-                    _isLoading ? 'Banovanje...' : 'Banuj korisnika',
+                    _isLoading ? 'Banning...' : 'Ban User',
                     style: const TextStyle(fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -502,6 +528,7 @@ class _BanUserScreenState extends State<BanUserScreen> {
             time.hour,
             time.minute,
           );
+          _expiryDateValidationError = null;
         });
       }
     }

@@ -41,24 +41,23 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('GreĹˇka pri uÄŤitavanju.')));
+        ).showSnackBar(SnackBar(content: Text('Error loading data.')));
       }
     }
   }
 
   Future<void> _deletePersonalTrainer(PersonalTrainer trainer) async {
-    // Nepovratna akcija - prvo prikaĹľi dijalog za potvrdu
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Potvrda brisanja'),
+        title: const Text('Confirm Deletion'),
         content: Text(
-          'Da li ste sigurni da Ĺľelite da obriĹˇete personalnog trenera "${trainer.userFirstName ?? 'ID: ${trainer.id}'}"?\n\nOva akcija je nepovratna!',
+          'Are you sure you want to delete personal trainer "${trainer.userFirstName ?? 'ID: ${trainer.id}'}"?\n\nThis action cannot be undone!',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Odustani'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -66,7 +65,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('ObriĹˇi'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -78,18 +77,17 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Personalni trener je uspjeĹˇno obrisan!'),
+              content: Text('Personal trainer deleted successfully!'),
               backgroundColor: Colors.green,
             ),
           );
-          // Ponovno uÄŤitaj listu
           _loadPersonalTrainers();
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('GreĹˇka pri brisanju.'),
+              content: Text('Error deleting record.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -154,12 +152,12 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Nema personalnih trenera',
+                      'No personal trainers found',
                       style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Kliknite na + dugme da dodate novog trenera',
+                      'Click the + button to add a new trainer',
                       style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                     ),
                   ],
@@ -189,13 +187,13 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                       columns: const [
                         DataColumn(
                           label: Text(
-                            'Ime',
+                            'Name',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         DataColumn(
                           label: Text(
-                            'Godine iskustva',
+                            'Years of Experience',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -207,13 +205,13 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                         ),
                         DataColumn(
                           label: Text(
-                            'Certifikati',
+                            'Certifications',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         DataColumn(
                           label: Text(
-                            'Akcije',
+                            'Actions',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -223,7 +221,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                           cells: [
                             DataCell(Text(trainer.userFirstName ?? 'N/A')),
                             DataCell(
-                              Text('${trainer.yearsOfExperience ?? 0} godina'),
+                              Text('${trainer.yearsOfExperience ?? 0} years'),
                             ),
                             DataCell(
                               Container(
@@ -239,8 +237,8 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                                 ),
                                 child: Text(
                                   trainer.isActive == true
-                                      ? 'Aktivan'
-                                      : 'Neaktivan',
+                                      ? 'Active'
+                                      : 'Inactive',
                                   style: TextStyle(
                                     color: trainer.isActive == true
                                         ? Colors.green[800]
@@ -266,7 +264,7 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
                                   Icons.delete,
                                   color: Colors.red,
                                 ),
-                                tooltip: 'ObriĹˇi',
+                                tooltip: 'Delete',
                                 onPressed: () =>
                                     _deletePersonalTrainer(trainer),
                               ),
@@ -280,21 +278,18 @@ class _PersonalTrainerListScreenState extends State<PersonalTrainerListScreen> {
               ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {
-            // Navigiraj na screen za dodavanje personalnog trenera
             await Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => const PersonalTrainerScreen(),
               ),
             );
-            // Nakon povratka, ponovno uÄŤitaj listu
             _loadPersonalTrainers();
           },
           icon: const Icon(Icons.add),
-          label: const Text('Dodaj trenera'),
+          label: const Text('Add Trainer'),
           backgroundColor: Colors.blue,
         ),
       ),
     );
   }
 }
-

@@ -35,6 +35,14 @@ class _GymScreenState extends State<GymScreen> {
   bool isLoading = false;
   bool _isUploading = false;
   String? errorMessage;
+  String? _nameError;
+  String? _addressError;
+  String? _cityError;
+  String? _countryError;
+  String? _emailError;
+  String? _phoneError;
+  String? _workTimeError;
+  String? _imageError;
 
   @override
   void initState() {
@@ -79,12 +87,13 @@ class _GymScreenState extends State<GymScreen> {
         setState(() {
           _selectedFile = result.files.first;
           _fileBytes = result.files.first.bytes;
+          _imageError = null;
         });
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Greška pri odabiru slike: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error selecting image: $e')));
     }
   }
 
@@ -92,14 +101,15 @@ class _GymScreenState extends State<GymScreen> {
     setState(() {
       _selectedFile = null;
       _fileBytes = null;
+      _imageError = null;
     });
   }
 
   Future<void> _uploadImage() async {
     if (_selectedFile == null || _fileBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Molimo odaberite sliku prvo')),
-      );
+      setState(() {
+        _imageError = 'Please select an image first';
+      });
       return;
     }
 
@@ -117,13 +127,14 @@ class _GymScreenState extends State<GymScreen> {
       setState(() {
         _uploadedImageId = result['imageId'];
         _isUploading = false;
+        _imageError = null;
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Slika uspješno uploadovana (ID: ${result['imageId']})',
+              'Image uploaded successfully (ID: ${result['imageId']})',
             ),
           ),
         );
@@ -135,63 +146,47 @@ class _GymScreenState extends State<GymScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Greška pri uploadu slike: $e')));
+        ).showSnackBar(SnackBar(content: Text('Error uploading image: $e')));
       }
     }
   }
 
   Future<void> _saveGym() async {
+    String? nameError;
+    String? addressError;
+    String? cityError;
+    String? countryError;
+    String? emailError;
+    String? phoneError;
+    String? workTimeError;
+
     if (nameController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'Gym name cannot be empty.';
-      });
-      return;
+      nameError = 'Gym name cannot be empty.';
     }
     if (addressController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'Address cannot be empty.';
-      });
-      return;
+      addressError = 'Address cannot be empty.';
     }
     if (cityController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'City cannot be empty.';
-      });
-      return;
+      cityError = 'City cannot be empty.';
     }
     if (countryController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'Country cannot be empty.';
-      });
-      return;
+      countryError = 'Country cannot be empty.';
     }
     if (emailController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'Email cannot be empty.';
-      });
-      return;
+      emailError = 'Email cannot be empty.';
     }
     if (phoneNumberController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'Phone number cannot be empty.';
-      });
-      return;
+      phoneError = 'Phone number cannot be empty.';
     }
     if (workTimeController.text.trim().isEmpty) {
-      setState(() {
-        errorMessage = 'Work time cannot be empty.';
-      });
-      return;
+      workTimeError = 'Work time cannot be empty.';
     }
 
     final phoneRaw = phoneNumberController.text.trim();
     final phoneRegex = RegExp(r'^\+387 6[0-9] [0-9]{3} [0-9]{3}$');
-    if (!phoneRegex.hasMatch(phoneRaw)) {
-      setState(() {
-        errorMessage =
-            'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
-      });
-      return;
+    if (phoneError == null && !phoneRegex.hasMatch(phoneRaw)) {
+      phoneError =
+          'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
     }
 
     final emailRaw = emailController.text.trim();
@@ -199,12 +194,31 @@ class _GymScreenState extends State<GymScreen> {
       r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$',
     );
     final emailEduRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@edu\.fit\.ba$');
-    if (!emailComRegex.hasMatch(emailRaw) &&
+    if (emailError == null &&
+        !emailComRegex.hasMatch(emailRaw) &&
         !emailEduRegex.hasMatch(emailRaw)) {
-      setState(() {
-        errorMessage =
-            'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
-      });
+      emailError =
+          'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
+    }
+
+    setState(() {
+      _nameError = nameError;
+      _addressError = addressError;
+      _cityError = cityError;
+      _countryError = countryError;
+      _emailError = emailError;
+      _phoneError = phoneError;
+      _workTimeError = workTimeError;
+      errorMessage = null;
+    });
+
+    if (nameError != null ||
+        addressError != null ||
+        cityError != null ||
+        countryError != null ||
+        emailError != null ||
+        phoneError != null ||
+        workTimeError != null) {
       return;
     }
 
@@ -235,13 +249,13 @@ class _GymScreenState extends State<GymScreen> {
 
       if (widget.gym == null) {
         await _gymProvider.insert(gym);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Teretana uspješno dodana')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gym added successfully')));
       } else {
         await _gymProvider.update(gym.id!, gym);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Teretana uspješno ažurirana')),
+          const SnackBar(content: Text('Gym updated successfully')),
         );
       }
 
@@ -260,7 +274,7 @@ class _GymScreenState extends State<GymScreen> {
   @override
   Widget build(BuildContext context) {
     return NavBar(
-      'Teretane',
+      'Gyms',
       Container(
         color: Colors.grey[100],
         child: SingleChildScrollView(
@@ -272,7 +286,7 @@ class _GymScreenState extends State<GymScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.gym == null ? 'Dodaj teretanu' : 'Uredi teretanu',
+                    widget.gym == null ? 'Add Gym' : 'Edit Gym',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -289,41 +303,87 @@ class _GymScreenState extends State<GymScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildTextField(
-                              'Naziv teretane',
+                              'Gym Name',
                               nameController,
                               'Arena Sport Centar',
+                              errorText: _nameError,
+                              onChanged: (_) {
+                                if (_nameError != null) {
+                                  setState(() => _nameError = null);
+                                }
+                              },
                             ),
                             const SizedBox(height: 20),
                             _buildTextField(
-                              'Adresa',
+                              'Address',
                               addressController,
                               'Brace Kaljica',
+                              errorText: _addressError,
+                              onChanged: (_) {
+                                if (_addressError != null) {
+                                  setState(() => _addressError = null);
+                                }
+                              },
                             ),
                             const SizedBox(height: 20),
-                            _buildTextField('Grad', cityController, 'Mostar'),
+                            _buildTextField(
+                              'City',
+                              cityController,
+                              'Mostar',
+                              errorText: _cityError,
+                              onChanged: (_) {
+                                if (_cityError != null) {
+                                  setState(() => _cityError = null);
+                                }
+                              },
+                            ),
                             const SizedBox(height: 20),
                             _buildTextField(
-                              'Država',
+                              'Country',
                               countryController,
                               'Bosna i Hercegovina',
+                              errorText: _countryError,
+                              onChanged: (_) {
+                                if (_countryError != null) {
+                                  setState(() => _countryError = null);
+                                }
+                              },
                             ),
                             const SizedBox(height: 20),
                             _buildTextField(
                               'Email',
                               emailController,
                               'info@arenasport.ba',
+                              errorText: _emailError,
+                              onChanged: (_) {
+                                if (_emailError != null) {
+                                  setState(() => _emailError = null);
+                                }
+                              },
                             ),
                             const SizedBox(height: 20),
                             _buildTextField(
-                              'Telefon',
+                              'Phone',
                               phoneNumberController,
                               '+387 36 123 456',
+                              errorText: _phoneError,
+                              onChanged: (_) {
+                                if (_phoneError != null) {
+                                  setState(() => _phoneError = null);
+                                }
+                              },
                             ),
                             const SizedBox(height: 20),
                             _buildTextField(
-                              'Radno vrijeme',
+                              'Working Hours',
                               workTimeController,
                               '07:00 - 23:00',
+                              errorText: _workTimeError,
+                              onChanged: (_) {
+                                if (_workTimeError != null) {
+                                  setState(() => _workTimeError = null);
+                                }
+                              },
                             ),
                           ],
                         ),
@@ -336,7 +396,7 @@ class _GymScreenState extends State<GymScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Slika',
+                              'Image',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -389,7 +449,7 @@ class _GymScreenState extends State<GymScreen> {
                           side: const BorderSide(color: Colors.grey),
                         ),
                         child: const Text(
-                          'Otkaži',
+                          'Cancel',
                           style: TextStyle(color: Colors.black),
                         ),
                       ),
@@ -413,7 +473,7 @@ class _GymScreenState extends State<GymScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('Spremi'),
+                            : const Text('Save'),
                       ),
                     ],
                   ),
@@ -429,8 +489,10 @@ class _GymScreenState extends State<GymScreen> {
   Widget _buildTextField(
     String label,
     TextEditingController controller,
-    String hint,
-  ) {
+    String hint, {
+    String? errorText,
+    ValueChanged<String>? onChanged,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -441,9 +503,11 @@ class _GymScreenState extends State<GymScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey[400]),
+            errorText: errorText,
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -484,7 +548,7 @@ class _GymScreenState extends State<GymScreen> {
             ElevatedButton.icon(
               onPressed: _pickImage,
               icon: const Icon(Icons.upload_file),
-              label: const Text('Odaberi sliku'),
+              label: const Text('Select Image'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
@@ -523,9 +587,21 @@ class _GymScreenState extends State<GymScreen> {
                   IconButton(
                     onPressed: _removeFile,
                     icon: const Icon(Icons.close, color: Colors.red),
-                    tooltip: 'Ukloni sliku',
+                    tooltip: 'Remove Image',
                   ),
                 ],
+              ),
+            ),
+
+          if (_imageError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _imageError!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                ),
               ),
             ),
 
@@ -571,7 +647,7 @@ class _GymScreenState extends State<GymScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Greška pri učitavanju slike',
+                            'Error loading image',
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
@@ -598,7 +674,7 @@ class _GymScreenState extends State<GymScreen> {
                       ),
                     )
                   : const Icon(Icons.cloud_upload),
-              label: Text(_isUploading ? 'Uploading...' : 'Upload sliku'),
+              label: Text(_isUploading ? 'Uploading...' : 'Upload Image'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
@@ -615,7 +691,7 @@ class _GymScreenState extends State<GymScreen> {
                   Icon(Icons.check_circle, color: Colors.green, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    'Slika uploadovana (ID: $_uploadedImageId)',
+                    'Image uploaded (ID: $_uploadedImageId)',
                     style: TextStyle(color: Colors.green[700], fontSize: 12),
                   ),
                 ],

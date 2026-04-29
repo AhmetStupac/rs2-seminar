@@ -9,6 +9,7 @@ import 'package:personaltrainer_mobile/screens/training_sessions_list_screen.dar
 import 'package:personaltrainer_mobile/screens/training_statistics_screen.dart';
 import 'package:personaltrainer_mobile/screens/online_users_screen.dart';
 import 'package:personaltrainer_mobile/screens/group_training_sessions_screen.dart';
+import 'package:personaltrainer_mobile/screens/payment_history_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
@@ -194,6 +195,23 @@ class MobileNavBar extends StatelessWidget {
           ),
           _buildMenuItem(
             context,
+            icon: Icons.receipt_long,
+            title: 'Payments',
+            routeName: 'payments',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != 'payments') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PaymentHistoryScreen(),
+                  ),
+                );
+              }
+            },
+          ),
+          _buildMenuItem(
+            context,
             icon: Icons.person,
             title: 'Profile',
             routeName: 'profile',
@@ -219,9 +237,7 @@ class MobileNavBar extends StatelessWidget {
                 context: context,
                 builder: (dialogContext) => AlertDialog(
                   title: const Text('Odjava'),
-                  content: const Text(
-                    'Are you sure you want to logout?',
-                  ),
+                  content: const Text('Are you sure you want to logout?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -266,7 +282,9 @@ class MobileNavBar extends StatelessWidget {
   }
 
   static String _getInitials(String? firstName, String? lastName) {
-    final first = firstName?.trim().isNotEmpty == true ? firstName!.trim()[0] : '';
+    final first = firstName?.trim().isNotEmpty == true
+        ? firstName!.trim()[0]
+        : '';
     final last = lastName?.trim().isNotEmpty == true ? lastName!.trim()[0] : '';
     if (first.isEmpty && last.isEmpty) return '?';
     return (first + last).toUpperCase();

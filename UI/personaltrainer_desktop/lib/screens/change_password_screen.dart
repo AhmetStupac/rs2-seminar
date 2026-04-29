@@ -13,6 +13,7 @@ class ChangePasswordScreen extends StatefulWidget {
 
 class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _verificationCodeController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -21,11 +22,31 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool _obscureConfirmPassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    _emailController.text = widget.email ?? '';
+  }
+
+  @override
   void dispose() {
+    _emailController.dispose();
     _verificationCodeController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+
+    final email = value.trim();
+    if (!email.contains('@') || !email.contains('.')) {
+      return 'Please enter a valid email address';
+    }
+
+    return null;
   }
 
   String? _validateVerificationCode(String? value) {
@@ -69,10 +90,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     try {
       final provider = UserProvider();
-      
+
       // Reset password using verification code from email
       final success = await provider.resetPasswordWithCode(
-        widget.email ?? '',
+        _emailController.text.trim(),
         _verificationCodeController.text,
         _newPasswordController.text,
         _confirmPasswordController.text,
@@ -122,10 +143,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reset Password'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Reset Password'), centerTitle: true),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -155,13 +173,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       const SizedBox(height: 8),
                       const Text(
                         'Enter the verification code from your email and your new password',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'Enter your email address',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.email_outlined),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _validateEmail,
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _verificationCodeController,
                         decoration: const InputDecoration(

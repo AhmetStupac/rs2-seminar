@@ -78,6 +78,31 @@ namespace eCommerce.WebAPI.Controllers
             }
         }
 
+        [HttpPost("refund")]
+        public async Task<IActionResult> RefundPayment([FromBody] RefundPaymentRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
+                return BadRequest("StripePaymentIntentId is required.");
+
+            try
+            {
+                var result = await _paymentService.RefundPaymentAsync(request);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         /// <summary>
         /// Returns all payment records for the specified user.
         /// </summary>

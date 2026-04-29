@@ -24,12 +24,9 @@ class _MasterScreenState extends State<NavBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
-        // Horizontalni layout
         children: [
-          // FIXED SIDEBAR - Uvek vidljiv
           _buildSidebar(),
 
-          // MAIN CONTENT - Tvoj child widget
           Expanded(child: widget.child),
         ],
       ),
@@ -38,8 +35,8 @@ class _MasterScreenState extends State<NavBar> {
 
   Widget _buildSidebar() {
     return Container(
-      width: 200, // Fiksna širina
-      color: Color(0xFFF5F0E8), // Bež boja kao na slici
+      width: 200,
+      color: Color(0xFFF5F0E8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -47,7 +44,7 @@ class _MasterScreenState extends State<NavBar> {
           Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              'Postavke',
+              'Settings',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -59,8 +56,8 @@ class _MasterScreenState extends State<NavBar> {
           // Menu Items
           _buildMenuItem(
             icon: Icons.person,
-            label: 'Profil',
-            routeName: 'Profil',
+            label: 'Profile',
+            routeName: 'Profile',
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const ProfileScreen()),
@@ -111,9 +108,9 @@ class _MasterScreenState extends State<NavBar> {
               label: 'Gym List',
               routeName: 'Gym List',
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (context) => GymListScreen()));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => GymListScreen()),
+                );
               },
             ),
 
@@ -153,8 +150,7 @@ class _MasterScreenState extends State<NavBar> {
               },
             ),
 
-          Spacer(), // Gurni donji deo na dno
-          // Logout dugme
+          Spacer(),
           _buildMenuItem(
             icon: Icons.logout,
             label: 'Logout',
@@ -164,22 +160,21 @@ class _MasterScreenState extends State<NavBar> {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text('Logout'),
-                  content: Text('Da li ste sigurni da želite da se odjavite?'),
+                  content: Text('Are you sure you want to log out?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: Text('Odustani'),
+                      child: Text('Cancel'),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(true),
-                      child: Text('Odjavi se'),
+                      child: Text('Log Out'),
                     ),
                   ],
                 ),
               );
               if (confirmed == true) {
                 AuthProvider.logout();
-                // Vrati korisnika na login screen
                 Navigator.of(
                   context,
                 ).pushNamedAndRemoveUntil('/', (route) => false);
@@ -187,7 +182,6 @@ class _MasterScreenState extends State<NavBar> {
             },
           ),
 
-          // Back dugme
           _buildMenuItem(
             icon: Icons.arrow_back,
             label: 'Back',
@@ -212,9 +206,7 @@ class _MasterScreenState extends State<NavBar> {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: isActive
-            ? Colors.grey[300]
-            : Colors.transparent, // Highlight ako je aktivan
+        color: isActive ? Colors.grey[300] : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(

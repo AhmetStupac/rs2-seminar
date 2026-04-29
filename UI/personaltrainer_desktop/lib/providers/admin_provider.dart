@@ -1,7 +1,7 @@
 ﻿import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:personaltrainer_desktop/config/app_config.dart';
-import 'package:personaltrainer_desktop/providers/auth_provider.dart'; // â­ Dodaj import
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class AdminProvider {
   final String baseUrl = AppConfig.apiBaseUrl;
@@ -37,7 +37,6 @@ class AdminProvider {
   Map<String, String> _createHeaders() {
     String token = AuthProvider.token ?? "";
 
-
     var headers = {"Content-Type": "application/json"};
 
     if (token.isNotEmpty) {
@@ -47,7 +46,7 @@ class AdminProvider {
     return headers;
   }
 
-  // â­ Banovanje korisnika
+  // Ban user
   Future<Map<String, dynamic>> banUser({
     required int userId,
     required String reason,
@@ -65,27 +64,24 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200) {
-        return {'success': true, 'message': 'Korisnik uspeĹˇno banovan'};
+        return {'success': true, 'message': 'User banned successfully'};
       } else if (response.statusCode == 403) {
         final data = jsonDecode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Pristup zabranjen',
+          'message': data['message'] ?? 'Access denied',
         };
       } else if (response.statusCode == 404) {
-        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
+        return {'success': false, 'message': 'User not found'};
       } else {
-        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
+        return {'success': false, 'message': 'Error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'GreĹˇka pri komunikaciji sa serverom: $e',
-      };
+      return {'success': false, 'message': 'Server communication error: $e'};
     }
   }
 
-  // Unbanovanje korisnika
+  // Unban user
   Future<Map<String, dynamic>> unbanUser(int userId) async {
     try {
       final response = await http.post(
@@ -94,18 +90,18 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200) {
-        return {'success': true, 'message': 'Korisnik uspeĹˇno unbanovan'};
+        return {'success': true, 'message': 'User unbanned successfully'};
       } else if (response.statusCode == 404) {
-        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
+        return {'success': false, 'message': 'User not found'};
       } else {
-        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
+        return {'success': false, 'message': 'Error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {'success': false, 'message': 'GreĹˇka: $e'};
+      return {'success': false, 'message': 'Error: $e'};
     }
   }
 
-  // Provera ban statusa
+  // Check ban status
   Future<Map<String, dynamic>> checkBan(int userId) async {
     try {
       final response = await http.get(
@@ -131,27 +127,26 @@ class AdminProvider {
         return {
           'success': false,
           'isBanned': false,
-          'message': 'GreĹˇka pri proveri bana',
+          'message': 'Error checking ban status',
         };
       }
     } catch (e) {
-      return {'success': false, 'isBanned': false, 'message': 'GreĹˇka: $e'};
+      return {'success': false, 'isBanned': false, 'message': 'Error: $e'};
     }
   }
 
-  // Dobavi sve korisnike
+  // Fetch all users
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     try {
       final requestUrl = '${_apiBaseUrl}users';
       final response = await _getWithProtocolFallback(requestUrl);
 
-      if (response.statusCode != 200) {
-      }
+      if (response.statusCode != 200) {}
 
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
 
-        // Proveri da li je response lista ili objekat sa 'items'
+        // Check if response is a list or an object with 'items'
         if (decodedData is List) {
           return decodedData.cast<Map<String, dynamic>>();
         } else if (decodedData is Map && decodedData['items'] != null) {
@@ -168,19 +163,18 @@ class AdminProvider {
     }
   }
 
-  // Dobavi sve obrisane korisnike
+  // Fetch all deleted users
   Future<List<Map<String, dynamic>>> getDeletedUsers() async {
     try {
       final requestUrl = '${_apiBaseUrl}users/deleted';
       final response = await _getWithProtocolFallback(requestUrl);
 
-      if (response.statusCode != 200) {
-      }
+      if (response.statusCode != 200) {}
 
       if (response.statusCode == 200) {
         final dynamic decodedData = jsonDecode(response.body);
 
-        // Proveri da li je response lista ili objekat sa 'items'
+        // Check if response is a list or an object with 'items'
         if (decodedData is List) {
           return decodedData.cast<Map<String, dynamic>>();
         } else if (decodedData is Map && decodedData['items'] != null) {
@@ -197,7 +191,7 @@ class AdminProvider {
     }
   }
 
-  // Soft delete korisnika
+  // Soft delete user
   Future<Map<String, dynamic>> softDeleteUser(int userId) async {
     try {
       final response = await http.delete(
@@ -206,43 +200,40 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        // Ako je prazan body ili 204, vrati uspeh
+        // If body is empty or 204, return success
         if (response.body.isEmpty) {
-          return {'success': true, 'message': 'Korisnik uspeĹˇno obrisan'};
+          return {'success': true, 'message': 'User deleted successfully'};
         }
-        // Ako ima body, pokuĹˇaj da ga parsiraĹˇ
+        // If body exists, try to parse it
         try {
           final data = jsonDecode(response.body);
           return {
             'success': true,
-            'message': data['message'] ?? 'Korisnik uspeĹˇno obrisan',
+            'message': data['message'] ?? 'User deleted successfully',
           };
         } catch (_) {
-          return {'success': true, 'message': 'Korisnik uspeĹˇno obrisan'};
+          return {'success': true, 'message': 'User deleted successfully'};
         }
       } else if (response.statusCode == 403) {
         if (response.body.isNotEmpty) {
           final data = jsonDecode(response.body);
           return {
             'success': false,
-            'message': data['message'] ?? 'Pristup zabranjen',
+            'message': data['message'] ?? 'Access denied',
           };
         }
-        return {'success': false, 'message': 'Pristup zabranjen'};
+        return {'success': false, 'message': 'Access denied'};
       } else if (response.statusCode == 404) {
-        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
+        return {'success': false, 'message': 'User not found'};
       } else {
-        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
+        return {'success': false, 'message': 'Error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'GreĹˇka pri komunikaciji sa serverom: $e',
-      };
+      return {'success': false, 'message': 'Server communication error: $e'};
     }
   }
 
-  // Restore obrisanog korisnika
+  // Restore deleted user
   Future<Map<String, dynamic>> restoreUser(int userId) async {
     try {
       final response = await http.post(
@@ -251,24 +242,20 @@ class AdminProvider {
       );
 
       if (response.statusCode == 200) {
-        return {'success': true, 'message': 'Korisnik uspeĹˇno vraÄ‡en'};
+        return {'success': true, 'message': 'User restored successfully'};
       } else if (response.statusCode == 403) {
         final data = jsonDecode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Pristup zabranjen',
+          'message': data['message'] ?? 'Access denied',
         };
       } else if (response.statusCode == 404) {
-        return {'success': false, 'message': 'Korisnik nije pronaÄ‘en'};
+        return {'success': false, 'message': 'User not found'};
       } else {
-        return {'success': false, 'message': 'GreĹˇka: ${response.statusCode}'};
+        return {'success': false, 'message': 'Error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'GreĹˇka pri komunikaciji sa serverom: $e',
-      };
+      return {'success': false, 'message': 'Server communication error: $e'};
     }
   }
 }
-

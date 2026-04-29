@@ -34,14 +34,10 @@ class BannedScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.block,
-                      size: 80,
-                      color: Colors.red.shade700,
-                    ),
+                    Icon(Icons.block, size: 80, color: Colors.red.shade700),
                     const SizedBox(height: 24),
                     Text(
-                      'Nalog je banovan',
+                      'Account Is Banned',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -59,7 +55,7 @@ class BannedScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Razlog:',
+                            'Reason:',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -73,7 +69,7 @@ class BannedScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     if (bannedAt != null)
                       Text(
-                        'Banovano: ${DateFormat('dd.MM.yyyy HH:mm').format(bannedAt!)}',
+                        'Banned At: ${DateFormat('dd.MM.yyyy HH:mm').format(bannedAt!)}',
                         style: TextStyle(
                           color: Colors.grey.shade700,
                           fontSize: 14,
@@ -91,7 +87,7 @@ class BannedScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
-                          'Permanentno',
+                          'Permanent',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -100,7 +96,7 @@ class BannedScreen extends StatelessWidget {
                       )
                     else if (expiresAt != null)
                       Text(
-                        'Ističe: ${DateFormat('dd.MM.yyyy HH:mm').format(expiresAt!)}',
+                        'Expires: ${DateFormat('dd.MM.yyyy HH:mm').format(expiresAt!)}',
                         style: TextStyle(
                           color: Colors.orange.shade700,
                           fontWeight: FontWeight.bold,
@@ -111,13 +107,12 @@ class BannedScreen extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () {
                         AuthProvider.logout();
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/login',
-                          (route) => false,
-                        );
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/login', (route) => false);
                       },
                       icon: const Icon(Icons.logout),
-                      label: const Text('Odjavi se'),
+                      label: const Text('Log Out'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade700,
                         padding: const EdgeInsets.symmetric(

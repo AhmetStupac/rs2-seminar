@@ -220,12 +220,6 @@ class _TrainingSessionsListScreenState
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton.extended(

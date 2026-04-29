@@ -11,46 +11,42 @@ class AuthInterceptor extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    
     final response = await _client.send(request);
 
-    // Provera bana - 403 Forbidden
+    // Ban check - 403 Forbidden
     if (response.statusCode == 403) {
-      
-      // ProÄŤitaj response body
+      // Read response body
       final responseBody = await response.stream.bytesToString();
-      
+
       try {
         final jsonResponse = jsonDecode(responseBody);
-        
-        // Proveri da li je poruka o banu (a ne neka druga 403 greĹˇka)
+
+        // Check whether the message is about a ban (not another 403 error).
         final message = jsonResponse['message']?.toString().toLowerCase() ?? '';
-        
+
         if (message.contains('banovan') || message.contains('banned')) {
-          
-          // Prebaci na Ban screen
+          // Redirect to banned screen.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             navigatorKey.currentState?.pushAndRemoveUntil(
               MaterialPageRoute(
                 builder: (context) => BannedScreen(
-                  reason: jsonResponse['reason'] ?? 'Nije naveden razlog',
-                  bannedAt: jsonResponse['bannedAt'] != null 
-                      ? DateTime.parse(jsonResponse['bannedAt']) 
+                  reason: jsonResponse['reason'] ?? 'No reason provided',
+                  bannedAt: jsonResponse['bannedAt'] != null
+                      ? DateTime.parse(jsonResponse['bannedAt'])
                       : null,
-                  expiresAt: jsonResponse['expiresAt'] != null 
-                      ? DateTime.parse(jsonResponse['expiresAt']) 
+                  expiresAt: jsonResponse['expiresAt'] != null
+                      ? DateTime.parse(jsonResponse['expiresAt'])
                       : null,
                   isPermanent: jsonResponse['isPermanent'] ?? true,
                 ),
               ),
-              (route) => false, // Ukloni sve prethodne route
+              (route) => false,
             );
           });
         }
-      } catch (e) {
-      }
+      } catch (e) {}
 
-      // Vrati response sa novim stream-om
+      // Return response with a new stream.
       return http.StreamedResponse(
         Stream.value(utf8.encode(responseBody)),
         response.statusCode,
@@ -64,4 +60,3 @@ class AuthInterceptor extends http.BaseClient {
     return response;
   }
 }
-

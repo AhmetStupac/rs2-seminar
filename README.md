@@ -25,9 +25,11 @@ Sistem obuhvata desktop aplikaciju za administratore i trenere, mobilnu aplikaci
 
 1. Pozicionirati se u folder `UI/personaltrainer_desktop/`.
 
-2. Pokrenuti komandu: `flutter run`
+2. Pokrenuti komandu: `flutter run -d windows`
 
 3. Prijaviti se pomoću admin kredencijala (kredencijali u nastavku...).
+
+Ukoliko zelite testirati registraciju ili dodavanje teretana, email trebate napisati u formatu xxx.xxx@edu.fit.ba ili xxx.xxx@xxx.com
 
 ---
 
@@ -49,12 +51,12 @@ Sistem obuhvata desktop aplikaciju za administratore i trenere, mobilnu aplikaci
 - password: test
 
 
-##### PersonalTrainer (desktop)
+##### PersonalTrainer (desktop/uloga trener)
 
 - username: desktop
 - password: test
 
-##### Korisnik (mobilna aplikacija)
+##### Korisnik (mobilna aplikacija/ uloga korisnik)
 
 - username: mobile
 - password: test

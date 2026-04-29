@@ -20,7 +20,7 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return NavBar(
-      "Detalji vježbe",
+      "Exercise Details",
       Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -29,9 +29,7 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ImageUploadScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => ImageUploadScreen()),
                 );
               },
               icon: Icon(Icons.upload_file),
@@ -63,9 +61,7 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => EquipmentScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => EquipmentScreen()),
                 );
               },
               icon: Icon(Icons.fitness_center),
@@ -79,9 +75,7 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => MuscleGroupScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => MuscleGroupScreen()),
                 );
               },
               icon: Icon(Icons.accessibility_new),

@@ -1,11 +1,6 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:personaltrainer_desktop/models/user.dart';
 import 'package:personaltrainer_desktop/providers/user_provider.dart';
-import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
-import 'package:personaltrainer_desktop/providers/auth_provider.dart'
-    as auth_provider;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -25,16 +20,91 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordConfirmationController =
       TextEditingController();
   final UserProvider _userProvider = UserProvider();
-  final BlobStorageProvider _blobStorageProvider = BlobStorageProvider();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscurePasswordConfirmation = true;
 
-  // Image upload state
-  PlatformFile? _selectedFile;
-  Uint8List? _fileBytes;
-  int? _uploadedImageId;
-  bool _isUploadingImage = false;
+  final RegExp _nameRegex = RegExp(r"^[A-Za-z\-'\s]{2,50}$");
+  final RegExp _usernameRegex = RegExp(r'^[a-zA-Z0-9._-]{3,30}$');
+  final RegExp _emailRegex = RegExp(
+    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+  );
+  final RegExp _bosnianPhoneRegex = RegExp(r'^\+387\s6[0-9]\s\d{3}\s\d{3}$');
+
+  String? _validateName(String? value, String fieldName) {
+    final input = value?.trim() ?? '';
+    if (input.isEmpty) {
+      return '$fieldName is required';
+    }
+    if (!_nameRegex.hasMatch(input)) {
+      return '$fieldName must be 2-50 letters only';
+    }
+    return null;
+  }
+
+  String? _validateUsername(String? value) {
+    final input = value?.trim() ?? '';
+    if (input.isEmpty) {
+      return 'Username is required';
+    }
+    if (!_usernameRegex.hasMatch(input)) {
+      return 'Username must be 3-30 chars (letters, numbers, ., _, -)';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    final input = value?.trim() ?? '';
+    if (input.isEmpty) {
+      return 'Email is required';
+    }
+    if (!_emailRegex.hasMatch(input)) {
+      return 'Enter a valid email (e.g. xxx@xxx.com)';
+    }
+    return null;
+  }
+
+  String? _validatePhoneNumber(String? value) {
+    final input = value?.trim() ?? '';
+    if (input.isEmpty) {
+      return 'Phone number is required';
+    }
+    if (!_bosnianPhoneRegex.hasMatch(input)) {
+      return 'Use format +387 61 111 111';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final input = value ?? '';
+    if (input.isEmpty) {
+      return 'Password is required';
+    }
+    if (input.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(input)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!RegExp(r'[a-z]').hasMatch(input)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!RegExp(r'\d').hasMatch(input)) {
+      return 'Password must contain at least one number';
+    }
+    return null;
+  }
+
+  String? _validatePasswordConfirmation(String? value) {
+    final input = value ?? '';
+    if (input.isEmpty) {
+      return 'Password confirmation is required';
+    }
+    if (input != _passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
 
   String _extractErrorMessage(Object error) {
     final message = error.toString().trim();
@@ -67,89 +137,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _pickFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-        withData: true,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _selectedFile = result.files.first;
-          _fileBytes = result.files.first.bytes;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to select file.')));
-      }
-    }
-  }
-
-  void _removeFile() {
-    setState(() {
-      _selectedFile = null;
-      _fileBytes = null;
-      _uploadedImageId = null;
-    });
-  }
-
-  Future<void> _uploadImage() async {
-    if (_selectedFile == null || _fileBytes == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please select an image first')));
-      return;
-    }
-
-    setState(() {
-      _isUploadingImage = true;
-    });
-
-    try {
-      final result = await _blobStorageProvider.uploadFile(
-        _fileBytes!,
-        _selectedFile!.name,
-        false, // isHeader
-      );
-
-      setState(() {
-        _uploadedImageId = result['imageId'];
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Image uploaded successfully! (ID: ${result['imageId']})',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        final errorMessage = e.toString().replaceFirst('Exception: ', '');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to upload image: $errorMessage'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploadingImage = false;
-        });
-      }
-    }
-  }
-
   Future<void> _register() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
@@ -158,15 +145,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       try {
         User user = User(
-          firstName: _firstNameController.text,
-          lastName: _lastNameController.text,
-          username: _usernameController.text,
-          email: _emailController.text,
-          phoneNumber: _phoneNumberController.text,
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          username: _usernameController.text.trim(),
+          email: _emailController.text.trim(),
+          phoneNumber: _phoneNumberController.text.trim(),
           password: _passwordController.text,
           passwordConfirmation: _passwordConfirmationController.text,
           isActive: true,
-          profileImageId: _uploadedImageId, // Include the uploaded image ID
         );
 
         await _userProvider.insert(user);
@@ -238,12 +224,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'First name is required';
-                          }
-                          return null;
-                        },
+                        validator: (value) =>
+                            _validateName(value, 'First name'),
                       ),
                       SizedBox(height: 16),
 
@@ -258,12 +240,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Last name is required';
-                          }
-                          return null;
-                        },
+                        validator: (value) => _validateName(value, 'Last name'),
                       ),
                       SizedBox(height: 16),
 
@@ -278,15 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Username is required';
-                          }
-                          if (value.length < 3) {
-                            return 'Username must be at least 3 characters';
-                          }
-                          return null;
-                        },
+                        validator: _validateUsername,
                       ),
                       SizedBox(height: 16),
 
@@ -302,15 +271,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Email is required';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
+                        validator: _validateEmail,
                       ),
                       SizedBox(height: 16),
 
@@ -319,166 +280,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _phoneNumberController,
                         decoration: InputDecoration(
                           labelText: 'Phone Number',
-                          hintText: 'Enter phone number',
+                          hintText: '+387 61 111 111',
                           prefixIcon: Icon(Icons.phone),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Phone number is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-
-                      // Profile Image Upload Section
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Profile Image (Optional)',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 12),
-
-                            if (_selectedFile == null)
-                              ElevatedButton.icon(
-                                onPressed: _pickFile,
-                                icon: Icon(Icons.upload_file),
-                                label: Text('Select Image'),
-                              )
-                            else
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.image, color: Colors.blue),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _selectedFile!.name,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            '${(_selectedFile!.size / 1024).toStringAsFixed(2)} KB',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        color: Colors.red,
-                                      ),
-                                      onPressed: _removeFile,
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                            // Preview
-                            if (_fileBytes != null) ...[
-                              SizedBox(height: 12),
-                              Container(
-                                height: 150,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey[300]!),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.memory(
-                                    _fileBytes!,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            ],
-
-                            // Upload button
-                            if (_selectedFile != null &&
-                                _uploadedImageId == null) ...[
-                              SizedBox(height: 12),
-                              ElevatedButton.icon(
-                                onPressed: _isUploadingImage
-                                    ? null
-                                    : _uploadImage,
-                                icon: _isUploadingImage
-                                    ? SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      )
-                                    : Icon(Icons.cloud_upload),
-                                label: Text(
-                                  _isUploadingImage
-                                      ? 'Uploading...'
-                                      : 'Upload Image',
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                ),
-                              ),
-                            ],
-
-                            // Show uploaded image ID
-                            if (_uploadedImageId != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.check_circle,
-                                      color: Colors.green,
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Image uploaded (ID: $_uploadedImageId)',
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
+                        validator: _validatePhoneNumber,
                       ),
                       SizedBox(height: 16),
 
@@ -506,15 +315,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
+                        validator: _validatePassword,
                       ),
                       SizedBox(height: 16),
 
@@ -543,15 +344,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password confirmation is required';
-                          }
-                          if (value != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
+                        validator: _validatePasswordConfirmation,
                       ),
                       SizedBox(height: 32),
 

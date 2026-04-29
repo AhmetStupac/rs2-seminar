@@ -111,14 +111,14 @@ class AuthProvider {
     }
   }
 
-  /// BriĹˇe sve korisniÄŤke podatke (logout)
+  /// Clears all user data (logout)
   static void logout() {
     userId = null;
     token = null;
     _role = null;
   }
 
-  /// Provjerava da li je korisnik ulogovan
+  /// Checks whether the user is logged in
   static bool get isLoggedIn => token != null && token!.isNotEmpty;
 }
 

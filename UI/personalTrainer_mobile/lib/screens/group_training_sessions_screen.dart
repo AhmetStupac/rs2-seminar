@@ -120,12 +120,6 @@ class _GroupTrainingSessionsScreenState
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       drawer: const MobileNavBar(currentRoute: 'group_sessions'),
       body: _buildBody(),

@@ -17,5 +17,7 @@ namespace eCommerce.Services.Interface
         /// Marks the payment record as "succeeded" once the client confirms payment.
         /// </summary>
         Task<PaymentResponse> ConfirmPaymentAsync(ConfirmPaymentRequest request);
+
+        Task<PaymentResponse> RefundPaymentAsync(RefundPaymentRequest request);
     }
 }

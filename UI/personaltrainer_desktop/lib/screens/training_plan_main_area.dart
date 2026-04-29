@@ -6,6 +6,7 @@ import 'package:personaltrainer_desktop/providers/exercise_plan.dart';
 import 'package:provider/provider.dart';
 import 'package:personaltrainer_desktop/providers/training_plan_provider.dart';
 import 'package:personaltrainer_desktop/models/training_plan.dart';
+import 'package:personaltrainer_desktop/models/search_result.dart';
 
 class TrainingPlanMainArea extends StatefulWidget {
   const TrainingPlanMainArea({super.key});
@@ -59,14 +60,15 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
       _plansError = null;
     });
     try {
-      final result = await _trainingPlanProvider.get();
+      final SearchResult<TrainingPlan> result =
+          await _trainingPlanProvider.get();
       setState(() {
         _availablePlans = result.result;
         _loadingPlans = false;
       });
     } catch (e) {
       setState(() {
-        _plansError = 'Failed to load plans.';
+        _plansError = e.toString().replaceFirst('Exception: ', '');
         _loadingPlans = false;
       });
     }
@@ -146,7 +148,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Price (â‚¬):',
+                    'Price (€):',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8),
@@ -157,7 +159,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                     ),
                     decoration: InputDecoration(
                       hintText: 'Enter price',
-                      prefixText: 'â‚¬ ',
+                      prefixText: '€ ',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -584,7 +586,7 @@ class _TrainingPlanMainAreaState extends State<TrainingPlanMainArea> {
                                   ),
                                 ),
                                 Text(
-                                  'â‚¬ ${plan.basePrice?.toStringAsFixed(2) ?? ''}',
+                                  '€ ${plan.basePrice?.toStringAsFixed(2) ?? ''}',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,

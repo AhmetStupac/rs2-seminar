@@ -282,7 +282,9 @@ namespace eCommerce.Services.Database
             modelBuilder.Entity<TrainingPlan>().HasData(
                 new TrainingPlan { Id = 1, PersonalTrainerId = 1, UserId = 2, Title = "Beginner Strength Program", Description = "A 4-week program for building foundational strength using compound lifts.", BasePrice = 49.99f, CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
                 new TrainingPlan { Id = 2, PersonalTrainerId = 1, UserId = 2, Title = "Advanced Hypertrophy", Description = "12-week muscle-building program designed for experienced lifters.", BasePrice = 79.99f, CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
-                new TrainingPlan { Id = 3, PersonalTrainerId = 2, UserId = null, Title = "Cardio Blast", Description = "High-intensity cardio program focused on fat loss and endurance.", BasePrice = 39.99f, CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) }
+                new TrainingPlan { Id = 3, PersonalTrainerId = 2, UserId = null, Title = "Cardio Blast", Description = "High-intensity cardio program focused on fat loss and endurance.", BasePrice = 39.99f, CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
+                new TrainingPlan { Id = 4, PersonalTrainerId = 3, UserId = null, Title = "Upper Body Builder", Description = "Focused upper body strength and hypertrophy plan for intermediate clients.", BasePrice = 59.99f, CreatedAt = new DateTime(2026, 1, 16, 0, 0, 0, DateTimeKind.Utc) },
+                new TrainingPlan { Id = 5, PersonalTrainerId = 4, UserId = null, Title = "Boxing Conditioning", Description = "Conditioning plan for boxing stamina, core stability, and footwork.", BasePrice = 69.99f, CreatedAt = new DateTime(2026, 1, 17, 0, 0, 0, DateTimeKind.Utc) }
             );
 
             // NutritionPlan

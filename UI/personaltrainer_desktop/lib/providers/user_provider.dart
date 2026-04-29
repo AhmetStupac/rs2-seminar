@@ -63,9 +63,7 @@ class UserProvider extends BaseProvider<User> {
 
     var body = jsonEncode({"username": username, "password": password});
 
-
     var response = await http.post(uri, headers: headers, body: body);
-
 
     if (response.statusCode == 200 || response.statusCode == 204) {
       // Handle JWT response
@@ -88,7 +86,8 @@ class UserProvider extends BaseProvider<User> {
         try {
           final decoded = jsonDecode(body);
           if (decoded is Map) {
-            message = decoded['message']?.toString() ??
+            message =
+                decoded['message']?.toString() ??
                 decoded['Message']?.toString() ??
                 decoded['detail']?.toString();
           }
@@ -206,9 +205,7 @@ class UserProvider extends BaseProvider<User> {
 
       var body = jsonEncode({"email": email});
 
-
       var response = await http.post(uri, headers: headers, body: body);
-
 
       // Backend returns 200 for both success and "email not found" cases for security
       if (response.statusCode == 200) {
@@ -248,11 +245,11 @@ class UserProvider extends BaseProvider<User> {
 
       var response = await http.post(uri, headers: headers, body: body);
 
-      if (response.statusCode == 200) {
-        return true;
-      } else {
+      if (response.statusCode != 200) {
         return false;
       }
+
+      return _isResetSuccessResponse(response.body);
     } catch (e) {
       return false;
     }
@@ -279,14 +276,60 @@ class UserProvider extends BaseProvider<User> {
 
       var response = await http.post(uri, headers: headers, body: body);
 
-      if (response.statusCode == 200) {
-        return true;
-      } else {
+      if (response.statusCode != 200) {
         return false;
       }
+
+      return _isResetSuccessResponse(response.body);
     } catch (e) {
       return false;
     }
   }
-}
 
+  bool _isResetSuccessResponse(String body) {
+    final trimmed = body.trim();
+
+    if (trimmed.isEmpty) {
+      return true;
+    }
+
+    if (trimmed.toLowerCase() == 'true') {
+      return true;
+    }
+
+    if (trimmed.toLowerCase() == 'false') {
+      return false;
+    }
+
+    try {
+      final decoded = jsonDecode(trimmed);
+
+      if (decoded is bool) {
+        return decoded;
+      }
+
+      if (decoded is Map<String, dynamic>) {
+        final successValue =
+            decoded['success'] ?? decoded['isSuccess'] ?? decoded['result'];
+
+        if (successValue is bool) {
+          return successValue;
+        }
+
+        if (successValue is String) {
+          final value = successValue.toLowerCase();
+          if (value == 'true') {
+            return true;
+          }
+          if (value == 'false') {
+            return false;
+          }
+        }
+      }
+    } catch (e) {
+      // If response format is unexpected, treat it as failure to avoid false positives.
+    }
+
+    return false;
+  }
+}

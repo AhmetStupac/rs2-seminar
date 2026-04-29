@@ -64,9 +64,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
       if (mounted) {
         final message = e.toString().replaceFirst('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('GreĹˇka pri uÄŤitavanju korisnika: $message'),
-          ),
+          SnackBar(content: Text('Error loading users: $message')),
         );
       }
     }
@@ -129,7 +127,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
             child: Row(
               children: [
                 FilterChip(
-                  label: Text(_showDeletedOnly ? 'Obrisani' : 'Svi'),
+                  label: Text(_showDeletedOnly ? 'Deleted' : 'All'),
                   selected: _showDeletedOnly,
                   onSelected: (value) {
                     setState(() {
@@ -161,7 +159,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Pretraga korisnika',
+                              'User Search',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -172,7 +170,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText:
-                                    'PretraĹľi po username, email, imenu ili prezimenu...',
+                                    'Search by username, email, first name, or last name...',
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: _searchQuery.isNotEmpty
                                     ? IconButton(
@@ -205,8 +203,8 @@ class _UsersListScreenState extends State<UsersListScreen> {
                               ? Center(
                                   child: Text(
                                     _searchQuery.isNotEmpty
-                                        ? 'Nema rezultata pretrage'
-                                        : 'Nema korisnika',
+                                        ? 'No search results'
+                                        : 'No users found',
                                   ),
                                 )
                               : ListView.builder(
@@ -312,7 +310,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                                 if (isDeleted) ...[
                                                   const SizedBox(height: 4),
                                                   Text(
-                                                    'OBRISAN',
+                                                    'DELETED',
                                                     style: TextStyle(
                                                       color:
                                                           Colors.grey.shade700,
@@ -325,7 +323,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                                 if (isBanned && !isDeleted) ...[
                                                   const SizedBox(height: 4),
                                                   Text(
-                                                    'BANOVAN: ${user['banReason'] ?? 'Bez razloga'}',
+                                                    'BANNED: ${user['banReason'] ?? 'No reason provided'}',
                                                     style: TextStyle(
                                                       color:
                                                           Colors.red.shade700,
@@ -346,7 +344,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                                       Icons.undo,
                                                       color: Colors.green,
                                                     ),
-                                                    tooltip: 'Vrati korisnika',
+                                                    tooltip: 'Restore user',
                                                     onPressed: () =>
                                                         _showRestoreDialog(
                                                           user,
@@ -358,8 +356,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                                       Icons.delete,
                                                       color: Colors.red,
                                                     ),
-                                                    tooltip:
-                                                        'ObriĹˇi korisnika',
+                                                    tooltip: 'Delete user',
                                                     onPressed: () =>
                                                         _showDeleteDialog(user),
                                                   ),
@@ -411,7 +408,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
     );
 
     if (result == true) {
-      _loadUsers(); // Refresh liste nakon banovanja
+      _loadUsers();
     }
   }
 
@@ -419,19 +416,17 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Unbanuj korisnika'),
-        content: Text(
-          'Da li ste sigurni da Ĺľelite da unbanuŃete ${user['username']}?',
-        ),
+        title: const Text('Unban User'),
+        content: Text('Are you sure you want to unban ${user['username']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('OtkaĹľi'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Unbanuj'),
+            child: const Text('Unban'),
           ),
         ],
       ),
@@ -444,7 +439,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'UspeĹˇno unbanovano'),
+              content: Text(result['message'] ?? 'User unbanned successfully'),
               backgroundColor: Colors.green,
             ),
           );
@@ -452,7 +447,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'GreĹˇka'),
+              content: Text(result['message'] ?? 'Error'),
               backgroundColor: Colors.red,
             ),
           );
@@ -465,19 +460,19 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('ObriĹˇi korisnika'),
+        title: const Text('Delete User'),
         content: Text(
-          'Da li ste sigurni da Ĺľelite da obriĹˇete korisnika ${user['username']}?\n\nOvo je soft delete operacija.',
+          'Are you sure you want to delete user ${user['username']}?\n\nThis is a soft delete operation.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('OtkaĹľi'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('ObriĹˇi'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -490,7 +485,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'UspeĹˇno obrisano'),
+              content: Text(result['message'] ?? 'Deleted successfully'),
               backgroundColor: Colors.green,
             ),
           );
@@ -498,7 +493,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'GreĹˇka'),
+              content: Text(result['message'] ?? 'Error'),
               backgroundColor: Colors.red,
             ),
           );
@@ -511,19 +506,19 @@ class _UsersListScreenState extends State<UsersListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Vrati korisnika'),
+        title: const Text('Restore User'),
         content: Text(
-          'Da li ste sigurni da Ĺľelite da vratite korisnika ${user['username']}?',
+          'Are you sure you want to restore user ${user['username']}?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('OtkaĹľi'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Vrati'),
+            child: const Text('Restore'),
           ),
         ],
       ),
@@ -536,7 +531,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'UspeĹˇno vraÄ‡eno'),
+              content: Text(result['message'] ?? 'Restored successfully'),
               backgroundColor: Colors.green,
             ),
           );
@@ -544,7 +539,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result['message'] ?? 'GreĹˇka'),
+              content: Text(result['message'] ?? 'Error'),
               backgroundColor: Colors.red,
             ),
           );

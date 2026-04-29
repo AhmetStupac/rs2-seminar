@@ -101,123 +101,133 @@ namespace eCommerce.Services
 
         public async Task<UserResponse> CreateAsync(UserUpsertRequest request)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
+            UserResponse? createdUser = null;
 
-            // Check for duplicate email and username
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            await strategy.ExecuteAsync(async () =>
             {
-                throw new InvalidOperationException("A user with this email already exists.");
-            }
-            
-            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-            {
-                throw new InvalidOperationException("A user with this username already exists.");
-            }
-            
-            var user = new User
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                Username = request.Username,
-                PhoneNumber = request.PhoneNumber,
-                IsActive = request.IsActive,
-                ProfileImageId = request.ProfileImageId,
-                CreatedAt = DateTime.UtcNow,
-                IsDeleted = false  // Explicitly set to false to ensure query filters don't exclude it
-            };
+                await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            // Handle password if provided
-            if (!string.IsNullOrEmpty(request.Password))
-            {
-                byte[] salt;
-                user.PasswordHash = HashPassword(request.Password, out salt);
-                user.PasswordSalt = Convert.ToBase64String(salt);
-            }
+                if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                {
+                    throw new InvalidOperationException("A user with this email already exists.");
+                }
 
-            // Registration default role: always assign role with Id = 2
-            const int defaultRoleId = 2;
-            var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
-            if (!defaultRoleExists)
-            {
-                throw new InvalidOperationException("Default role (Id = 2) not found.");
-            }
+                if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+                {
+                    throw new InvalidOperationException("A user with this username already exists.");
+                }
 
-            user.UserRoles.Add(new UserRole
-            {
-                RoleId = defaultRoleId,
-                DateAssigned = DateTime.UtcNow
+                var user = new User
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    Username = request.Username,
+                    PhoneNumber = request.PhoneNumber,
+                    IsActive = request.IsActive,
+                    ProfileImageId = request.ProfileImageId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+
+                if (!string.IsNullOrEmpty(request.Password))
+                {
+                    byte[] salt;
+                    user.PasswordHash = HashPassword(request.Password, out salt);
+                    user.PasswordSalt = Convert.ToBase64String(salt);
+                }
+
+                const int defaultRoleId = 2;
+                var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
+                if (!defaultRoleExists)
+                {
+                    throw new InvalidOperationException("Default role (Id = 2) not found.");
+                }
+
+                user.UserRoles.Add(new UserRole
+                {
+                    RoleId = defaultRoleId,
+                    DateAssigned = DateTime.UtcNow
+                });
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                createdUser = await GetUserResponseWithRolesAsync(user.Id);
             });
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            return await GetUserResponseWithRolesAsync(user.Id);
+            return createdUser!;
         }
 
         public async Task<UserResponse?> UpdateAsync(int id, UserUpsertRequest request)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
+            var strategy = _context.Database.CreateExecutionStrategy();
+            UserResponse? updatedUser = null;
 
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-                return null;
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            // Check for duplicate email and username (excluding current user)
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != id))
-            {
-                throw new InvalidOperationException("A user with this email already exists.");
-            }
-            
-            if (await _context.Users.AnyAsync(u => u.Username == request.Username && u.Id != id))
-            {
-                throw new InvalidOperationException("A user with this username already exists.");
-            }
-
-            user.FirstName = request.FirstName;
-            user.LastName = request.LastName;
-            user.Email = request.Email;
-            user.Username = request.Username;
-            user.PhoneNumber = request.PhoneNumber;
-            user.IsActive = request.IsActive;
-            user.ProfileImageId = request.ProfileImageId;
-
-            // Handle password if provided
-            if (!string.IsNullOrEmpty(request.Password))
-            {
-                byte[] salt;
-                user.PasswordHash = HashPassword(request.Password, out salt);
-                user.PasswordSalt = Convert.ToBase64String(salt);
-            }
-            
-            // Update roles
-            // First, remove all existing roles
-            var existingUserRoles = await _context.UserRoles.Where(ur => ur.UserId == id).ToListAsync();
-            _context.UserRoles.RemoveRange(existingUserRoles);
-            
-            // Then add the new roles
-            if (request.RoleIds != null && request.RoleIds.Count > 0)
-            {
-                foreach (var roleId in request.RoleIds)
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
                 {
-                    // Check if role exists
-                    if (await _context.Roles.AnyAsync(r => r.Id == roleId))
+                    updatedUser = null;
+                    return;
+                }
+
+                if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != id))
+                {
+                    throw new InvalidOperationException("A user with this email already exists.");
+                }
+
+                if (await _context.Users.AnyAsync(u => u.Username == request.Username && u.Id != id))
+                {
+                    throw new InvalidOperationException("A user with this username already exists.");
+                }
+
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.Email = request.Email;
+                user.Username = request.Username;
+                user.PhoneNumber = request.PhoneNumber;
+                user.IsActive = request.IsActive;
+                user.ProfileImageId = request.ProfileImageId;
+
+                if (!string.IsNullOrEmpty(request.Password))
+                {
+                    byte[] salt;
+                    user.PasswordHash = HashPassword(request.Password, out salt);
+                    user.PasswordSalt = Convert.ToBase64String(salt);
+                }
+
+                var existingUserRoles = await _context.UserRoles.Where(ur => ur.UserId == id).ToListAsync();
+                _context.UserRoles.RemoveRange(existingUserRoles);
+
+                if (request.RoleIds != null && request.RoleIds.Count > 0)
+                {
+                    foreach (var roleId in request.RoleIds)
                     {
-                        var userRole = new UserRole
+                        if (await _context.Roles.AnyAsync(r => r.Id == roleId))
                         {
-                            UserId = user.Id,
-                            RoleId = roleId,
-                            DateAssigned = DateTime.UtcNow
-                        };
-                        _context.UserRoles.Add(userRole);
+                            var userRole = new UserRole
+                            {
+                                UserId = user.Id,
+                                RoleId = roleId,
+                                DateAssigned = DateTime.UtcNow
+                            };
+                            _context.UserRoles.Add(userRole);
+                        }
                     }
                 }
-            }
-            
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return await GetUserResponseWithRolesAsync(user.Id);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                updatedUser = await GetUserResponseWithRolesAsync(user.Id);
+            });
+
+            return updatedUser;
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -482,8 +492,10 @@ namespace eCommerce.Services
 
         public async Task<bool> ForgotPasswordAsync(string email)
         {
+            email = email?.Trim();
+
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email);
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
             // Don't reveal if email exists in the system (security best practice)
             if (user == null)
@@ -505,15 +517,18 @@ namespace eCommerce.Services
 
         public async Task<bool> ResetPasswordAsync(string email, string code, string newPassword)
         {
+            email = email?.Trim();
+            code = code?.Trim();
+
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == email);
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
             if (user == null)
                 return false;
 
             // Validate code
             if (string.IsNullOrEmpty(user.ResetCode) || 
-                user.ResetCode != code || 
+                user.ResetCode.Trim() != code || 
                 user.ResetCodeExpiry == null || 
                 user.ResetCodeExpiry < DateTime.UtcNow)
             {

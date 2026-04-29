@@ -38,6 +38,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _newImageUploaded =
       false; // Track if a new image was uploaded this session
 
+  String? _firstNameError;
+  String? _lastNameError;
+  String? _emailError;
+  String? _phoneError;
+  String? _usernameError;
+  String? _imageUploadError;
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _selectedFile = result.files.first;
           _fileBytes = result.files.first.bytes;
           _newImageUploaded = false; // Reset flag when new file is picked
+          _imageUploadError = null;
         });
       }
     } catch (e) {
@@ -116,14 +124,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _selectedFile = null;
       _fileBytes = null;
       _newImageUploaded = false;
+      _imageUploadError = null;
     });
   }
 
   Future<void> _uploadImage() async {
     if (_selectedFile == null || _fileBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an image first')),
-      );
+      setState(() {
+        _imageUploadError = 'Please select an image first';
+      });
       return;
     }
 
@@ -141,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _uploadedImageId = result['imageId'];
         _newImageUploaded = true; // Mark that a new image was uploaded
+        _imageUploadError = null;
       });
 
       if (mounted) {
@@ -172,51 +182,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String? _validate() {
-    if (_firstNameController.text.trim().isEmpty)
-      return 'First name cannot be empty.';
-    if (_lastNameController.text.trim().isEmpty)
-      return 'Last name cannot be empty.';
-    if (_emailController.text.trim().isEmpty) return 'Email cannot be empty.';
+  bool _validate() {
+    String? firstNameError;
+    String? lastNameError;
+    String? emailError;
+    String? phoneError;
+    String? usernameError;
+
+    if (_firstNameController.text.trim().isEmpty) {
+      firstNameError = 'First name cannot be empty.';
+    }
+    if (_lastNameController.text.trim().isEmpty) {
+      lastNameError = 'Last name cannot be empty.';
+    }
+    if (_emailController.text.trim().isEmpty) {
+      emailError = 'Email cannot be empty.';
+    }
+
     final emailComRegex = RegExp(
       r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@[a-zA-Z0-9]+\.com$',
     );
     final emailEduRegex = RegExp(r'^[a-zA-Z0-9]+\.[a-zA-Z0-9]+@edu\.fit\.ba$');
     final email = _emailController.text.trim();
-    if (!emailComRegex.hasMatch(email) && !emailEduRegex.hasMatch(email))
-      return 'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
-    if (_phoneController.text.trim().isEmpty)
-      return 'Phone number cannot be empty.';
+    if (emailError == null &&
+        !emailComRegex.hasMatch(email) &&
+        !emailEduRegex.hasMatch(email)) {
+      emailError =
+          'Email must be in format firstname.lastname@domain.com or firstname.lastname@edu.fit.ba';
+    }
+
+    if (_phoneController.text.trim().isEmpty) {
+      phoneError = 'Phone number cannot be empty.';
+    }
+
     final phoneRegex = RegExp(r'^\+387 6[0-9] [0-9]{3} [0-9]{3}$');
-    if (!phoneRegex.hasMatch(_phoneController.text.trim()))
-      return 'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
-    if (_usernameController.text.trim().isEmpty)
-      return 'Username cannot be empty.';
-    return null;
+    if (phoneError == null && !phoneRegex.hasMatch(_phoneController.text.trim())) {
+      phoneError =
+          'Phone must be in format +387 6x xxx xxx (e.g. +387 61 234 567).';
+    }
+
+    if (_usernameController.text.trim().isEmpty) {
+      usernameError = 'Username cannot be empty.';
+    }
+
+    setState(() {
+      _firstNameError = firstNameError;
+      _lastNameError = lastNameError;
+      _emailError = emailError;
+      _phoneError = phoneError;
+      _usernameError = usernameError;
+    });
+
+    return firstNameError == null &&
+        lastNameError == null &&
+        emailError == null &&
+        phoneError == null &&
+        usernameError == null;
   }
 
   Future<void> _saveChanges() async {
     if (_user == null) return;
 
-    final validationError = _validate();
-    if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(validationError),
-            ],
-          ),
-          backgroundColor: Colors.orange[700],
-          duration: const Duration(seconds: 3),
-        ),
-      );
+    final isValid = _validate();
+    if (!isValid) {
       return;
     }
 
@@ -517,6 +545,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
 
+                          if (_imageUploadError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                _imageUploadError!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+
                           if (_newImageUploaded)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
@@ -547,7 +587,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           TextField(
                             controller: _firstNameController,
-                            decoration: const InputDecoration(
+                            onChanged: (_) {
+                              if (_firstNameError != null) {
+                                setState(() => _firstNameError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
                               labelText: 'First Name',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -557,13 +602,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 1.2,
                               ),
                               alignLabelWithHint: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              errorText: _firstNameError,
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _lastNameController,
-                            decoration: const InputDecoration(
+                            onChanged: (_) {
+                              if (_lastNameError != null) {
+                                setState(() => _lastNameError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
                               labelText: 'Last Name',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -573,13 +624,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 1.2,
                               ),
                               alignLabelWithHint: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              errorText: _lastNameError,
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _emailController,
-                            decoration: const InputDecoration(
+                            onChanged: (_) {
+                              if (_emailError != null) {
+                                setState(() => _emailError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
                               labelText: 'Email',
                               hintText:
                                   'e.g. john.doe@gmail.com or john.doe@edu.fit.ba',
@@ -591,13 +648,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 1.2,
                               ),
                               alignLabelWithHint: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              errorText: _emailError,
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _phoneController,
-                            decoration: const InputDecoration(
+                            onChanged: (_) {
+                              if (_phoneError != null) {
+                                setState(() => _phoneError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
                               labelText: 'Phone',
                               hintText: '+387 6x xxx xxx',
                               labelStyle: TextStyle(
@@ -608,13 +671,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 1.2,
                               ),
                               alignLabelWithHint: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              errorText: _phoneError,
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _usernameController,
-                            decoration: const InputDecoration(
+                            onChanged: (_) {
+                              if (_usernameError != null) {
+                                setState(() => _usernameError = null);
+                              }
+                            },
+                            decoration: InputDecoration(
                               labelText: 'Username',
                               labelStyle: TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -624,7 +693,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 1.2,
                               ),
                               alignLabelWithHint: true,
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              errorText: _usernameError,
                             ),
                           ),
                           const SizedBox(height: 24),

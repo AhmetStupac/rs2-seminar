@@ -173,16 +173,6 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.attach_file),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Adding files - soon available'),
-                ),
-              );
-            },
-          ),
           Expanded(
             child: TextField(
               controller: _messageController,

@@ -35,9 +35,32 @@ abstract class BaseProvider<T> with ChangeNotifier {
 
       var result = SearchResult<T>();
 
-      result.count = data['totalCount'] ?? 0;
-      for (var item in data['items'] ?? []) {
-        result.result.add(fromJson(item));
+      if (data is List) {
+        result.count = data.length;
+        for (var item in data) {
+          result.result.add(fromJson(item));
+        }
+        return result;
+      }
+
+      if (data is Map<String, dynamic>) {
+        final dynamic rawItems =
+            data['items'] ?? data['result'] ?? data['data'] ?? [];
+
+        if (rawItems is List) {
+          result.count =
+              data['totalCount'] ?? data['count'] ?? rawItems.length;
+          for (var item in rawItems) {
+            result.result.add(fromJson(item));
+          }
+        } else if (rawItems is Map<String, dynamic>) {
+          result.count = 1;
+          result.result.add(fromJson(rawItems));
+        } else {
+          result.count = data['totalCount'] ?? data['count'] ?? 0;
+        }
+
+        return result;
       }
 
       return result;

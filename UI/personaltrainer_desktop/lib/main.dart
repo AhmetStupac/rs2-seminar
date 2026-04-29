@@ -414,7 +414,7 @@ class LoginPage extends StatelessWidget {
   }
 
   void _showResetPasswordDialog(BuildContext context) {
-    final TextEditingController tokenController = TextEditingController();
+    final TextEditingController emailController = TextEditingController();
 
     showDialog(
       context: context,
@@ -425,18 +425,18 @@ class LoginPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Paste your reset link or token from the email:",
+              "Enter your account email to receive a verification code:",
               style: TextStyle(fontSize: 14),
             ),
             SizedBox(height: 12),
             TextField(
-              controller: tokenController,
+              controller: emailController,
               decoration: InputDecoration(
-                labelText: "Reset Link or Token",
-                hintText: "personaltrainerapp://reset-password?token=...",
+                labelText: "Email",
+                hintText: "name@example.com",
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3,
+              keyboardType: TextInputType.emailAddress,
             ),
           ],
         ),
@@ -446,46 +446,38 @@ class LoginPage extends StatelessWidget {
             child: Text("Cancel"),
           ),
           ElevatedButton(
-            onPressed: () {
-              final input = tokenController.text.trim();
-              if (input.isEmpty) {
+            onPressed: () async {
+              final email = emailController.text.trim();
+              if (email.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Please paste a reset link or token")),
+                  SnackBar(content: Text("Please enter your email")),
                 );
                 return;
               }
 
-              String? token;
-              String? email;
-
-              // Try to extract token from URL
-              if (input.contains('token=') || input.contains('email=')) {
-                final parsedUri = Uri.tryParse(input);
-                if (parsedUri != null) {
-                  token = parsedUri.queryParameters['token'];
-                  email = parsedUri.queryParameters['email'];
-                } else {
-                  // Try to extract from plain string
-                  final tokenMatch = RegExp(
-                    r'token=([^&\s]+)',
-                  ).firstMatch(input);
-                  if (tokenMatch != null) {
-                    token = tokenMatch.group(1);
-                  }
-                  final emailMatch = RegExp(
-                    r'email=([^&\s]+)',
-                  ).firstMatch(input);
-                  if (emailMatch != null) {
-                    email = emailMatch.group(1);
-                  }
-                }
-              } else {
-                // Assume entire input is the token
-                token = input;
+              if (!email.contains('@') || !email.contains('.')) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Please enter a valid email")),
+                );
+                return;
               }
 
-              if (token != null && token.isNotEmpty) {
-                Navigator.pop(context); // Close dialog
+              final userProvider = UserProvider();
+              final success = await userProvider.forgotPassword(email);
+
+              if (!context.mounted) {
+                return;
+              }
+
+              if (success) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "If the email exists, a verification code has been sent.",
+                    ),
+                  ),
+                );
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => ChangePasswordScreen(email: email),
@@ -493,7 +485,7 @@ class LoginPage extends StatelessWidget {
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Could not extract token from input")),
+                  SnackBar(content: Text("Failed to send verification code")),
                 );
               }
             },

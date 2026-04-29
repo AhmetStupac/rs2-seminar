@@ -47,6 +47,15 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
   int? _selectedPlanId;
   bool isLoading = false;
   String? errorMessage;
+  String? _titleError;
+  String? _userError;
+  String? _trainerError;
+  String? _descriptionError;
+  String? _totalCaloriesError;
+  String? _proteinError;
+  String? _carbsError;
+  String? _fatsError;
+  String? _priceError;
 
   @override
   void initState() {
@@ -161,14 +170,73 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     final double? proteinNum = double.tryParse(protein);
     final double? carbsNum = double.tryParse(carbs);
 
-    if (title.isEmpty ||
-        totalCaloriesNum == null ||
-        proteinNum == null ||
-        carbsNum == null ||
-        fatsInt == null ||
-        priceDouble == null) {
+    String? titleError;
+    String? userError;
+    String? trainerError;
+    String? descriptionError;
+    String? totalCaloriesError;
+    String? proteinError;
+    String? carbsError;
+    String? fatsError;
+    String? priceError;
+
+    if (title.isEmpty) titleError = 'Title is required.';
+    if (_selectedUserId == null) userError = 'User is required.';
+    if (_selectedPersonalTrainerId == null) {
+      trainerError = 'Personal trainer is required.';
+    }
+    if (desc.isEmpty) descriptionError = 'Description is required.';
+
+    if (totalCalories.isEmpty) {
+      totalCaloriesError = 'Total calories is required.';
+    } else if (totalCaloriesNum == null) {
+      totalCaloriesError = 'Total calories must be a valid number.';
+    }
+
+    if (protein.isEmpty) {
+      proteinError = 'Protein is required.';
+    } else if (proteinNum == null) {
+      proteinError = 'Protein must be a valid number.';
+    }
+
+    if (carbs.isEmpty) {
+      carbsError = 'Carbs is required.';
+    } else if (carbsNum == null) {
+      carbsError = 'Carbs must be a valid number.';
+    }
+
+    if (FatsController.text.trim().isEmpty) {
+      fatsError = 'Fats is required.';
+    } else if (fatsInt == null) {
+      fatsError = 'Fats must be a valid whole number.';
+    }
+
+    if (PriceController.text.trim().isEmpty) {
+      priceError = 'Price is required.';
+    } else if (priceDouble == null) {
+      priceError = 'Price must be a valid number.';
+    }
+
+    if (titleError != null ||
+        userError != null ||
+        trainerError != null ||
+        descriptionError != null ||
+        totalCaloriesError != null ||
+        proteinError != null ||
+        carbsError != null ||
+        fatsError != null ||
+        priceError != null) {
       setState(() {
-        errorMessage = 'Please fill all required fields.';
+        _titleError = titleError;
+        _userError = userError;
+        _trainerError = trainerError;
+        _descriptionError = descriptionError;
+        _totalCaloriesError = totalCaloriesError;
+        _proteinError = proteinError;
+        _carbsError = carbsError;
+        _fatsError = fatsError;
+        _priceError = priceError;
+        errorMessage = null;
       });
       return;
     }
@@ -176,6 +244,15 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
     setState(() {
       isLoading = true;
       errorMessage = null;
+      _titleError = null;
+      _userError = null;
+      _trainerError = null;
+      _descriptionError = null;
+      _totalCaloriesError = null;
+      _proteinError = null;
+      _carbsError = null;
+      _fatsError = null;
+      _priceError = null;
     });
 
     final NutritionPlan plan = NutritionPlan(
@@ -246,6 +323,15 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
       FatsController.clear();
       PriceController.clear();
       errorMessage = null;
+      _titleError = null;
+      _userError = null;
+      _trainerError = null;
+      _descriptionError = null;
+      _totalCaloriesError = null;
+      _proteinError = null;
+      _carbsError = null;
+      _fatsError = null;
+      _priceError = null;
     });
   }
 
@@ -303,17 +389,34 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Title',
+              '* All fields are required',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Title *',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
             TextField(
               controller: TitleController,
-              decoration: InputDecoration(border: OutlineInputBorder()),
+              onChanged: (_) {
+                if (_titleError != null) {
+                  setState(() => _titleError = null);
+                }
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                errorText: _titleError,
+              ),
             ),
             SizedBox(height: 12),
             Text(
-              'User',
+              'User *',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
@@ -352,11 +455,15 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                   );
                 }).toList(),
                 onChanged: (v) {
-                  setState(() => _selectedUserId = v);
+                  setState(() {
+                    _selectedUserId = v;
+                    _userError = null;
+                  });
                 },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Select user (optional)',
+                  hintText: 'Select user',
+                  errorText: _userError,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 14,
@@ -365,7 +472,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
               ),
             SizedBox(height: 16),
             Text(
-              'Personal Trainer',
+              'Personal Trainer *',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
@@ -415,11 +522,15 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                   );
                 }).toList(),
                 onChanged: (v) {
-                  setState(() => _selectedPersonalTrainerId = v);
+                  setState(() {
+                    _selectedPersonalTrainerId = v;
+                    _trainerError = null;
+                  });
                 },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'Select personal trainer (optional)',
+                  hintText: 'Select personal trainer',
+                  errorText: _trainerError,
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 14,
@@ -428,14 +539,22 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
               ),
             SizedBox(height: 16),
             Text(
-              'Description',
+              'Description *',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
             TextField(
               controller: DescriptionController,
               maxLines: 3,
-              decoration: InputDecoration(border: OutlineInputBorder()),
+              onChanged: (_) {
+                if (_descriptionError != null) {
+                  setState(() => _descriptionError = null);
+                }
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                errorText: _descriptionError,
+              ),
             ),
             SizedBox(height: 16),
             Row(
@@ -445,7 +564,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Calories',
+                        'Total Calories *',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       SizedBox(height: 8),
@@ -454,8 +573,14 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        onChanged: (_) {
+                          if (_totalCaloriesError != null) {
+                            setState(() => _totalCaloriesError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
+                          errorText: _totalCaloriesError,
                         ),
                       ),
                     ],
@@ -467,7 +592,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Protein',
+                        'Protein *',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       SizedBox(height: 8),
@@ -476,8 +601,14 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        onChanged: (_) {
+                          if (_proteinError != null) {
+                            setState(() => _proteinError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
+                          errorText: _proteinError,
                         ),
                       ),
                     ],
@@ -493,7 +624,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Carbs',
+                        'Carbs *',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       SizedBox(height: 8),
@@ -502,8 +633,14 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        onChanged: (_) {
+                          if (_carbsError != null) {
+                            setState(() => _carbsError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
+                          errorText: _carbsError,
                         ),
                       ),
                     ],
@@ -515,15 +652,21 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Fats',
+                        'Fats *',
                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       SizedBox(height: 8),
                       TextField(
                         controller: FatsController,
                         keyboardType: TextInputType.number,
+                        onChanged: (_) {
+                          if (_fatsError != null) {
+                            setState(() => _fatsError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
+                          errorText: _fatsError,
                         ),
                       ),
                     ],
@@ -533,16 +676,22 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
             ),
             SizedBox(height: 16),
             Text(
-              'Price (â‚¬)',
+              'Price (€) *',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
             TextField(
               controller: PriceController,
               keyboardType: TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) {
+                if (_priceError != null) {
+                  setState(() => _priceError = null);
+                }
+              },
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                prefixText: 'â‚¬ ',
+                prefixText: '€ ',
+                errorText: _priceError,
               ),
             ),
             SizedBox(height: 24),
@@ -687,7 +836,7 @@ class _NutritionPlanMainAreaState extends State<NutritionPlanMainArea> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                'â‚¬ ${plan.price?.toStringAsFixed(2) ?? "0.00"}',
+                                '€ ${plan.price?.toStringAsFixed(2) ?? "0.00"}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

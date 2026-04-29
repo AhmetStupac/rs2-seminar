@@ -38,6 +38,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
   PlatformFile? _selectedFile;
   Uint8List? _fileBytes;
   bool _isUploading = false;
+  String? _fileValidationError;
 
   @override
   void initState() {
@@ -74,9 +75,9 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
 
   Future<void> _uploadImageOnly() async {
     if (_selectedFile == null || _fileBytes == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please select a file')));
+      setState(() {
+        _fileValidationError = 'Please select a file';
+      });
       return;
     }
 
@@ -127,6 +128,7 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
         setState(() {
           _selectedFile = result.files.first;
           _fileBytes = result.files.first.bytes;
+          _fileValidationError = null;
         });
       }
     } catch (e) {
@@ -142,15 +144,16 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
     setState(() {
       _selectedFile = null;
       _fileBytes = null;
+      _fileValidationError = null;
     });
   }
 
   Future<void> _sendToApi() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_selectedFile == null || _fileBytes == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Please select a file')));
+        setState(() {
+          _fileValidationError = 'Please select a file';
+        });
         return;
       }
 
@@ -158,16 +161,16 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Potvrda slanja'),
-          content: Text('Da li ste sigurni da Ĺľelite poslati podatke?'),
+          title: Text('Confirm Submission'),
+          content: Text('Are you sure you want to send this data?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Odustani'),
+              child: Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text('PoĹˇalji'),
+              child: Text('Submit'),
             ),
           ],
         ),
@@ -319,6 +322,17 @@ class _ImageUploadScreenState extends State<ImageUploadScreen> {
                                 ],
                               ),
                             ),
+
+                          if (_fileValidationError != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              _fileValidationError!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
 
                           // Preview slike
                           if (_fileBytes != null) ...[

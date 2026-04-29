@@ -49,6 +49,8 @@ namespace eCommerce.Services
 
         public async Task<PaymentIntentResponse> CreatePaymentIntentAsync(PaymentCreateRequest request)
         {
+            await EnsureNoDuplicatePurchaseAsync(request);
+
             var amountInCents = await ResolveAmountInCentsAsync(request);
 
             var options = new PaymentIntentCreateOptions
@@ -126,6 +128,57 @@ namespace eCommerce.Services
             return MapToResponse(record);
         }
 
+        public async Task<PaymentResponse> RefundPaymentAsync(RefundPaymentRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
+                throw new ArgumentException("StripePaymentIntentId is required.");
+
+            var record = await _context.Set<Payment>()
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == request.StripePaymentIntentId);
+
+            if (record == null)
+                throw new KeyNotFoundException($"No payment record found for intent '{request.StripePaymentIntentId}'.");
+
+            var currentUserId = GetCurrentUserId();
+            var isAdmin = IsCurrentUserAdmin();
+            if (!isAdmin && record.UserId != currentUserId)
+                throw new UnauthorizedAccessException("You are not allowed to refund this payment.");
+
+            if (string.Equals(record.Status, "refunded", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Payment is already refunded.");
+
+            if (!string.Equals(record.Status, "succeeded", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Only succeeded payments can be refunded.");
+
+            var intentService = new PaymentIntentService();
+            var intent = await intentService.GetAsync(request.StripePaymentIntentId);
+
+            if (intent == null)
+                throw new InvalidOperationException("Stripe PaymentIntent was not found.");
+
+            var refundService = new RefundService();
+            var refund = await refundService.CreateAsync(new RefundCreateOptions
+            {
+                PaymentIntent = request.StripePaymentIntentId
+            });
+
+            record.Status = string.Equals(refund.Status, "succeeded", StringComparison.OrdinalIgnoreCase)
+                ? "refunded"
+                : "refund_pending";
+
+            if (string.Equals(refund.Status, "failed", StringComparison.OrdinalIgnoreCase))
+            {
+                await _context.SaveChangesAsync();
+                throw new InvalidOperationException("Refund failed on Stripe.");
+            }
+
+            await RevertPurchaseEffectsAsync(record);
+
+            await _context.SaveChangesAsync();
+
+            return MapToResponse(record);
+        }
+
         private async Task ApplyPurchaseEffectsAsync(Payment record)
         {
             if (!record.ItemId.HasValue)
@@ -150,6 +203,92 @@ namespace eCommerce.Services
                         throw new KeyNotFoundException($"TrainingPlan with id {record.ItemId.Value} not found.");
 
                     plan.UserId = record.UserId;
+                    break;
+                }
+
+                case PaymentItemType.Membership:
+                default:
+                    break;
+            }
+        }
+
+        private async Task EnsureNoDuplicatePurchaseAsync(PaymentCreateRequest request)
+        {
+            switch (request.ItemType)
+            {
+                case PaymentItemType.TrainingPlan:
+                {
+                    if (!request.ItemId.HasValue)
+                        return;
+
+                    var plan = await _context.Set<Database.TrainingPlan>().FindAsync(request.ItemId.Value);
+                    if (plan != null && plan.UserId == request.UserId)
+                        throw new InvalidOperationException("You already purchased this training plan.");
+                    break;
+                }
+
+                case PaymentItemType.NutritionPlan:
+                {
+                    if (!request.ItemId.HasValue)
+                        return;
+
+                    var plan = await _context.Set<Database.NutritionPlan>().FindAsync(request.ItemId.Value);
+                    if (plan != null && plan.UserId == request.UserId)
+                        throw new InvalidOperationException("You already purchased this nutrition plan.");
+                    break;
+                }
+
+                case PaymentItemType.Membership:
+                default:
+                    break;
+            }
+
+            var hasActivePayment = await _context.Set<Payment>()
+                .AnyAsync(p => p.UserId == request.UserId
+                    && p.ItemType == request.ItemType
+                    && p.ItemId == request.ItemId
+                    && !string.Equals(p.Status, "refunded", StringComparison.OrdinalIgnoreCase));
+
+            if (!hasActivePayment)
+                return;
+
+            var message = request.ItemType switch
+            {
+                PaymentItemType.TrainingPlan => "You already purchased this training plan.",
+                PaymentItemType.NutritionPlan => "You already purchased this nutrition plan.",
+                PaymentItemType.Membership => "You already have an active membership for this trainer.",
+                _ => "You already purchased this item."
+            };
+
+            throw new InvalidOperationException(message);
+        }
+
+        private async Task RevertPurchaseEffectsAsync(Payment record)
+        {
+            if (!record.ItemId.HasValue)
+                return;
+
+            switch (record.ItemType)
+            {
+                case PaymentItemType.NutritionPlan:
+                {
+                    var plan = await _context.Set<Database.NutritionPlan>().FindAsync(record.ItemId.Value);
+                    if (plan == null)
+                        throw new KeyNotFoundException($"NutritionPlan with id {record.ItemId.Value} not found.");
+
+                    if (plan.UserId == record.UserId)
+                        plan.UserId = null;
+                    break;
+                }
+
+                case PaymentItemType.TrainingPlan:
+                {
+                    var plan = await _context.Set<Database.TrainingPlan>().FindAsync(record.ItemId.Value);
+                    if (plan == null)
+                        throw new KeyNotFoundException($"TrainingPlan with id {record.ItemId.Value} not found.");
+
+                    if (plan.UserId == record.UserId)
+                        plan.UserId = null;
                     break;
                 }
 
