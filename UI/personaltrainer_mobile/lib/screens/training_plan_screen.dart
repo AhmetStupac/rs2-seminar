@@ -51,8 +51,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
         filter: {'userId': AuthProvider.userId.toString()},
       );
 
-      for (var plan in result.result) {
-      }
+      for (var plan in result.result) {}
 
       setState(() {
         _trainingPlans = result.result;
@@ -71,7 +70,6 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       _isLoadingExercises = true;
     });
 
-
     try {
       // First try with includeProperties
       var result = await _exercisePlanProvider.get(
@@ -80,7 +78,6 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
           'includeProperties': 'Exercise,Exercise.Equipment,Exercise.Image',
         },
       );
-
 
       // If no results, try without includeProperties
       if (result.result.isEmpty) {
@@ -92,12 +89,10 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       // If still no results, try getting ALL exercise plans to debug
       if (result.result.isEmpty) {
         final allPlans = await _exercisePlanProvider.get();
-        for (var plan in allPlans.result) {
-        }
+        for (var plan in allPlans.result) {}
       }
 
-      for (var plan in result.result) {
-      }
+      for (var plan in result.result) {}
 
       setState(() {
         _exercisePlans = result.result;
@@ -301,10 +296,6 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.more_vert, color: Colors.black87),
-                      onPressed: () {},
                     ),
                   ],
                 ),

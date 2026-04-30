@@ -57,7 +57,7 @@ namespace eCommerce.Services
 
             if (!string.IsNullOrWhiteSpace(search.Gender))
             {
-                query = query.Where(pt => pt.Gender != null && pt.Gender.Equals(search.Gender));
+                query = query.Where(pt => pt.Gender != null && pt.Gender.ToLower() == search.Gender.ToLower());
             }
 
             if (search.MinRating.HasValue)

@@ -5,6 +5,7 @@ import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/user_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
+import 'package:personaltrainer_mobile/providers/notification_provider.dart';
 import 'package:personaltrainer_mobile/config/stripe_config.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_search_screen.dart';
 import 'package:personaltrainer_mobile/screens/forgot_password_screen.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SignalRProvider()),
         ChangeNotifierProvider(create: (_) => MessagesProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(
         title: 'Personal Trainer Mobile',
@@ -66,7 +68,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    debugPrint('Login: handleLogin called');
     if (!_formKey.currentState!.validate()) {
+      debugPrint('Login: form validation failed');
       return;
     }
 
@@ -79,7 +83,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final username = _usernameController.text.trim();
       final password = _passwordController.text;
 
+      debugPrint('Login: sending request for user "$username"');
       await userProvider.login(username, password);
+      debugPrint('Login: request completed');
 
       if (mounted) {
         // Connect to SignalR presence hub after login (non-blocking)
@@ -89,6 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         // Don't await - let it connect in the background so login isn't blocked
         signalRProvider.connect();
+
+        final notificationProvider = Provider.of<NotificationProvider>(
+          context,
+          listen: false,
+        );
+        notificationProvider.loadNotifications(page: 1, pageSize: 50);
+        notificationProvider.startPolling();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -303,8 +316,13 @@ class HomeScreen extends StatelessWidget {
                 context,
                 listen: false,
               );
+              final notificationProvider = Provider.of<NotificationProvider>(
+                context,
+                listen: false,
+              );
               await signalRProvider.disconnect();
               await messagesProvider.disconnect();
+              notificationProvider.stopPolling();
 
               AuthProvider.logout();
               Navigator.of(context).pushReplacement(

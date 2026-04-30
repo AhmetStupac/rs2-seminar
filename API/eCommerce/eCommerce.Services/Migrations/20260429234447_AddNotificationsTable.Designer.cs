@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class IB210033DbContextModelSnapshot : ModelSnapshot
+    [Migration("20260429234447_AddNotificationsTable")]
+    partial class AddNotificationsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -722,46 +725,6 @@ namespace eCommerce.Services.Migrations
                     b.ToTable("MealFoods");
                 });
 
-            modelBuilder.Entity("eCommerce.Services.Database.Membership", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ClientUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("PaymentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PersonalTrainerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClientUserId");
-
-                    b.HasIndex("PaymentId");
-
-                    b.HasIndex("PersonalTrainerId");
-
-                    b.ToTable("Memberships");
-                });
-
             modelBuilder.Entity("eCommerce.Services.Database.Message", b =>
                 {
                     b.Property<int>("Id")
@@ -1268,7 +1231,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(199),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5445),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -1276,7 +1239,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(201),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5447),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -1284,7 +1247,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(203),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5449),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -1630,7 +1593,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(346),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5592),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -1644,7 +1607,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(349),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5595),
                             Email = "adil@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -1658,7 +1621,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(351),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5598),
                             Email = "ahmet2.stupac@edu.fit.ba",
                             FirstName = "Ismail",
                             IsActive = true,
@@ -1672,7 +1635,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(353),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5600),
                             Email = "ahmet3.stupac@edu.fit.ba",
                             FirstName = "Alem",
                             IsActive = true,
@@ -1686,7 +1649,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(355),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5602),
                             Email = "ahmet4.stupac@edu.fit.ba",
                             FirstName = "Adil",
                             IsActive = true,
@@ -1700,7 +1663,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(357),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5603),
                             Email = "ahmet5.stupac@edu.fit.ba",
                             FirstName = "Amel",
                             IsActive = true,
@@ -1714,7 +1677,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(359),
+                            CreatedAt = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5605),
                             Email = "ahmet6.stupac@edu.fit.ba",
                             FirstName = "Emina",
                             IsActive = true,
@@ -1758,49 +1721,49 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(440),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5634),
                             RoleId = 3,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(442),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5636),
                             RoleId = 1,
                             UserId = 2
                         },
                         new
                         {
                             Id = 4,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(444),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5637),
                             RoleId = 1,
                             UserId = 3
                         },
                         new
                         {
                             Id = 5,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(445),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5639),
                             RoleId = 1,
                             UserId = 4
                         },
                         new
                         {
                             Id = 6,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(446),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5640),
                             RoleId = 1,
                             UserId = 5
                         },
                         new
                         {
                             Id = 7,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(447),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5641),
                             RoleId = 1,
                             UserId = 6
                         },
                         new
                         {
                             Id = 8,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(448),
+                            DateAssigned = new DateTime(2026, 4, 29, 23, 44, 47, 316, DateTimeKind.Utc).AddTicks(5642),
                             RoleId = 2,
                             UserId = 7
                         });
@@ -1940,32 +1903,6 @@ namespace eCommerce.Services.Migrations
                         .IsRequired();
 
                     b.Navigation("Meal");
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.Membership", b =>
-                {
-                    b.HasOne("eCommerce.Services.Database.User", "Client")
-                        .WithMany()
-                        .HasForeignKey("ClientUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("eCommerce.Services.Database.Payment", "Payment")
-                        .WithMany()
-                        .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("eCommerce.Services.Database.PersonalTrainer", "PersonalTrainer")
-                        .WithMany()
-                        .HasForeignKey("PersonalTrainerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Client");
-
-                    b.Navigation("Payment");
-
-                    b.Navigation("PersonalTrainer");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Message", b =>

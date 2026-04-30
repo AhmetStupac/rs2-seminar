@@ -29,9 +29,19 @@ Sistem obuhvata desktop aplikaciju za administratore i trenere, mobilnu aplikaci
 
 3. Prijaviti se pomoću admin kredencijala (kredencijali u nastavku...).
 
-Ukoliko zelite testirati registraciju ili dodavanje teretana, email trebate napisati u formatu xxx.xxx@edu.fit.ba ili xxx.xxx@xxx.com
+- Ukoliko zelite testirati registraciju ili dodavanje teretana, email trebate napisati u formatu xxx.xxx@edu.fit.ba ili xxx.xxx@xxx.com
+- Prilikom ulaska u applikacijnu trener ce biti usmjeren na Exercise plan ekran na kojem se dodaje cijena trening plana, vrijeme trajanja i dodatne biljeske.
+  Ovaj dio sluzi za dodavanja vjezbi određenom trening planu.
+  Prvo sto trebate uraditi je selektovati trening plan iz liste, te dodati vjezbe. Ukoliko ne vidite trening planove, potrebno je otici na ekran 
+  Exercise -> Training Plan Management -> Add Training Plan.
+- U Sekciji Exercise ima par opcija. Jedna od tih je dodavanje novih vjezba za trening. Prvo sto je potrebno uraditi je upload-ovati sliku,  te nakon toga unjeti ostale podatke.
+- Iduca opcija je dodavanje opreme za trening, a nakon toga dolazi dodavanje misicnih grupa.
+- Opcija My Dashboard  se moze gledati iz 2 perspektive. Prva je kao trener gdje ce biti prikazana statistika o treneru, a druga je statistika cijele aplikacije.
+  Tu se potrebno login-ovati kao superadmin
+- Iduca sekcija je Nutrition Plan, gdje trener pravi planove ishrane za klijente
+- Za testiranje chat-a najbolje je upaliti ili  2 desktop aplikacije ili poslati poruku sa desktop-a na mobile aplikaciju.
 
----
+- superadmin ima dodatne privilegije kojim moze ban-ovati korisnika i soft delete ga.
 
 #### 🔹 Mobilna aplikacija (korisnici)
 
@@ -39,9 +49,29 @@ Ukoliko zelite testirati registraciju ili dodavanje teretana, email trebate napi
 
 2. Pokrenuti komandu: `flutter run`
 
-3. Pokrenuti aplikaciju i prijaviti se pomoću testnih kredencijala (kredencijali u nastavku...).
+3. Pokrenuti aplikaciju i prijaviti se pomoću testnih kredencijala (username: mobile, password: test).
 
----
+- Prilikom ulaska na mobilnu aplikaciju korisnik je preusmjern na stranicu za pretragu personalnih trenera. Serach polje ima integrisanu filtraciju po vrsti sporta,
+  spolu, ratingu i min. i max. cijeni
+- Korisnik kada uđe u profil zeljenog trenera ima opciju kupovine trening plana, plana ishrane i clanarine(30 dana). 
+  Ukoliko se korisnik odluci da kupi jedan od planova, taj plan mu se prikazuje u npr. Training Plans sekciji gdje moze vidjeti detalje treninga.
+  Vazno je napomenti da klijent moze rezervisati trening kod personalnog trenera tek nakon sto kupi clanarinu.
+  Ukoliko je trener zadovoljan trening uslugama moze ocjeniti  trenera i ostaviti komentar.
+- U Sekcijama Training Plans i Nutrition Plans korisnik moze da detaljnije vidi kupljene programe.
+- U sekciji My Training, korisnik ima uvid u nadolazece treninge. Ukoliko je potrebno trening se moze otkazati ili se moze odabrati drugi termin.
+	(korisnik ne mora napisati razlog otkazivanja, dok trener ukoliko otkaze trening mora navesti i razlog)
+- Sekcija Group Training Sessions je namjenjena za zajednicke grupne treninge kojim bilo ko moze prisustvovati.
+  Bilo koji korisnik moze kreirati grupni trening, a ostali korisnici imaju opciju da se pridruze treningu.
+  Kada trening zavrsi potrebno ga je ukloniti sa liste.
+- Sekcija Training Statistics je dodana tako da korisnik moze pratiti svoj napredak u treninzima.
+- Notifikacije su napravljane za: (refreshuju se pomocu pollinga svakih 5 sec)
+	•	uspješnu kupovinu
+	•	refund
+	•	novu grupnu sesiju
+	•	rezervaciju trening sesije
+	•	primljenu poruku u chatu
+
+- U sekciji Payments korisnik ima uvid u kupovine, te ukoliko je potrebno moze uraditi refund.
 
 #### 🔐 Kredencijali za prijavu
 
@@ -143,3 +173,9 @@ Desktop aplikacija omogućava generisanje i preuzimanje PDF izvještaja putem pa
 ---
 
 📌 Projekt razvijen u sklopu predmeta Razvoj softvera 2 na Fakultetu informacijskih tehnologija Mostar.
+
+
+
+
+
+

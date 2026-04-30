@@ -9,11 +9,14 @@ import 'package:personaltrainer_mobile/screens/training_sessions_list_screen.dar
 import 'package:personaltrainer_mobile/screens/training_statistics_screen.dart';
 import 'package:personaltrainer_mobile/screens/online_users_screen.dart';
 import 'package:personaltrainer_mobile/screens/group_training_sessions_screen.dart';
+import 'package:personaltrainer_mobile/screens/my_memberships_screen.dart';
 import 'package:personaltrainer_mobile/screens/payment_history_screen.dart';
 import 'package:personaltrainer_mobile/screens/profile_screen.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/signalr_provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
+import 'package:personaltrainer_mobile/providers/notification_provider.dart';
+import 'package:personaltrainer_mobile/screens/notifications_screen.dart';
 import 'package:personaltrainer_mobile/main.dart';
 
 class MobileNavBar extends StatelessWidget {
@@ -193,6 +196,63 @@ class MobileNavBar extends StatelessWidget {
               }
             },
           ),
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final unreadCount = notificationProvider.unreadCount;
+              return ListTile(
+                leading: Icon(
+                  Icons.notifications,
+                  color: currentRoute == 'notifications'
+                      ? Colors.orange.shade700
+                      : Colors.black87,
+                ),
+                title: Text(
+                  'Notifications',
+                  style: TextStyle(
+                    color: currentRoute == 'notifications'
+                        ? Colors.orange.shade700
+                        : Colors.black87,
+                    fontWeight: currentRoute == 'notifications'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: unreadCount > 0
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                    : null,
+                selected: currentRoute == 'notifications',
+                selectedTileColor: Colors.orange.shade50,
+                onTap: () {
+                  Navigator.pop(context);
+                  if (currentRoute != 'notifications') {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NotificationsScreen(),
+                      ),
+                    );
+                  }
+                },
+              );
+            },
+          ),
           _buildMenuItem(
             context,
             icon: Icons.receipt_long,
@@ -205,6 +265,23 @@ class MobileNavBar extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const PaymentHistoryScreen(),
+                  ),
+                );
+              }
+            },
+          ),
+          _buildMenuItem(
+            context,
+            icon: Icons.card_membership,
+            title: 'My Memberships',
+            routeName: 'memberships',
+            onTap: () {
+              Navigator.pop(context);
+              if (currentRoute != 'memberships') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyMembershipsScreen(),
                   ),
                 );
               }
@@ -264,8 +341,13 @@ class MobileNavBar extends StatelessWidget {
                   context,
                   listen: false,
                 );
+                final notificationProvider = Provider.of<NotificationProvider>(
+                  context,
+                  listen: false,
+                );
                 await signalRProvider.disconnect();
                 await messagesProvider.disconnect();
+                notificationProvider.stopPolling();
 
                 AuthProvider.logout();
                 Navigator.of(context).pop(); // Close drawer

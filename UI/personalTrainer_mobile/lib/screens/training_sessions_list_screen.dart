@@ -555,7 +555,7 @@ class _TrainingSessionsListScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Razlog otkazivanja:',
+                          'Cancellation reason:',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

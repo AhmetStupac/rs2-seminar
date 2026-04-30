@@ -3,8 +3,6 @@ using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace eCommerce.Services.Interface
@@ -13,6 +11,9 @@ namespace eCommerce.Services.Interface
     {
         Task<TrainingSessionResponse> ConfirmAsync(int id);
         Task<TrainingSessionResponse> CancelAsync(int id, TrainingSessionCancelRequest request);
+        Task<TrainingSessionResponse> CompleteAsync(int id);
+        Task<TrainingSessionResponse> MarkNoShowAsync(int id);
+        Task<List<string>> AllowedActionsAsync(int id);
         Task<List<DateTime>> GetAvailableTimeSlotsAsync(int trainerId, DateTime date, int durationMinutes);
         Task<bool> CheckAvailabilityAsync(int trainerId, DateTime scheduledDateTime, int durationMinutes, int? excludeSessionId = null);
     }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/config/stripe_config.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/notification_provider.dart';
 import 'package:personaltrainer_mobile/providers/payment_provider.dart';
 import 'package:personaltrainer_mobile/services/membership_access_service.dart';
 
@@ -48,6 +50,30 @@ class _PaymentScreenState extends State<PaymentScreen> {
   String _formatAmount(int cents) {
     final euros = cents / 100;
     return '€${euros.toStringAsFixed(2)}';
+  }
+
+  String _formatApiError(String rawMessage) {
+    final message = rawMessage.trim();
+    final normalized = message.toLowerCase();
+
+    final alreadyOwned = normalized.contains('already');
+
+    if (alreadyOwned) {
+      if (widget.itemType == 2 ||
+          normalized.contains('membership') ||
+          normalized.contains('active membership')) {
+        return 'You already own this membership.';
+      }
+      if (widget.itemType == 0 || normalized.contains('training plan')) {
+        return 'You already own this training plan.';
+      }
+      if (widget.itemType == 1 || normalized.contains('nutrition plan')) {
+        return 'You already own this nutrition plan.';
+      }
+      return 'You already own this item.';
+    }
+
+    return message;
   }
 
   Future<void> _startPayment() async {
@@ -112,6 +138,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         _paymentSuccess = true;
         _isLoading = false;
       });
+
+      if (mounted) {
+        Provider.of<NotificationProvider>(
+          context,
+          listen: false,
+        ).loadNotifications(page: 1, pageSize: 50);
+      }
     } on StripeConfigException {
       setState(() {
         _isLoading = false;
@@ -130,7 +163,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        final raw = e.toString().replaceAll('Exception: ', '');
+        _errorMessage = _formatApiError(raw);
       });
     }
   }

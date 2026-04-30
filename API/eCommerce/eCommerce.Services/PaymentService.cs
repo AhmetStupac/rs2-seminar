@@ -23,13 +23,15 @@ namespace eCommerce.Services
         private readonly IB210033DbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly INotificationService _notificationService;
 
-        public PaymentService(IB210033DbContext context, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public PaymentService(IB210033DbContext context, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, INotificationService notificationService)
             : base(context, mapper)
         {
             _context = context;
             _configuration = configuration;
             _httpContextAccessor = httpContextAccessor;
+            _notificationService = notificationService;
             StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
         }
 
@@ -123,6 +125,15 @@ namespace eCommerce.Services
 
             await ApplyPurchaseEffectsAsync(record);
 
+            var purchaseTitle = await GetPurchaseTitleAsync(record);
+            await _notificationService.CreateAsync(new NotificationCreateRequest
+            {
+                UserId = record.UserId,
+                Title = "Purchase successful",
+                Message = $"You purchased {purchaseTitle}.",
+                Type = "purchase"
+            });
+
             await _context.SaveChangesAsync();
 
             return MapToResponse(record);
@@ -174,9 +185,35 @@ namespace eCommerce.Services
 
             await RevertPurchaseEffectsAsync(record);
 
+            var refundTitle = await GetPurchaseTitleAsync(record);
+            await _notificationService.CreateAsync(new NotificationCreateRequest
+            {
+                UserId = record.UserId,
+                Title = "Payment refunded",
+                Message = $"Your payment for {refundTitle} was refunded.",
+                Type = "refund"
+            });
+
             await _context.SaveChangesAsync();
 
             return MapToResponse(record);
+        }
+
+        private async Task<string> GetPurchaseTitleAsync(Payment record)
+        {
+            return record.ItemType switch
+            {
+                PaymentItemType.TrainingPlan => (await _context.Set<Database.TrainingPlan>()
+                    .Where(tp => tp.Id == record.ItemId)
+                    .Select(tp => tp.Title)
+                    .FirstOrDefaultAsync()) ?? "training plan",
+                PaymentItemType.NutritionPlan => (await _context.Set<Database.NutritionPlan>()
+                    .Where(np => np.Id == record.ItemId)
+                    .Select(np => np.Title)
+                    .FirstOrDefaultAsync()) ?? "nutrition plan",
+                PaymentItemType.Membership => "membership",
+                _ => "item"
+            };
         }
 
         private async Task ApplyPurchaseEffectsAsync(Payment record)
@@ -207,6 +244,26 @@ namespace eCommerce.Services
                 }
 
                 case PaymentItemType.Membership:
+                {
+                    // record.ItemId is the PersonalTrainer ID for memberships
+                    var personalTrainerId = record.ItemId.Value;
+
+                    var now = DateTime.UtcNow;
+                    var membership = new Database.Membership
+                    {
+                        ClientUserId = record.UserId,
+                        PersonalTrainerId = personalTrainerId,
+                        PaymentId = record.Id,
+                        StartDate = now,
+                        ExpiryDate = now.AddDays(30),
+                        IsRevoked = false,
+                        CreatedAt = now
+                    };
+
+                    _context.Set<Database.Membership>().Add(membership);
+                    break;
+                }
+
                 default:
                     break;
             }
@@ -224,7 +281,7 @@ namespace eCommerce.Services
                     var plan = await _context.Set<Database.TrainingPlan>().FindAsync(request.ItemId.Value);
                     if (plan != null && plan.UserId == request.UserId)
                         throw new InvalidOperationException("You already purchased this training plan.");
-                    break;
+                    return;
                 }
 
                 case PaymentItemType.NutritionPlan:
@@ -235,10 +292,40 @@ namespace eCommerce.Services
                     var plan = await _context.Set<Database.NutritionPlan>().FindAsync(request.ItemId.Value);
                     if (plan != null && plan.UserId == request.UserId)
                         throw new InvalidOperationException("You already purchased this nutrition plan.");
-                    break;
+                    return;
                 }
 
                 case PaymentItemType.Membership:
+                {
+                    if (!request.ItemId.HasValue)
+                        break;
+
+                    var personalTrainerId = request.ItemId.Value;
+                    var now = DateTime.UtcNow;
+
+                    // Check: client already has an active membership with this trainer
+                    var clientHasActive = await _context.Set<Database.Membership>()
+                        .AnyAsync(m => m.ClientUserId == request.UserId
+                            && m.PersonalTrainerId == personalTrainerId
+                            && !m.IsRevoked
+                            && m.ExpiryDate > now);
+
+                    if (clientHasActive)
+                        throw new InvalidOperationException("You already have an active membership with this trainer.");
+
+                    // Check: trainer already has 5 active clients
+                    var activeClientCount = await _context.Set<Database.Membership>()
+                        .CountAsync(m => m.PersonalTrainerId == personalTrainerId
+                            && !m.IsRevoked
+                            && m.ExpiryDate > now);
+
+                    if (activeClientCount >= 5)
+                        throw new InvalidOperationException(
+                            "This trainer has reached the maximum of 5 active client memberships and cannot accept new clients at this time.");
+
+                    return;
+                }
+
                 default:
                     break;
             }
@@ -247,7 +334,7 @@ namespace eCommerce.Services
                 .AnyAsync(p => p.UserId == request.UserId
                     && p.ItemType == request.ItemType
                     && p.ItemId == request.ItemId
-                    && !string.Equals(p.Status, "refunded", StringComparison.OrdinalIgnoreCase));
+                    && (p.Status == "succeeded" || p.Status == "refund_pending"));
 
             if (!hasActivePayment)
                 return;
@@ -256,7 +343,6 @@ namespace eCommerce.Services
             {
                 PaymentItemType.TrainingPlan => "You already purchased this training plan.",
                 PaymentItemType.NutritionPlan => "You already purchased this nutrition plan.",
-                PaymentItemType.Membership => "You already have an active membership for this trainer.",
                 _ => "You already purchased this item."
             };
 
@@ -293,6 +379,16 @@ namespace eCommerce.Services
                 }
 
                 case PaymentItemType.Membership:
+                {
+                    var membership = await _context.Set<Database.Membership>()
+                        .FirstOrDefaultAsync(m => m.PaymentId == record.Id);
+
+                    if (membership != null)
+                        membership.IsRevoked = true;
+
+                    break;
+                }
+
                 default:
                     break;
             }

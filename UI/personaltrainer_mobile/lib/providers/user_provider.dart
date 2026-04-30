@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:personaltrainer_mobile/models/user.dart';
 import 'package:personaltrainer_mobile/models/search_result.dart';
@@ -63,6 +64,7 @@ class UserProvider extends BaseProvider<User> {
 
     var body = jsonEncode({"username": username, "password": password});
 
+    debugPrint('Login: POST $url');
 
     var response = await BaseProvider.client.post(
       uri,
@@ -70,6 +72,7 @@ class UserProvider extends BaseProvider<User> {
       body: body,
     );
 
+    debugPrint('Login: response ${response.statusCode}');
 
     if (response.statusCode == 200 || response.statusCode == 204) {
       // Handle JWT response
@@ -218,13 +221,11 @@ class UserProvider extends BaseProvider<User> {
 
       var body = jsonEncode({"email": email});
 
-
       var response = await BaseProvider.client.post(
         uri,
         headers: headers,
         body: body,
       );
-
 
       // Backend returns 200 for both success and "email not found" cases for security
       if (response.statusCode == 200) {

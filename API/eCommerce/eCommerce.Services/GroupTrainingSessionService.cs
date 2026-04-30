@@ -20,16 +20,41 @@ namespace eCommerce.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IValidator<GroupTrainingSessionUpsertRequest> _validator;
+        private readonly INotificationService _notificationService;
 
         public GroupTrainingSessionService(
             IB210033DbContext context,
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
-            IValidator<GroupTrainingSessionUpsertRequest> validator)
+            IValidator<GroupTrainingSessionUpsertRequest> validator,
+            INotificationService notificationService)
             : base(context, mapper)
         {
             _httpContextAccessor = httpContextAccessor;
             _validator = validator;
+            _notificationService = notificationService;
+        }
+
+        public override async Task<GroupTrainingSessionResponse> CreateAsync(GroupTrainingSessionUpsertRequest request)
+        {
+            var entity = new GroupTrainingSession();
+            MapInsertToEntity(entity, request);
+            _context.Set<GroupTrainingSession>().Add(entity);
+
+            await BeforeInsert(entity, request);
+            await _context.SaveChangesAsync();
+
+            var userIds = await _context.Users
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            await _notificationService.CreateBulkAsync(
+                userIds,
+                "New group session",
+                $"New group session '{entity.Name}' has been created.",
+                "group-session");
+
+            return MapToResponse(entity);
         }
 
         protected override IQueryable<GroupTrainingSession> ApplyFilter(IQueryable<GroupTrainingSession> query, GroupTrainingSessionSearchObject search)

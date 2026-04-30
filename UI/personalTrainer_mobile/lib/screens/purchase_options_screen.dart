@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:personaltrainer_mobile/models/membership.dart';
 import 'package:personaltrainer_mobile/models/nutrition_plan.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
 import 'package:personaltrainer_mobile/models/training_plan.dart';
+import 'package:personaltrainer_mobile/providers/membership_provider.dart';
 import 'package:personaltrainer_mobile/providers/nutrition_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/screens/payment_screen.dart';
@@ -21,6 +24,7 @@ class PurchaseOptionsScreen extends StatefulWidget {
 class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
   final _trainingPlanProvider = TrainingPlanProvider();
   final _nutritionPlanProvider = NutritionPlanProvider();
+  final _membershipProvider = MembershipProvider();
 
   List<TrainingPlan> _trainingPlans = [];
   List<NutritionPlan> _nutritionPlans = [];
@@ -31,11 +35,19 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
   bool _trainingExpanded = false;
   bool _nutritionExpanded = false;
 
+  // Membership state
+  bool _checkingMembership = true;
+  bool _hasActiveMembership = false;
+  Membership? _activeMembership;
+  int _activeClientCount = 0;
+  bool _trainerFull = false;
+
   @override
   void initState() {
     super.initState();
     _loadTrainingPlans();
     _loadNutritionPlans();
+    _loadMembershipStatus();
   }
 
   Future<void> _loadTrainingPlans() async {
@@ -74,6 +86,46 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
     }
   }
 
+  Future<void> _loadMembershipStatus() async {
+    if (widget.trainer.id == null) {
+      setState(() => _checkingMembership = false);
+      return;
+    }
+
+    setState(() => _checkingMembership = true);
+
+    try {
+      final results = await Future.wait([
+        _membershipProvider.hasActiveMembership(widget.trainer.id!),
+        _membershipProvider.getActiveClientCount(widget.trainer.id!),
+        _membershipProvider.getMyMemberships(),
+      ]);
+
+      final hasActive = results[0] as bool;
+      final clientCount = results[1] as int;
+      final myMemberships = results[2] as List<Membership>;
+
+      Membership? activeMembership;
+      if (hasActive) {
+        activeMembership = myMemberships
+            .where(
+              (m) => m.personalTrainerId == widget.trainer.id && m.isActive,
+            )
+            .firstOrNull;
+      }
+
+      setState(() {
+        _hasActiveMembership = hasActive;
+        _activeMembership = activeMembership;
+        _activeClientCount = clientCount;
+        _trainerFull = clientCount >= 5;
+        _checkingMembership = false;
+      });
+    } catch (_) {
+      setState(() => _checkingMembership = false);
+    }
+  }
+
   Future<void> _navigateToPayment({
     required int itemType,
     int? itemId,
@@ -95,6 +147,8 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
     if (!mounted) return;
 
     if (itemType == 2 && paymentSuccess == true) {
+      // Refresh membership status after a successful purchase
+      await _loadMembershipStatus();
       Navigator.of(context).pop(true);
     }
   }
@@ -203,11 +257,225 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
               const SizedBox(height: 14),
 
               // --- Membership ---
-              _buildMembershipOption(),
+              _buildMembershipSection(),
 
               const SizedBox(height: 32),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMembershipSection() {
+    if (_checkingMembership) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: const Center(
+          child: SizedBox(
+            height: 24,
+            width: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Color(0xFFE8B44A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // User already has an active membership
+    if (_hasActiveMembership) {
+      return _buildActiveMembershipCard();
+    }
+
+    // Trainer is full
+    if (_trainerFull) {
+      return _buildMembershipFullCard();
+    }
+
+    // Normal buy button
+    return _buildBuyMembershipCard();
+  }
+
+  Widget _buildActiveMembershipCard() {
+    final days = _activeMembership?.daysRemaining ?? 0;
+    final expiry = _activeMembership?.expiryDate;
+    final expiryLabel = expiry != null
+        ? DateFormat('dd.MM.yyyy').format(expiry)
+        : null;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF4CAF50).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF4CAF50).withOpacity(0.4),
+          width: 1.5,
+        ),
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50).withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              color: Color(0xFF4CAF50),
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Active membership',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  days > 0
+                      ? 'Expires in $days day${days == 1 ? '' : 's'}'
+                          '${expiryLabel != null ? ' ($expiryLabel)' : ''}'
+                      : expiryLabel != null
+                      ? 'Expires $expiryLabel'
+                      : 'Membership active',
+                  style: TextStyle(fontSize: 13, color: Colors.green[700]),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMembershipFullCard() {
+    return Column(
+      children: [
+        // Warning banner
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.orange.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: Colors.orange.shade700, size: 18),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  "This trainer's client spots are full (5/5). Memberships are not available.",
+                  style: TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Greyed-out card
+        Opacity(
+          opacity: 0.45,
+          child: _buildBuyMembershipCard(disabled: true),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBuyMembershipCard({bool disabled = false}) {
+    final price = _membershipPriceInCents / 100;
+    return InkWell(
+      onTap: disabled
+          ? null
+          : () => _navigateToPayment(
+                itemType: 2,
+                itemId: widget.trainer.id,
+                customAmountInCents: _membershipPriceInCents,
+                itemName:
+                    'Membership — ${widget.trainer.userFirstName ?? "Trainer"}',
+              ),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: disabled
+                ? [Colors.grey.shade400, Colors.grey.shade500]
+                : const [Color(0xFFE8B44A), Color(0xFFD4A030)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: disabled
+              ? null
+              : [
+                  BoxShadow(
+                    color: const Color(0xFFE8B44A).withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.card_membership,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Membership',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Monthly subscription — €${price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
         ),
       ),
     );
@@ -385,79 +653,6 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildMembershipOption() {
-    final price = _membershipPriceInCents / 100;
-    return InkWell(
-      onTap: () => _navigateToPayment(
-        itemType: 2,
-        itemId: widget.trainer.id,
-        customAmountInCents: _membershipPriceInCents,
-        itemName: 'Membership — ${widget.trainer.userFirstName ?? "Trainer"}',
-      ),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFE8B44A), Color(0xFFD4A030)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFE8B44A).withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.card_membership,
-                color: Colors.white,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Membership',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Monthly subscription — €${price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.85),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
-          ],
-        ),
       ),
     );
   }

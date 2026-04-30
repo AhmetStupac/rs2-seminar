@@ -35,6 +35,11 @@ namespace eCommerce.Services.Database
         public DbSet<GroupTrainingSession> GroupTrainingSessions { get; set; }
         public DbSet<GroupTrainingSessionParticipant> GroupTrainingSessionParticipants { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Membership> Memberships { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+
+
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -80,6 +85,33 @@ namespace eCommerce.Services.Database
 
             modelBuilder.Entity<Payment>()
                 .HasQueryFilter(p => !p.User.IsDeleted);
+
+            modelBuilder.Entity<Notification>()
+                .HasQueryFilter(n => n.User == null || !n.User.IsDeleted);
+
+            // Membership – ignore computed property, filter soft-deleted clients, configure relationships
+            modelBuilder.Entity<Membership>()
+                .Ignore(m => m.IsActive)
+                .HasQueryFilter(m => !m.Client.IsDeleted);
+
+            modelBuilder.Entity<Membership>()
+                .HasOne(m => m.Client)
+                .WithMany()
+                .HasForeignKey(m => m.ClientUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Membership>()
+                .HasOne(m => m.PersonalTrainer)
+                .WithMany()
+                .HasForeignKey(m => m.PersonalTrainerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Membership>()
+                .HasOne(m => m.Payment)
+                .WithMany()
+                .HasForeignKey(m => m.PaymentId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             // Configure UserRole join entity
             modelBuilder.Entity<UserRole>()

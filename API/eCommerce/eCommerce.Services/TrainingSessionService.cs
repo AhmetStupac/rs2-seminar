@@ -3,35 +3,108 @@ using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
-using FluentValidation;
+using eCommerce.Services.States;
 using MapsterMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using TrainingSessionStatus = eCommerce.Model.Enums.TrainingSessionStatus;
 using System.Threading.Tasks;
+using TrainingSessionStatus = eCommerce.Model.Enums.TrainingSessionStatus;
 
 namespace eCommerce.Services
 {
-    public class TrainingSessionService : BaseCRUDService<TrainingSessionResponse, TrainingSessionSearchObject, TrainingSession, TrainingSessionUpsertRequest, TrainingSessionUpsertRequest>, ITrainingSessionService
+    /// <summary>
+    /// Context (in the State Design Pattern). All status-driven business rules live in
+    /// the concrete <see cref="BaseTrainingSessionState"/> implementations under
+    /// <c>eCommerce.Services.States</c>. This class only:
+    ///   1. resolves the current state for a session,
+    ///   2. delegates the requested action to that state, and
+    ///   3. maps the resulting entity to a response DTO.
+    /// </summary>
+    public class TrainingSessionService
+        : BaseCRUDService<TrainingSessionResponse, TrainingSessionSearchObject, TrainingSession, TrainingSessionUpsertRequest, TrainingSessionUpsertRequest>,
+          ITrainingSessionService
     {
-        private readonly IValidator<TrainingSessionUpsertRequest> _validator;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public TrainingSessionService(
             IB210033DbContext context,
             IMapper mapper,
-            IValidator<TrainingSessionUpsertRequest> validator,
+            IServiceProvider serviceProvider,
             IHttpContextAccessor httpContextAccessor)
             : base(context, mapper)
         {
-            _validator = validator;
+            _serviceProvider = serviceProvider;
             _httpContextAccessor = httpContextAccessor;
         }
+
+        // --- State machine entry points -----------------------------------------------------
+
+        public override async Task<TrainingSessionResponse> CreateAsync(TrainingSessionUpsertRequest request)
+        {
+            var initialState = _serviceProvider.GetRequiredService<InitialTrainingSessionState>();
+            var entity = await initialState.CreateAsync(request);
+            return MapToResponse(entity);
+        }
+
+        public override async Task<TrainingSessionResponse?> UpdateAsync(int id, TrainingSessionUpsertRequest request)
+        {
+            var entity = await _context.Set<TrainingSession>().FindAsync(id);
+            if (entity == null)
+                return null;
+
+            var state = ResolveState(entity.Status);
+            await state.UpdateAsync(entity, request);
+            return MapToResponse(entity);
+        }
+
+        public async Task<TrainingSessionResponse> ConfirmAsync(int id)
+        {
+            var entity = await GetSessionOrThrowAsync(id);
+            var state = ResolveState(entity.Status);
+            await state.ConfirmAsync(entity);
+            return MapToResponse(entity);
+        }
+
+        public async Task<TrainingSessionResponse> CancelAsync(int id, TrainingSessionCancelRequest request)
+        {
+            var entity = await GetSessionOrThrowAsync(id);
+            var state = ResolveState(entity.Status);
+            await state.CancelAsync(entity, request);
+            return MapToResponse(entity);
+        }
+
+        public async Task<TrainingSessionResponse> CompleteAsync(int id)
+        {
+            var entity = await GetSessionOrThrowAsync(id);
+            var state = ResolveState(entity.Status);
+            await state.CompleteAsync(entity);
+            return MapToResponse(entity);
+        }
+
+        public async Task<TrainingSessionResponse> MarkNoShowAsync(int id)
+        {
+            var entity = await GetSessionOrThrowAsync(id);
+            var state = ResolveState(entity.Status);
+            await state.MarkNoShowAsync(entity);
+            return MapToResponse(entity);
+        }
+
+        public async Task<List<string>> AllowedActionsAsync(int id)
+        {
+            var entity = await _context.Set<TrainingSession>().FindAsync(id);
+            if (entity == null)
+                throw new KeyNotFoundException("Training session not found");
+
+            return ResolveState(entity.Status).AllowedActions(entity);
+        }
+
+        // --- Filtering / mapping (unchanged) -------------------------------------------------
 
         protected override IQueryable<TrainingSession> ApplyFilter(IQueryable<TrainingSession> query, TrainingSessionSearchObject search)
         {
@@ -62,54 +135,6 @@ namespace eCommerce.Services
             return query.OrderBy(ts => ts.ScheduledDateTime);
         }
 
-        protected override async Task BeforeInsert(TrainingSession entity, TrainingSessionUpsertRequest request)
-        {
-            var result = await _validator.ValidateAsync(request);
-            if (!result.IsValid)
-            {
-                var errors = string.Join("; ", result.Errors.Select(e => e.ErrorMessage));
-                throw new ArgumentException($"Validation failed: {errors}");
-            }
-
-            // Set ClientId from authenticated user
-            var userId = GetCurrentUserId();
-            entity.ClientId = userId;
-            entity.Status = TrainingSessionStatus.Pending;
-            entity.CreatedAt = DateTime.UtcNow;
-        }
-
-        protected override async Task BeforeUpdate(TrainingSession entity, TrainingSessionUpsertRequest request)
-        {
-            var result = await _validator.ValidateAsync(request);
-            if (!result.IsValid)
-            {
-                var errors = string.Join("; ", result.Errors.Select(e => e.ErrorMessage));
-                throw new ArgumentException($"Validation failed: {errors}");
-            }
-
-            // Check permissions
-            var currentUserId = GetCurrentUserId();
-            var isTrainer = IsCurrentUserTrainer(entity.PersonalTrainerId);
-
-            if (entity.ClientId != currentUserId && !isTrainer)
-                throw new UnauthorizedAccessException("You don't have permission to update this training session");
-
-            // Check availability if datetime or duration changed
-            if (request.ScheduledDateTime != entity.ScheduledDateTime || request.DurationMinutes != entity.DurationMinutes)
-            {
-                var isAvailable = await CheckAvailabilityAsync(
-                    entity.PersonalTrainerId,
-                    request.ScheduledDateTime,
-                    request.DurationMinutes,
-                    entity.Id);
-
-                if (!isAvailable)
-                    throw new ArgumentException("Trainer is not available at the requested time");
-            }
-
-            entity.UpdatedAt = DateTime.UtcNow;
-        }
-
         protected override TrainingSessionResponse MapToResponse(TrainingSession entity)
         {
             var response = _mapper.Map<TrainingSessionResponse>(entity);
@@ -125,57 +150,14 @@ namespace eCommerce.Services
 
             response.StatusDisplay = entity.Status.ToString();
 
-            // Check permissions
-            var userId = GetCurrentUserId();
-            response.CanEdit = entity.ClientId == userId || IsCurrentUserTrainer(entity.PersonalTrainerId);
+            var userId = TryGetCurrentUserId();
+            response.CanEdit = userId.HasValue && (entity.ClientId == userId || IsCurrentUserTrainer(entity.PersonalTrainerId));
             response.CanCancel = response.CanEdit && entity.Status != TrainingSessionStatus.Completed;
 
             return response;
         }
 
-        public async Task<TrainingSessionResponse> ConfirmAsync(int id)
-        {
-            var entity = await _context.Set<TrainingSession>().FindAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException("Training session not found");
-
-            var isTrainer = IsCurrentUserTrainer(entity.PersonalTrainerId);
-            if (!isTrainer)
-                throw new UnauthorizedAccessException("Only the trainer can confirm the training session");
-
-            if (entity.Status != TrainingSessionStatus.Pending)
-                throw new InvalidOperationException("Only pending training sessions can be confirmed");
-
-            entity.Status = TrainingSessionStatus.Confirmed;
-            entity.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return MapToResponse(entity);
-        }
-
-        public async Task<TrainingSessionResponse> CancelAsync(int id, TrainingSessionCancelRequest request)
-        {
-            var entity = await _context.Set<TrainingSession>().FindAsync(id);
-            if (entity == null)
-                throw new KeyNotFoundException("Training session not found");
-
-            var userId = GetCurrentUserId();
-            var isTrainer = IsCurrentUserTrainer(entity.PersonalTrainerId);
-
-            if (entity.ClientId != userId && !isTrainer)
-                throw new UnauthorizedAccessException("You don't have permission to cancel this training session");
-
-            if (entity.Status == TrainingSessionStatus.Completed)
-                throw new InvalidOperationException("Cannot cancel a completed training session");
-
-            entity.Status = TrainingSessionStatus.Cancelled;
-            entity.CancelledAt = DateTime.UtcNow;
-            entity.CancellationReason = request.CancellationReason;
-            entity.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-            return MapToResponse(entity);
-        }
+        // --- Availability helpers (still used by controller endpoints) ----------------------
 
         public async Task<bool> CheckAvailabilityAsync(int trainerId, DateTime scheduledDateTime, int durationMinutes, int? excludeSessionId = null)
         {
@@ -197,8 +179,8 @@ namespace eCommerce.Services
 
         public async Task<List<DateTime>> GetAvailableTimeSlotsAsync(int trainerId, DateTime date, int durationMinutes)
         {
-            var workStart = date.Date.AddHours(6); // 6:00 AM
-            var workEnd = date.Date.AddHours(22); // 10:00 PM
+            var workStart = date.Date.AddHours(6);
+            var workEnd = date.Date.AddHours(22);
             var slotDuration = TimeSpan.FromMinutes(durationMinutes);
 
             var slots = new List<DateTime>();
@@ -209,27 +191,47 @@ namespace eCommerce.Services
                 if (await CheckAvailabilityAsync(trainerId, currentSlot, durationMinutes))
                     slots.Add(currentSlot);
 
-                currentSlot = currentSlot.AddMinutes(30); // 30 minute intervals
+                currentSlot = currentSlot.AddMinutes(30);
             }
 
             return slots;
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                throw new UnauthorizedAccessException("User is not authenticated");
+        // --- Internal helpers ----------------------------------------------------------------
 
-            return userId;
+        private BaseTrainingSessionState ResolveState(TrainingSessionStatus status)
+        {
+            return status switch
+            {
+                TrainingSessionStatus.Pending => _serviceProvider.GetRequiredService<PendingTrainingSessionState>(),
+                TrainingSessionStatus.Confirmed => _serviceProvider.GetRequiredService<ConfirmedTrainingSessionState>(),
+                TrainingSessionStatus.Completed => _serviceProvider.GetRequiredService<CompletedTrainingSessionState>(),
+                TrainingSessionStatus.Cancelled => _serviceProvider.GetRequiredService<CancelledTrainingSessionState>(),
+                TrainingSessionStatus.NoShow => _serviceProvider.GetRequiredService<NoShowTrainingSessionState>(),
+                _ => throw new InvalidOperationException($"Unknown TrainingSessionStatus: {status}")
+            };
+        }
+
+        private async Task<TrainingSession> GetSessionOrThrowAsync(int id)
+        {
+            var entity = await _context.Set<TrainingSession>().FindAsync(id);
+            if (entity == null)
+                throw new KeyNotFoundException("Training session not found");
+            return entity;
+        }
+
+        private int? TryGetCurrentUserId()
+        {
+            var claim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(claim, out var userId) ? userId : (int?)null;
         }
 
         private bool IsCurrentUserTrainer(int trainerId)
         {
-            var userId = GetCurrentUserId();
+            var userId = TryGetCurrentUserId();
+            if (!userId.HasValue) return false;
             return _context.Set<PersonalTrainer>()
-                .Any(pt => pt.Id == trainerId && pt.UserId == userId);
+                .Any(pt => pt.Id == trainerId && pt.UserId == userId.Value);
         }
     }
 }
-

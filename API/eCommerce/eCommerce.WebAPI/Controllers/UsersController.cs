@@ -136,6 +136,9 @@ namespace eCommerce.WebAPI.Controllers
             var deletedUsers = await _userService.GetDeletedUsersAsync();
             return Ok(deletedUsers);
         }
+
+        // login
+
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult> Login(UserLoginRequest request)

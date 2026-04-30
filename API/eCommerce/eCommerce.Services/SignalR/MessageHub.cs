@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace eCommerce.Services.SignalR
 {
     [Authorize]
-    public class MessageHub(IMessageRepository messageRepository, IUserRepository userRepository) : Hub
+    public class MessageHub(IMessageRepository messageRepository, IUserRepository userRepository, INotificationService notificationService) : Hub
     {
         public override async Task OnConnectedAsync()
         {
@@ -73,6 +73,14 @@ namespace eCommerce.Services.SignalR
             {
                 var group = GetGroupName(sender.Id, recipient.Id);
                 await Clients.Group(group).SendAsync("New message", message.ToDto());
+
+                await notificationService.CreateAsync(new eCommerce.Model.Requests.NotificationCreateRequest
+                {
+                    UserId = recipient.Id,
+                    Title = "New message",
+                    Message = $"You received a new message from {sender.FirstName} {sender.LastName}.",
+                    Type = "message"
+                });
 
             }
         }

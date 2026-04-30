@@ -21,46 +21,32 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         [HttpPut("{id}/confirm")]
-        public async Task<ActionResult<TrainingSessionResponse>> Confirm(int id)
-        {
-            try
-            {
-                var result = await _trainingSessionService.ConfirmAsync(id);
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(403, new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+        public Task<ActionResult<TrainingSessionResponse>> Confirm(int id)
+            => HandleStateTransition(() => _trainingSessionService.ConfirmAsync(id));
 
         [HttpPut("{id}/cancel")]
-        public async Task<ActionResult<TrainingSessionResponse>> Cancel(int id, [FromBody] TrainingSessionCancelRequest request)
+        public Task<ActionResult<TrainingSessionResponse>> Cancel(int id, [FromBody] TrainingSessionCancelRequest request)
+            => HandleStateTransition(() => _trainingSessionService.CancelAsync(id, request));
+
+        [HttpPut("{id}/complete")]
+        public Task<ActionResult<TrainingSessionResponse>> Complete(int id)
+            => HandleStateTransition(() => _trainingSessionService.CompleteAsync(id));
+
+        [HttpPut("{id}/no-show")]
+        public Task<ActionResult<TrainingSessionResponse>> MarkNoShow(int id)
+            => HandleStateTransition(() => _trainingSessionService.MarkNoShowAsync(id));
+
+        [HttpGet("{id}/allowed-actions")]
+        public async Task<ActionResult<List<string>>> AllowedActions(int id)
         {
             try
             {
-                var result = await _trainingSessionService.CancelAsync(id, request);
-                return Ok(result);
+                var actions = await _trainingSessionService.AllowedActionsAsync(id);
+                return Ok(actions);
             }
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(403, new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
             }
         }
 
@@ -82,6 +68,31 @@ namespace eCommerce.WebAPI.Controllers
         {
             var result = await _trainingSessionService.CheckAvailabilityAsync(trainerId, scheduledDateTime, durationMinutes);
             return Ok(result);
+        }
+
+        private async Task<ActionResult<TrainingSessionResponse>> HandleStateTransition(Func<Task<TrainingSessionResponse>> action)
+        {
+            try
+            {
+                var result = await action();
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
     }
 }

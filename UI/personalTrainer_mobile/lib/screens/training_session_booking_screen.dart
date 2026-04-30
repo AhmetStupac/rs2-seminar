@@ -40,6 +40,18 @@ class _TrainingSessionBookingScreenState
 
   bool get _isEditMode => widget.existingSession != null;
 
+  /// True when the selected date+hour is less than 2 hours from now.
+  bool get _selectedSlotIsTooSoon {
+    if (_selectedHour == null) return false;
+    final slot = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedHour!,
+    );
+    return slot.isBefore(DateTime.now().add(const Duration(hours: 2)));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -165,6 +177,37 @@ class _TrainingSessionBookingScreenState
         original.hour == hour;
   }
 
+  String _formatBookingError(String raw) {
+    final msg = raw
+        .replaceAll('Exception: ', '')
+        .replaceAll(RegExp(r'API Error \(\d+\):\s*'), '')
+        .replaceAll('Validation failed:', '')
+        .trim();
+
+    final lower = msg.toLowerCase();
+
+    if (lower.contains('2 hours') || lower.contains('in advance')) {
+      return 'Training must be scheduled at least 2 hours in advance.';
+    }
+    if (lower.contains('working hours') ||
+        lower.contains('6:00') ||
+        lower.contains('9:00 pm') ||
+        lower.contains('21')) {
+      return 'Training can only be scheduled between 6:00 AM and 9:00 PM.';
+    }
+    if (lower.contains('duration')) {
+      return 'Session duration must be between 30 and 180 minutes.';
+    }
+    if (lower.contains('not available') || lower.contains('unavailable')) {
+      return 'The trainer is not available at the selected time. Please choose another slot.';
+    }
+    if (lower.contains('unauthorized') || lower.contains('permission')) {
+      return 'You do not have permission to perform this action.';
+    }
+
+    return msg.isNotEmpty ? msg : 'Could not save the training session. Please try again.';
+  }
+
   Future<void> _saveTrainingSession() async {
     if (!_hasMembership) {
       if (mounted) {
@@ -235,11 +278,7 @@ class _TrainingSessionBookingScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              _isEditMode
-                  ? 'Failed to reschedule training session: $e'
-                  : 'Failed to book training session: $e',
-            ),
+            content: Text(_formatBookingError(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -282,12 +321,6 @@ class _TrainingSessionBookingScreenState
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: !_isLocaleInitialized
           ? const Center(
@@ -342,9 +375,15 @@ class _TrainingSessionBookingScreenState
                     else if (_isAvailable != null)
                       Center(
                         child: Text(
-                          _isAvailable! ? 'Free slot' : 'Slot not available',
+                          _selectedSlotIsTooSoon
+                              ? 'Must be at least 2 hours in advance'
+                              : _isAvailable!
+                              ? 'Free slot'
+                              : 'Slot not available',
                           style: TextStyle(
-                            color: _isAvailable!
+                            color: _selectedSlotIsTooSoon
+                                ? Colors.red
+                                : _isAvailable!
                                 ? const Color(0xFF4CAF50)
                                 : Colors.red,
                             fontSize: 16,
@@ -355,7 +394,7 @@ class _TrainingSessionBookingScreenState
                     const SizedBox(height: 24),
 
                     // Book button
-                    if (_isAvailable == true)
+                    if (_isAvailable == true && !_selectedSlotIsTooSoon)
                       Center(
                         child: ElevatedButton(
                           onPressed: _isBooking ? null : _saveTrainingSession,

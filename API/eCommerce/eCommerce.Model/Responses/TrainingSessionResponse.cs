@@ -22,6 +22,8 @@ namespace eCommerce.Model.Responses
         public string? TrainerNotes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public DateTime? CancelledAt { get; set; }
+        public string? CancellationReason { get; set; }
         public bool CanEdit { get; set; } // Da li trenutni korisnik može da edituje
         public bool CanCancel { get; set; }
     }

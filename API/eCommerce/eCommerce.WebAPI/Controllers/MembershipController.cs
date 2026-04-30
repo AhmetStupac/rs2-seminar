@@ -1,0 +1,106 @@
+using eCommerce.Model.Constants;
+using eCommerce.Model.Responses;
+using eCommerce.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
+
+namespace eCommerce.WebAPI.Controllers
+{
+    [Authorize]
+    [Route("api/[controller]")]
+    [ApiController]
+    public class MembershipController : ControllerBase
+    {
+        private readonly IMembershipService _membershipService;
+
+        public MembershipController(IMembershipService membershipService)
+        {
+            _membershipService = membershipService;
+        }
+
+        /// <summary>
+        /// Returns all memberships (active and expired) for the currently authenticated client.
+        /// </summary>
+        [HttpGet("my")]
+        public async Task<IActionResult> GetMyMemberships()
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Forbid();
+
+            var result = await _membershipService.GetClientMembershipsAsync(userId.Value);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Checks whether the current user has an active membership with the specified trainer.
+        /// </summary>
+        [HttpGet("active/{trainerId:int}")]
+        public async Task<IActionResult> HasActiveMembership(int trainerId)
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Forbid();
+
+            var result = await _membershipService.HasActiveMembershipAsync(userId.Value, trainerId);
+            return Ok(new { isActive = result });
+        }
+
+        /// <summary>
+        /// Returns all memberships for the trainer's clients (trainer-only).
+        /// </summary>
+        [HttpGet("trainer/{personalTrainerId:int}/clients")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> GetTrainerMemberships(int personalTrainerId)
+        {
+            var result = await _membershipService.GetTrainerMembershipsAsync(personalTrainerId);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Returns the count of active clients for a trainer.
+        /// </summary>
+        [HttpGet("trainer/{personalTrainerId:int}/active-count")]
+        public async Task<IActionResult> GetActiveClientCount(int personalTrainerId)
+        {
+            var count = await _membershipService.GetActiveClientCountAsync(personalTrainerId);
+            return Ok(new { personalTrainerId, activeClientCount = count, maxClients = 5 });
+        }
+
+        /// <summary>
+        /// Revokes a membership early (trainer-only). Does not trigger a refund.
+        /// </summary>
+        [HttpPut("{membershipId:int}/revoke")]
+        [Authorize(Roles = Roles.Administrator)]
+        public async Task<IActionResult> Revoke(int membershipId)
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Forbid();
+
+            try
+            {
+                var result = await _membershipService.RevokeAsync(membershipId, userId.Value);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User?.FindFirst("nameid")?.Value;
+            return int.TryParse(claim, out var id) ? id : null;
+        }
+    }
+}
