@@ -246,45 +246,16 @@ class UserProvider extends BaseProvider<User> {
     }
   }
 
-  Future<bool> resetPassword(
-    String token,
-    String newPassword,
-    String confirmPassword,
-  ) async {
-    try {
-      var url = "${BaseProvider.baseUrl}Users/reset-password";
-      var uri = Uri.parse(url);
-
-      var headers = {"Content-Type": "application/json"};
-
-      var body = jsonEncode({
-        "token": token,
-        "newPassword": newPassword,
-        "confirmPassword": confirmPassword,
-      });
-
-      var response = await BaseProvider.client.post(
-        uri,
-        headers: headers,
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      return false;
-    }
-  }
-
   Future<bool> resetPasswordWithCode(
     String email,
     String verificationCode,
     String newPassword,
     String confirmPassword,
   ) async {
+    if (newPassword != confirmPassword) {
+      throw Exception("Passwords do not match");
+    }
+
     try {
       var url = "${BaseProvider.baseUrl}Users/reset-password";
       var uri = Uri.parse(url);
@@ -295,7 +266,6 @@ class UserProvider extends BaseProvider<User> {
         "Email": email,
         "Code": verificationCode,
         "NewPassword": newPassword,
-        "ConfirmPassword": confirmPassword,
       });
 
       var response = await BaseProvider.client.post(
