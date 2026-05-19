@@ -12,28 +12,33 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
-    private IConnection _connection;
-    private IModel _channel;
+    private IConnection? _connection;
+    private IModel? _channel;
 
     private const string QueueName = "user-login";
+    private const int MaxRetries = 5;
+    private const int RetryDelayMs = 5000;
 
     public Worker(ILogger<Worker> logger, IConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
+    }
 
+    private async Task<bool> ConnectAsync(CancellationToken cancellationToken)
+    {
         var factory = new ConnectionFactory
         {
-            HostName = configuration["RabbitMQ:Host"] ?? "localhost",
-            UserName = configuration["RabbitMQ:Username"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest",
-            Port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672"),
+            HostName = _configuration["RabbitMQ:Host"] ?? "localhost",
+            UserName = _configuration["RabbitMQ:Username"] ?? "guest",
+            Password = _configuration["RabbitMQ:Password"] ?? "guest",
+            Port = int.Parse(_configuration["RabbitMQ:Port"] ?? "5672"),
             RequestedHeartbeat = TimeSpan.FromSeconds(60),
-            AutomaticRecoveryEnabled = true
+            AutomaticRecoveryEnabled = true,
+            DispatchConsumersAsync = true
         };
 
-        const int maxRetries = 5;
-        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        for (int attempt = 1; attempt <= MaxRetries; attempt++)
         {
             try
             {
@@ -45,23 +50,31 @@ public class Worker : BackgroundService
                     exclusive: false,
                     autoDelete: false,
                     arguments: null);
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 
                 _logger.LogInformation("EmailService Worker connected to RabbitMQ.");
-                break;
+                return true;
             }
-            catch (Exception ex) when (attempt < maxRetries)
+            catch (Exception ex) when (attempt < MaxRetries)
             {
-                _logger.LogWarning(ex, "RabbitMQ connection attempt {Attempt}/{Max} failed. Retrying in 5s...", attempt, maxRetries);
-                Thread.Sleep(5000);
+                _logger.LogWarning(ex, "RabbitMQ connection attempt {Attempt}/{Max} failed. Retrying in {Delay}ms...",
+                    attempt, MaxRetries, RetryDelayMs);
+                await Task.Delay(RetryDelayMs, cancellationToken);
             }
         }
+
+        return false;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        stoppingToken.ThrowIfCancellationRequested();
+        if (!await ConnectAsync(stoppingToken))
+        {
+            _logger.LogError("Failed to connect to RabbitMQ after {Max} attempts. Worker will not start.", MaxRetries);
+            return;
+        }
 
-        var consumer = new EventingBasicConsumer(_channel);
+        var consumer = new AsyncEventingBasicConsumer(_channel);
 
         consumer.Received += async (_, ea) =>
         {
@@ -72,25 +85,28 @@ public class Worker : BackgroundService
                 var message = JsonSerializer.Deserialize<LoginNotificationMessage>(json);
                 if (message == null)
                 {
-                    _logger.LogWarning("Received null or unreadable message from queue.");
+                    _logger.LogWarning("Received null or unreadable message — discarding.");
+                    _channel!.BasicAck(ea.DeliveryTag, multiple: false);
                     return;
                 }
 
                 await SendLoginNotificationEmailAsync(message);
                 _logger.LogInformation("Login notification email sent to {Email}.", message.Email);
+                _channel!.BasicAck(ea.DeliveryTag, multiple: false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to process login notification message.");
+                _logger.LogError(ex, "Failed to send email — rejecting message (no requeue to avoid infinite loop).");
+                _channel!.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
             }
         };
 
-        _channel.BasicConsume(
+        _channel!.BasicConsume(
             queue: QueueName,
-            autoAck: true,
+            autoAck: false,
             consumer: consumer);
 
-        return Task.CompletedTask;
+        await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 
     private async Task SendLoginNotificationEmailAsync(LoginNotificationMessage message)

@@ -46,6 +46,23 @@ namespace eCommerce.Services
             if (!string.IsNullOrWhiteSpace(search.Status))
                 query = query.Where(p => p.Status == search.Status);
 
+            if (search.TrainerId.HasValue)
+            {
+                var tid = search.TrainerId.Value;
+                var trainingPlanIds = _context.Set<Database.TrainingPlan>()
+                    .Where(tp => tp.PersonalTrainerId == tid)
+                    .Select(tp => (int?)tp.Id);
+
+                var nutritionPlanIds = _context.Set<Database.NutritionPlan>()
+                    .Where(np => np.PersonalTrainerId == tid)
+                    .Select(np => (int?)np.Id);
+
+                query = query.Where(p =>
+                    (p.ItemType == PaymentItemType.TrainingPlan && trainingPlanIds.Contains(p.ItemId)) ||
+                    (p.ItemType == PaymentItemType.NutritionPlan && nutritionPlanIds.Contains(p.ItemId)) ||
+                    (p.ItemType == PaymentItemType.Membership && p.ItemId == tid));
+            }
+
             return query;
         }
 
@@ -106,6 +123,9 @@ namespace eCommerce.Services
             if (!isAdmin && record.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You are not allowed to confirm this payment.");
 
+            if (string.Equals(record.Status, "succeeded", StringComparison.OrdinalIgnoreCase))
+                return MapToResponse(record);
+
             var stripeService = new PaymentIntentService();
             var intent = await stripeService.GetAsync(request.StripePaymentIntentId);
 
@@ -139,7 +159,7 @@ namespace eCommerce.Services
             return MapToResponse(record);
         }
 
-        public async Task<PaymentResponse> RefundPaymentAsync(RefundPaymentRequest request)
+        public async Task RequestRefundAsync(RefundRequestCreateRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
                 throw new ArgumentException("StripePaymentIntentId is required.");
@@ -151,15 +171,47 @@ namespace eCommerce.Services
                 throw new KeyNotFoundException($"No payment record found for intent '{request.StripePaymentIntentId}'.");
 
             var currentUserId = GetCurrentUserId();
-            var isAdmin = IsCurrentUserAdmin();
-            if (!isAdmin && record.UserId != currentUserId)
-                throw new UnauthorizedAccessException("You are not allowed to refund this payment.");
+            if (record.UserId != currentUserId)
+                throw new UnauthorizedAccessException("You are not allowed to request a refund for this payment.");
 
-            if (string.Equals(record.Status, "refunded", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Payment is already refunded.");
+            if (string.Equals(record.Status, "refund_requested", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(record.Status, "refund_pending", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(record.Status, "refunded", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(record.Status, "refund_rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException("Refund is already in progress or completed.");
+            }
 
             if (!string.Equals(record.Status, "succeeded", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Only succeeded payments can be refunded.");
+
+            record.Status = "refund_requested";
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<PaymentResponse> DecideRefundAsync(RefundDecisionRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
+                throw new ArgumentException("StripePaymentIntentId is required.");
+
+            if (!IsCurrentUserAdmin())
+                throw new UnauthorizedAccessException("Only admins can approve or reject refunds.");
+
+            var record = await _context.Set<Payment>()
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == request.StripePaymentIntentId);
+
+            if (record == null)
+                throw new KeyNotFoundException($"No payment record found for intent '{request.StripePaymentIntentId}'.");
+
+            if (!string.Equals(record.Status, "refund_requested", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Refund request is not in a pending state.");
+
+            if (!request.Approve)
+            {
+                record.Status = "refund_rejected";
+                await _context.SaveChangesAsync();
+                return MapToResponse(record);
+            }
 
             var intentService = new PaymentIntentService();
             var intent = await intentService.GetAsync(request.StripePaymentIntentId);
@@ -462,10 +514,14 @@ namespace eCommerce.Services
                     if (trainer == null)
                         throw new KeyNotFoundException($"PersonalTrainer with id {request.ItemId.Value} not found.");
 
-                    if (!request.CustomAmountInCents.HasValue || request.CustomAmountInCents.Value <= 0)
-                        throw new ArgumentException("CustomAmountInCents is required for Membership payments.");
+                    var averagePrice = await _context.Set<Database.TrainingSession>()
+                        .Where(ts => ts.PersonalTrainerId == request.ItemId.Value && ts.Price.HasValue)
+                        .AverageAsync(ts => (float?)ts.Price);
 
-                    return request.CustomAmountInCents.Value;
+                    if (!averagePrice.HasValue || averagePrice.Value <= 0)
+                        throw new InvalidOperationException("Membership price is not configured for this trainer.");
+
+                    return (long)Math.Round(averagePrice.Value * 100);
                 }
 
                 default:

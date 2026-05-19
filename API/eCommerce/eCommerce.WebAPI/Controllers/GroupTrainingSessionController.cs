@@ -4,7 +4,6 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -16,38 +15,26 @@ namespace eCommerce.WebAPI.Controllers
         : BaseCRUDController<GroupTrainingSessionResponse, GroupTrainingSessionSearchObject, GroupTrainingSessionUpsertRequest, GroupTrainingSessionUpsertRequest>
     {
         private readonly IGroupTrainingSessionService _groupTrainingSessionService;
+        private readonly ICurrentUserService _currentUser;
 
-        public GroupTrainingSessionController(IGroupTrainingSessionService service) : base(service)
+        public GroupTrainingSessionController(IGroupTrainingSessionService service, ICurrentUserService currentUser) : base(service)
         {
             _groupTrainingSessionService = service;
+            _currentUser = currentUser;
         }
 
         [HttpPost("{id}/join")]
         public async Task<ActionResult<GroupTrainingSessionResponse>> Join(int id)
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue)
-                return Forbid();
-
-            return await _groupTrainingSessionService.JoinAsync(id, userId.Value);
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            return await _groupTrainingSessionService.JoinAsync(id, _currentUser.UserId.Value);
         }
 
         [HttpDelete("{id}/leave")]
         public async Task<ActionResult<bool>> Leave(int id)
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue)
-                return Forbid();
-
-            return await _groupTrainingSessionService.LeaveAsync(id, userId.Value);
-        }
-
-        private int? GetCurrentUserId()
-        {
-            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                        ?? User?.FindFirst("nameid")?.Value;
-
-            return int.TryParse(claim, out var userId) ? userId : null;
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            return await _groupTrainingSessionService.LeaveAsync(id, _currentUser.UserId.Value);
         }
     }
 }

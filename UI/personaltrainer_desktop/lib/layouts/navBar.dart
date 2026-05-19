@@ -7,6 +7,7 @@ import 'package:personaltrainer_desktop/screens/user_list_screen.dart';
 import 'package:personaltrainer_desktop/screens/profile_screen.dart';
 import 'package:personaltrainer_desktop/screens/messaging_screen.dart';
 import 'package:personaltrainer_desktop/screens/nutrition_plan_screen.dart';
+import 'package:personaltrainer_desktop/screens/refund_requests_screen.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
 class NavBar extends StatefulWidget {
@@ -146,6 +147,22 @@ class _MasterScreenState extends State<NavBar> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => UsersListScreen()),
+                );
+              },
+            ),
+
+          if (AuthProvider.isSuperAdmin ||
+              AuthProvider.isAdministrator ||
+              AuthProvider.isPersonalTrainer)
+            _buildMenuItem(
+              icon: Icons.currency_exchange,
+              label: 'Refund Requests',
+              routeName: 'Refund Requests',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const RefundRequestsScreen(),
+                  ),
                 );
               },
             ),

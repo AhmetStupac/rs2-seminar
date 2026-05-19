@@ -3,7 +3,6 @@ using eCommerce.Model.Responses;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace eCommerce.WebAPI.Controllers
 {
@@ -13,17 +12,19 @@ namespace eCommerce.WebAPI.Controllers
     public class PersonalTrainerRatingController : ControllerBase
     {
         private readonly IPersonalTrainerRatingService _ratingService;
+        private readonly ICurrentUserService _currentUser;
 
-        public PersonalTrainerRatingController(IPersonalTrainerRatingService ratingService)
+        public PersonalTrainerRatingController(IPersonalTrainerRatingService ratingService, ICurrentUserService currentUser)
         {
             _ratingService = ratingService;
+            _currentUser = currentUser;
         }
 
         // Get current user's rating for a specific trainer
         [HttpGet("my-rating/{personalTrainerId}")]
         public async Task<ActionResult<PersonalTrainerRatingResponse>> GetMyRating(int personalTrainerId)
         {
-            var userId = GetCurrentUserId();
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
             var rating = await _ratingService.GetUserRatingForTrainerAsync(userId, personalTrainerId);
 
             if (rating == null)
@@ -59,7 +60,7 @@ namespace eCommerce.WebAPI.Controllers
 
             try
             {
-                var userId = GetCurrentUserId();
+                var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
                 var rating = await _ratingService.CreateRatingAsync(userId, request);
                 return CreatedAtAction(nameof(GetMyRating), new { personalTrainerId = rating.PersonalTrainerId }, rating);
             }
@@ -76,7 +77,7 @@ namespace eCommerce.WebAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = GetCurrentUserId();
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
             var rating = await _ratingService.UpdateRatingAsync(ratingId, userId, request);
 
             if (rating == null)
@@ -89,7 +90,7 @@ namespace eCommerce.WebAPI.Controllers
         [HttpDelete("{ratingId}")]
         public async Task<ActionResult> DeleteRating(int ratingId)
         {
-            var userId = GetCurrentUserId();
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
             var success = await _ratingService.DeleteRatingAsync(ratingId, userId);
 
             if (!success)
@@ -98,14 +99,5 @@ namespace eCommerce.WebAPI.Controllers
             return NoContent();
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated");
-            }
-            return userId;
-        }
     }
 }

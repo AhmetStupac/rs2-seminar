@@ -47,7 +47,10 @@ namespace eCommerce.Services.States
                     throw new ArgumentException("Trainer is not available at the requested time");
             }
 
-            _mapper.Map(request, entity);
+            entity.GymId = request.GymId;
+            entity.ScheduledDateTime = request.ScheduledDateTime;
+            entity.DurationMinutes = request.DurationMinutes;
+            entity.Notes = request.Notes;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -59,7 +62,10 @@ namespace eCommerce.Services.States
             if (!IsCurrentUserTrainer(entity.PersonalTrainerId))
                 throw new UnauthorizedAccessException("Only the trainer can confirm the training session");
 
+            var userId = GetCurrentUserId();
             entity.Status = TrainingSessionStatus.Confirmed;
+            entity.ApprovedAt = DateTime.UtcNow;
+            entity.ApprovedByUserId = userId;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -88,6 +94,7 @@ namespace eCommerce.Services.States
 
             entity.Status = TrainingSessionStatus.Cancelled;
             entity.CancelledAt = DateTime.UtcNow;
+            entity.CancelledByUserId = userId;
             entity.CancellationReason = request?.CancellationReason;
             entity.UpdatedAt = DateTime.UtcNow;
 

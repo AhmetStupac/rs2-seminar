@@ -13,6 +13,8 @@ namespace eCommerce.Services
 {
     public abstract class BaseService<T, TSearch, TEntity> : IService<T, TSearch> where T : class where TSearch : BaseSearchObject where TEntity : class
     {
+        private const int MaxPageSize = 50;
+
         private readonly IB210033DbContext _context;
         protected readonly IMapper _mapper;
 
@@ -28,21 +30,12 @@ namespace eCommerce.Services
             query = await ApplyFilterAsync(query, search);
 
             int? totalCount = null;
-            if (search.IncludeTotalCount){
+            if (search.IncludeTotalCount)
                 totalCount = await query.CountAsync();
-            }
 
-            if (!search.RetrieveAll)
-            {
-                if (search.Page.HasValue)
-                {
-                    query = query.Skip(search.Page.Value * search.PageSize.Value);
-                }
-                if (search.PageSize.HasValue)
-                {
-                    query = query.Take(search.PageSize.Value);
-                }
-            }
+            var pageSize = Math.Min(search.PageSize ?? 10, MaxPageSize);
+            var page = search.Page ?? 0;
+            query = query.Skip(page * pageSize).Take(pageSize);
 
             
             

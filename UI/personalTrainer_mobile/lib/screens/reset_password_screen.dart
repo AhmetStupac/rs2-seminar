@@ -40,60 +40,43 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
 
     try {
-      final code = _codeController.text.trim();
-      final newPassword = _newPasswordController.text;
-      final confirmPassword = _confirmPasswordController.text;
-
-      final success = await _userProvider.resetPasswordWithCode(
+      await _userProvider.resetPasswordWithCode(
         widget.email,
-        code,
-        newPassword,
-        confirmPassword,
+        _codeController.text.trim(),
+        _newPasswordController.text,
+        _confirmPasswordController.text,
       );
 
       if (mounted) {
-        if (success) {
-          // Show success dialog
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 28),
-                  SizedBox(width: 8),
-                  Text('Success!'),
-                ],
-              ),
-              content: const Text(
-                'Your password has been successfully changed. You can now login with your new password.',
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    // Navigate back to login screen
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  child: const Text('OK'),
-                ),
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                SizedBox(width: 8),
+                Text('Success!'),
               ],
             ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Error resetting password. Please check the entered data.',
-              ),
-              backgroundColor: Colors.red,
+            content: const Text(
+              'Your password has been successfully changed. You can now login with your new password.',
             ),
-          );
-        }
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                    (route) => false,
+                  );
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

@@ -1,22 +1,21 @@
-﻿using eCommerce.Model.Responses;
+﻿using eCommerce.Model.Constants;
+using eCommerce.Model.Responses;
 using eCommerce.Services.Database;
 using eCommerce.Services.Extensions;
 using eCommerce.Services.Interface;
-using eCommerce.Services.Repository;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace eCommerce.Services.SignalR
 {
     [Authorize]
-    public class MessageHub(IMessageRepository messageRepository, IUserRepository userRepository, INotificationService notificationService) : Hub
+    public class MessageHub(
+        IMessageRepository messageRepository,
+        IUserRepository userRepository,
+        INotificationService notificationService,
+        IValidator<CreateMessageDTO> messageValidator) : Hub
     {
         public override async Task OnConnectedAsync()
         {
@@ -52,19 +51,26 @@ namespace eCommerce.Services.SignalR
 
         public async Task SendMessage(CreateMessageDTO createMessageDto)
         {
+            var validation = await messageValidator.ValidateAsync(createMessageDto);
+            if (!validation.IsValid)
+            {
+                var errorText = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+                throw new HubException(errorText);
+            }
+
+            var normalizedContent = MessageContentRules.Normalize(createMessageDto.Content)!;
+
             var sender = await userRepository.GetUserByIdAsync(GetUserId());
             var recipient = await userRepository.GetUserByIdAsync(createMessageDto.RecipientId);
 
-            // Convert createMessageDto.RecipientId to int for comparison
-            if (recipient == null || sender == null || sender.Id == (createMessageDto.RecipientId))
-                throw new HubException("Cannot send message");
+            if (recipient == null || sender == null || sender.Id == createMessageDto.RecipientId)
+                throw new HubException("Cannot send message.");
 
-            // Change SenderId and RecipientId assignments to use string conversion
             var message = new Message
             {
                 SenderId = sender.Id,
                 RecipientId = recipient.Id,
-                Content = createMessageDto.Content
+                Content = normalizedContent
             };
 
             messageRepository.AddMessage(message);

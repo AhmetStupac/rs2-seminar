@@ -8,8 +8,9 @@ class Gym {
   int? id;
   String? name;
   String? address;
-  String? city;
-  String? country;
+  int? cityId;
+  String? cityName;
+  String? countryName;
   String? email;
   String? phoneNumber;
   String? workTime;
@@ -21,8 +22,9 @@ class Gym {
     this.id,
     this.name,
     this.address,
-    this.city,
-    this.country,
+    this.cityId,
+    this.cityName,
+    this.countryName,
     this.email,
     this.phoneNumber,
     this.workTime,

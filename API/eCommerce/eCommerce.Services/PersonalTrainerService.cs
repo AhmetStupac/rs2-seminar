@@ -1,4 +1,4 @@
-using eCommerce.Model.Requests;
+﻿using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Database;
@@ -186,7 +186,12 @@ namespace eCommerce.Services
                 .OrderByDescending(x => x.FinalScore)
                 .FirstOrDefault();
 
-            return top != null ? MapToResponse(top.Trainer) : null;
+            if (top == null)
+                return null;
+
+            var response = MapToResponse(top.Trainer);
+            response.WhyRecommended = BuildRecommendationReason(top.Trainer, usedTrainerIds, highlyRatedTrainerIds, preferredSports);
+            return response;
         }
 
         private async Task<List<string>> GetPreferredSportsForUserAsync(int userId)
@@ -248,7 +253,28 @@ namespace eCommerce.Services
             else
                 chosen = candidates.OrderBy(_ => Guid.NewGuid()).First();
 
-            return MapToResponse(chosen);
+            var response = MapToResponse(chosen);
+            response.WhyRecommended = BuildRecommendationReason(chosen, usedTrainerIds, highlyRatedTrainerIds, preferredSports);
+            return response;
+        }
+
+        private static string BuildRecommendationReason(PersonalTrainer trainer, List<int> usedTrainerIds, List<int> highlyRatedTrainerIds, List<string> preferredSports)
+        {
+            var reasons = new List<string>();
+
+            if (usedTrainerIds.Contains(trainer.Id))
+                reasons.Add("ranijih treninga sa ovim trenerom");
+
+            if (highlyRatedTrainerIds.Contains(trainer.Id))
+                reasons.Add("visokih ocjena koje ste dali ovom treneru");
+
+            if (!string.IsNullOrEmpty(trainer.Sport) && preferredSports.Contains(trainer.Sport))
+                reasons.Add($"sličnog sporta ({trainer.Sport}) koji preferirate");
+
+            if (reasons.Count == 0)
+                return null;
+
+            return $"Preporučeno jer imate iskustvo sa {string.Join(" i ", reasons)}.";
         }
 
         public static void TrainRecommenderAtStartup(IServiceProvider serviceProvider)

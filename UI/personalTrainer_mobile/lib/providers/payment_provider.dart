@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:personaltrainer_mobile/models/payment_intent_response.dart';
 import 'package:personaltrainer_mobile/models/payment_record.dart';
 import 'package:personaltrainer_mobile/providers/base_provider.dart';
+import 'package:personaltrainer_mobile/utils/api_error.dart';
 
 class PaymentProvider extends BaseProvider<dynamic> {
   PaymentProvider() : super("Payment");
@@ -16,125 +17,72 @@ class PaymentProvider extends BaseProvider<dynamic> {
     int? itemId,
     int? customAmountInCents,
   }) async {
-    final url = "${BaseProvider.baseUrl}Payment/create-intent";
-    final uri = Uri.parse(url);
-    final headers = createHeaders();
-
-    final body = jsonEncode({
-      'itemType': itemType,
-      if (itemId != null) 'itemId': itemId,
-      if (customAmountInCents != null)
-        'customAmountInCents': customAmountInCents,
-    });
-
+    final uri = Uri.parse("${BaseProvider.baseUrl}Payment/create-intent");
     final response = await BaseProvider.client.post(
       uri,
-      headers: headers,
-      body: body,
+      headers: createHeaders(),
+      body: jsonEncode({
+        'itemType': itemType,
+        if (itemId != null) 'itemId': itemId,
+        if (customAmountInCents != null) 'customAmountInCents': customAmountInCents,
+      }),
     );
 
     if (isValidResponse(response)) {
-      final data = jsonDecode(response.body);
-      return PaymentIntentResponse.fromJson(data);
-    } else {
-      throw Exception("Failed to create payment intent");
+      return PaymentIntentResponse.fromJson(jsonDecode(response.body));
     }
+    throw Exception("Failed to create payment intent");
   }
 
   /// Confirms the payment on the backend after Stripe confirms it on the client.
   Future<void> confirmPayment(String stripePaymentIntentId) async {
-    final url = "${BaseProvider.baseUrl}Payment/confirm";
-    final uri = Uri.parse(url);
-    final headers = createHeaders();
-
-    final body = jsonEncode({'stripePaymentIntentId': stripePaymentIntentId});
-
+    final uri = Uri.parse("${BaseProvider.baseUrl}Payment/confirm");
     final response = await BaseProvider.client.post(
       uri,
-      headers: headers,
-      body: body,
+      headers: createHeaders(),
+      body: jsonEncode({'stripePaymentIntentId': stripePaymentIntentId}),
     );
-
     isValidResponse(response);
   }
 
-  Future<List<PaymentRecord>> getUserPayments() async {
-    final url = "${BaseProvider.baseUrl}Payment/user";
-    final uri = Uri.parse(url);
-    final headers = createHeaders();
-
-    final response = await BaseProvider.client.get(uri, headers: headers);
+  Future<List<PaymentRecord>> getUserPayments({int page = 0, int pageSize = 50}) async {
+    final uri = Uri.parse(
+      "${BaseProvider.baseUrl}Payment/user?page=$page&pageSize=$pageSize",
+    );
+    final response = await BaseProvider.client.get(uri, headers: createHeaders());
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) {
-        return [];
-      }
+      if (response.body.isEmpty) return [];
       final data = jsonDecode(response.body);
       if (data is List) {
         return data.map((item) => PaymentRecord.fromJson(item)).toList();
       }
       if (data is Map && data['items'] is List) {
-        final items = data['items'] as List;
-        return items.map((item) => PaymentRecord.fromJson(item)).toList();
+        return (data['items'] as List)
+            .map((item) => PaymentRecord.fromJson(item))
+            .toList();
       }
       return [];
     }
 
-    if (response.statusCode == 400 ||
-        response.statusCode == 403 ||
-        response.statusCode == 404) {
-      final message = _extractErrorMessage(response.body);
-      throw Exception(
-        "API Error (${response.statusCode}): ${message.isEmpty ? response.reasonPhrase ?? 'Request failed' : message}",
-      );
-    }
-
+    // Delegates to the central parser — throws with the backend message.
     isValidResponse(response);
     return [];
   }
 
   Future<void> refundPayment(String stripePaymentIntentId) async {
-    final url = "${BaseProvider.baseUrl}Payment/refund";
-    final uri = Uri.parse(url);
-    final headers = createHeaders();
-
-    final body = jsonEncode({'stripePaymentIntentId': stripePaymentIntentId});
-
+    final uri = Uri.parse("${BaseProvider.baseUrl}Payment/refund-request");
     final response = await BaseProvider.client.post(
       uri,
-      headers: headers,
-      body: body,
+      headers: createHeaders(),
+      body: jsonEncode({'stripePaymentIntentId': stripePaymentIntentId}),
     );
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return;
-    }
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
 
-    if (response.statusCode == 400 ||
-        response.statusCode == 403 ||
-        response.statusCode == 404) {
-      final message = _extractErrorMessage(response.body);
-      throw Exception(
-        "API Error (${response.statusCode}): ${message.isEmpty ? response.reasonPhrase ?? 'Request failed' : message}",
-      );
-    }
-
-    isValidResponse(response);
-  }
-
-  String _extractErrorMessage(String body) {
-    if (body.isEmpty) return '';
-    try {
-      final data = jsonDecode(body);
-      if (data is Map) {
-        return data['message']?.toString() ??
-            data['title']?.toString() ??
-            data['error']?.toString() ??
-            '';
-      }
-      return data.toString();
-    } catch (_) {
-      return body;
-    }
+    // Use the central parser so the backend message reaches the UI.
+    throw Exception(
+      ApiError.fromBody(response.body, statusCode: response.statusCode),
+    );
   }
 }

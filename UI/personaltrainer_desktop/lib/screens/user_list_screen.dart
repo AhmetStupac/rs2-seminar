@@ -5,6 +5,7 @@ import 'package:personaltrainer_desktop/providers/admin_provider.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
 import 'package:personaltrainer_desktop/screens/admin_ban_screen.dart';
+import 'package:personaltrainer_desktop/screens/change_role_screen.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
 class UsersListScreen extends StatefulWidget {
@@ -353,6 +354,15 @@ class _UsersListScreenState extends State<UsersListScreen> {
                                                 ] else ...[
                                                   IconButton(
                                                     icon: const Icon(
+                                                      Icons.manage_accounts,
+                                                      color: Colors.deepPurple,
+                                                    ),
+                                                    tooltip: 'Change role',
+                                                    onPressed: () =>
+                                                        _openChangeRoleScreen(user),
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(
                                                       Icons.delete,
                                                       color: Colors.red,
                                                     ),
@@ -394,6 +404,24 @@ class _UsersListScreenState extends State<UsersListScreen> {
         ],
       ),
     );
+  }
+
+  void _openChangeRoleScreen(Map<String, dynamic> user) async {
+    final currentRoles = (user['roles'] ?? user['userRoles'] ?? []) as List<dynamic>;
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChangeRoleScreen(
+          userId: user['id'],
+          username: user['username'] ?? 'Unknown',
+          currentRoles: currentRoles,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      _loadUsers();
+    }
   }
 
   void _openBanScreen(Map<String, dynamic> user) async {

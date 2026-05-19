@@ -2,7 +2,7 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using System;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -13,18 +13,19 @@ namespace eCommerce.WebAPI.Controllers
     public class NotificationsController : ControllerBase
     {
         private readonly INotificationService _notificationService;
+        private readonly ICurrentUserService _currentUser;
 
-        public NotificationsController(INotificationService notificationService)
+        public NotificationsController(INotificationService notificationService, ICurrentUserService currentUser)
         {
             _notificationService = notificationService;
+            _currentUser = currentUser;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] NotificationSearchObject? search = null)
         {
-            var userId = GetCurrentUserId();
             search ??= new NotificationSearchObject();
-            search.UserId = userId;
+            search.UserId = _currentUser.UserId;
             var result = await _notificationService.GetAsync(search);
             return Ok(result);
         }
@@ -32,28 +33,17 @@ namespace eCommerce.WebAPI.Controllers
         [HttpPost("{id:int}/read")]
         public async Task<IActionResult> MarkRead(int id)
         {
-            var userId = GetCurrentUserId();
-            await _notificationService.MarkAsReadAsync(userId, id);
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            await _notificationService.MarkAsReadAsync(_currentUser.UserId.Value, id);
             return NoContent();
         }
 
         [HttpPost("read-all")]
         public async Task<IActionResult> MarkAllRead()
         {
-            var userId = GetCurrentUserId();
-            await _notificationService.MarkAllAsReadAsync(userId);
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            await _notificationService.MarkAllAsReadAsync(_currentUser.UserId.Value);
             return NoContent();
-        }
-
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                             ?? User?.FindFirst("nameid")?.Value;
-
-            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                throw new UnauthorizedAccessException("User is not authenticated");
-
-            return userId;
         }
     }
 }

@@ -3,7 +3,6 @@ using eCommerce.Model.Responses;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -14,10 +13,12 @@ namespace eCommerce.WebAPI.Controllers
     public class MembershipController : ControllerBase
     {
         private readonly IMembershipService _membershipService;
+        private readonly ICurrentUserService _currentUser;
 
-        public MembershipController(IMembershipService membershipService)
+        public MembershipController(IMembershipService membershipService, ICurrentUserService currentUser)
         {
             _membershipService = membershipService;
+            _currentUser = currentUser;
         }
 
         /// <summary>
@@ -26,10 +27,8 @@ namespace eCommerce.WebAPI.Controllers
         [HttpGet("my")]
         public async Task<IActionResult> GetMyMemberships()
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue) return Forbid();
-
-            var result = await _membershipService.GetClientMembershipsAsync(userId.Value);
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            var result = await _membershipService.GetClientMembershipsAsync(_currentUser.UserId.Value);
             return Ok(result);
         }
 
@@ -39,10 +38,8 @@ namespace eCommerce.WebAPI.Controllers
         [HttpGet("active/{trainerId:int}")]
         public async Task<IActionResult> HasActiveMembership(int trainerId)
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue) return Forbid();
-
-            var result = await _membershipService.HasActiveMembershipAsync(userId.Value, trainerId);
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            var result = await _membershipService.HasActiveMembershipAsync(_currentUser.UserId.Value, trainerId);
             return Ok(new { isActive = result });
         }
 
@@ -74,12 +71,11 @@ namespace eCommerce.WebAPI.Controllers
         [Authorize(Roles = Roles.Administrator)]
         public async Task<IActionResult> Revoke(int membershipId)
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue) return Forbid();
+            if (!_currentUser.UserId.HasValue) return Forbid();
 
             try
             {
-                var result = await _membershipService.RevokeAsync(membershipId, userId.Value);
+                var result = await _membershipService.RevokeAsync(membershipId, _currentUser.UserId.Value);
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)
@@ -96,11 +92,5 @@ namespace eCommerce.WebAPI.Controllers
             }
         }
 
-        private int? GetCurrentUserId()
-        {
-            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                        ?? User?.FindFirst("nameid")?.Value;
-            return int.TryParse(claim, out var id) ? id : null;
-        }
     }
 }

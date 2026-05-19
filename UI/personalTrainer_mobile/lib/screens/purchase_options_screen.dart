@@ -56,7 +56,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
       final result = await _trainingPlanProvider.get(
         filter: {
           if (widget.trainer.id != null) 'personalTrainerId': widget.trainer.id,
-          'retrieveAll': true,
+          'pageSize': 50,
         },
       );
       setState(() {
@@ -74,7 +74,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
       final result = await _nutritionPlanProvider.get(
         filter: {
           if (widget.trainer.id != null) 'personalTrainerId': widget.trainer.id,
-          'retrieveAll': true,
+          'pageSize': 50,
         },
       );
       setState(() {
@@ -131,6 +131,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
     int? itemId,
     int? customAmountInCents,
     required String itemName,
+    String? priceLabel,
   }) async {
     final paymentSuccess = await Navigator.push<bool>(
       context,
@@ -140,6 +141,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
           itemId: itemId,
           customAmountInCents: customAmountInCents,
           itemName: itemName,
+          priceLabel: priceLabel,
         ),
       ),
     );
@@ -216,6 +218,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                     itemType: 0,
                     itemId: item.id,
                     itemName: item.name,
+                    priceLabel: item.price,
                   ),
                 ),
               ),
@@ -250,6 +253,7 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                     itemType: 1,
                     itemId: item.id,
                     itemName: item.name,
+                    priceLabel: item.price,
                   ),
                 ),
               ),

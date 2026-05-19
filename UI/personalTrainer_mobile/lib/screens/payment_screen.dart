@@ -13,6 +13,9 @@ class PaymentScreen extends StatefulWidget {
   final int? itemId;
   final int? customAmountInCents;
   final String itemName;
+  /// Human-readable price string shown in the confirmation dialog (e.g. "€25.00").
+  /// Falls back to formatting [customAmountInCents] if not provided.
+  final String? priceLabel;
 
   const PaymentScreen({
     super.key,
@@ -20,6 +23,7 @@ class PaymentScreen extends StatefulWidget {
     this.itemId,
     this.customAmountInCents,
     required this.itemName,
+    this.priceLabel,
   });
 
   @override
@@ -74,6 +78,107 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     return message;
+  }
+
+  Future<bool> _showConfirmationDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.payment, color: Color(0xFFE8B44A)),
+            SizedBox(width: 10),
+            Text('Confirm Payment'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'You are about to make a payment. Please review the details:',
+              style: TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+            const SizedBox(height: 16),
+            _confirmRow(Icons.label_outline, 'Item', widget.itemName),
+            const SizedBox(height: 8),
+            _confirmRow(_itemTypeIcon, 'Type', _itemTypeLabel),
+            if (widget.priceLabel != null ||
+                widget.customAmountInCents != null) ...[
+              const SizedBox(height: 8),
+              _confirmRow(
+                Icons.euro,
+                'Amount',
+                widget.priceLabel ??
+                    _formatAmount(widget.customAmountInCents!),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      size: 16, color: Colors.orange.shade700),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'This action cannot be undone. The charge will be applied immediately.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE8B44A),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Confirm & Pay'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Widget _confirmRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _startPayment() async {
@@ -411,7 +516,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _startPayment,
+              onPressed: _isLoading
+                  ? null
+                  : () async {
+                      final confirmed = await _showConfirmationDialog();
+                      if (confirmed) _startPayment();
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE8B44A),
                 foregroundColor: Colors.white,

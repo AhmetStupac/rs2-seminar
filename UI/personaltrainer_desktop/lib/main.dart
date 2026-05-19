@@ -15,6 +15,8 @@ import 'package:personaltrainer_desktop/providers/training_plan_provider.dart';
 import 'package:personaltrainer_desktop/providers/training_provider.dart';
 import 'package:personaltrainer_desktop/providers/user_provider.dart';
 import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
+import 'package:personaltrainer_desktop/providers/admin_provider.dart';
+import 'package:personaltrainer_desktop/screens/banned_screen.dart';
 import 'package:personaltrainer_desktop/screens/training_plan_screen.dart';
 import 'package:personaltrainer_desktop/screens/register_screen.dart';
 import 'package:personaltrainer_desktop/screens/change_password_screen.dart';
@@ -313,6 +315,23 @@ class LoginPage extends StatelessWidget {
 
                         // JWT token is already stored by userProvider.login via AuthProvider.applyLoginResponse
 
+                        // Check if user is banned before proceeding
+                        final adminProvider = AdminProvider();
+                        final isBanned = await adminProvider.checkMyBan();
+
+                        if (!context.mounted) return;
+
+                        if (isBanned) {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => const BannedScreen(
+                                reason: 'Your account has been banned by an administrator.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
                         // Connect to SignalR after login
                         final signalRProvider = Provider.of<SignalRProvider>(
                           context,
@@ -332,9 +351,23 @@ class LoginPage extends StatelessWidget {
                         );
                         final isBan = errMsg.startsWith('BANNED:');
                         final isDeleted = errMsg.startsWith('DELETED:');
-                        final banMessage = isBan
-                            ? errMsg.replaceFirst('BANNED:', '').trim()
-                            : null;
+
+                        if (isBan) {
+                          final banMessage = errMsg
+                              .replaceFirst('BANNED:', '')
+                              .trim();
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => BannedScreen(
+                                reason: banMessage.isNotEmpty
+                                    ? banMessage
+                                    : 'Your account has been banned by an administrator.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
                         final deletedMessage = isDeleted
                             ? errMsg.replaceFirst('DELETED:', '').trim()
                             : null;
@@ -344,35 +377,27 @@ class LoginPage extends StatelessWidget {
                             title: Row(
                               children: [
                                 Icon(
-                                  isBan
-                                      ? Icons.block
-                                      : isDeleted
+                                  isDeleted
                                       ? Icons.person_off
                                       : Icons.error_outline,
-                                  color: isBan || isDeleted
+                                  color: isDeleted
                                       ? Colors.red
                                       : Colors.orange,
                                 ),
                                 SizedBox(width: 8),
                                 Text(
-                                  isBan
-                                      ? "Account Banned"
-                                      : isDeleted
+                                  isDeleted
                                       ? "Account Deleted"
                                       : "Login Error",
                                 ),
                               ],
                             ),
                             content: Text(
-                              isBan
-                                  ? banMessage!
-                                  : isDeleted
+                              isDeleted
                                   ? deletedMessage!
                                   : "Invalid username or password. Please try again.",
                               style: TextStyle(
-                                color: isBan || isDeleted
-                                    ? Colors.red[800]
-                                    : null,
+                                color: isDeleted ? Colors.red[800] : null,
                               ),
                             ),
                             actions: [
@@ -418,7 +443,7 @@ class LoginPage extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text("Reset Password"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -442,21 +467,21 @@ class LoginPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text("Cancel"),
           ),
           ElevatedButton(
             onPressed: () async {
               final email = emailController.text.trim();
               if (email.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
                   SnackBar(content: Text("Please enter your email")),
                 );
                 return;
               }
 
               if (!email.contains('@') || !email.contains('.')) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
                   SnackBar(content: Text("Please enter a valid email")),
                 );
                 return;
@@ -465,12 +490,13 @@ class LoginPage extends StatelessWidget {
               final userProvider = UserProvider();
               final success = await userProvider.forgotPassword(email);
 
-              if (!context.mounted) {
+              if (!dialogContext.mounted) {
                 return;
               }
 
               if (success) {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -484,7 +510,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 );
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
                   SnackBar(content: Text("Failed to send verification code")),
                 );
               }

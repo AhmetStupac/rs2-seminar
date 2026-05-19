@@ -1,5 +1,5 @@
 ﻿using eCommerce.Services;
-using System.Security.Claims;
+using eCommerce.Services.Interface;
 
 namespace eCommerce.WebAPI.Middleware
 {
@@ -12,22 +12,15 @@ namespace eCommerce.WebAPI.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, IUserService userService)
+        public async Task InvokeAsync(HttpContext context, IUserService userService, ICurrentUserService currentUser)
         {
-            if (context.User.Identity?.IsAuthenticated == true)
+            if (currentUser.IsAuthenticated && currentUser.UserId.HasValue)
             {
-                var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                if (await userService.IsUserBannedAsync(currentUser.UserId.Value))
                 {
-                    if (await userService.IsUserBannedAsync(userId))
-                    {
-                        context.Response.StatusCode = 403;
-                        await context.Response.WriteAsJsonAsync(new
-                        {
-                            message = "You have been banned"
-                        });
-                        return;
-                    }
+                    context.Response.StatusCode = 403;
+                    await context.Response.WriteAsJsonAsync(new { message = "You have been banned" });
+                    return;
                 }
             }
 

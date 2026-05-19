@@ -36,10 +36,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  final _passwordFormKey = GlobalKey<FormState>();
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   User? _user;
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isEditing = false;
+  bool _isChangingPassword = false;
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
   String? _profileImageUrl;
 
   @override
@@ -55,6 +64,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _emailController.dispose();
     _usernameController.dispose();
     _phoneController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -110,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _isSaving = true);
     try {
-      final success = await _userProvider.updateUser(
+      await _userProvider.updateUser(
         _user!.id!,
         _firstNameController.text.trim(),
         _lastNameController.text.trim(),
@@ -124,19 +136,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isSaving = false;
           _isEditing = false;
         });
-        if (success) {
-          await _loadUser();
+        await _loadUser();
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile updated successfully.'),
               backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to update profile.'),
-              backgroundColor: Colors.red,
             ),
           );
         }
@@ -144,6 +149,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _changePassword() async {
+    if (!_passwordFormKey.currentState!.validate()) return;
+
+    setState(() => _isChangingPassword = true);
+    try {
+      await _userProvider.changePassword(
+        _currentPasswordController.text,
+        _newPasswordController.text,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isChangingPassword = false;
+          _currentPasswordController.clear();
+          _newPasswordController.clear();
+          _confirmPasswordController.clear();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password changed successfully.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isChangingPassword = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString().replaceAll('Exception: ', '')),
@@ -194,7 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         throw Exception('Server did not return an image ID.');
       }
 
-      final success = await _userProvider.updateUser(
+      await _userProvider.updateUser(
         _user!.id!,
         _firstNameController.text.trim(),
         _lastNameController.text.trim(),
@@ -208,19 +250,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (mounted) {
         setState(() => _isSaving = false);
-        if (success) {
-          await _loadUser();
+        await _loadUser();
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Profile picture updated successfully.'),
               backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to update profile picture.'),
-              backgroundColor: Colors.red,
             ),
           );
         }
@@ -528,6 +563,150 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ],
+                const SizedBox(height: 40),
+                Divider(color: Colors.grey[300]),
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Change Password',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Form(
+                  key: _passwordFormKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _currentPasswordController,
+                        obscureText: _obscureCurrentPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Current Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureCurrentPassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () => setState(() {
+                              _obscureCurrentPassword =
+                                  !_obscureCurrentPassword;
+                            }),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Current password is required.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _newPasswordController,
+                        obscureText: _obscureNewPassword,
+                        decoration: InputDecoration(
+                          labelText: 'New Password',
+                          prefixIcon: const Icon(Icons.lock_reset_outlined),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureNewPassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () => setState(() {
+                              _obscureNewPassword = !_obscureNewPassword;
+                            }),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'New password is required.';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm New Password',
+                          prefixIcon: const Icon(Icons.lock_reset_outlined),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () => setState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            }),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your new password.';
+                          }
+                          if (value != _newPasswordController.text) {
+                            return 'Passwords do not match.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed:
+                              _isChangingPassword ? null : _changePassword,
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isChangingPassword
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Change Password',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

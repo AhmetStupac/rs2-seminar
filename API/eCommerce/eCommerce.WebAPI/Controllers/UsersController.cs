@@ -7,8 +7,6 @@ using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -20,13 +18,16 @@ namespace eCommerce.WebAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        private readonly ICurrentUserService _currentUser;
 
-        public UsersController(IUserService userService, ITokenService tokenService)
+        public UsersController(IUserService userService, ITokenService tokenService, ICurrentUserService currentUser)
         {
             _userService = userService;
             _tokenService = tokenService;
+            _currentUser = currentUser;
         }
 
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpGet]
         public async Task<ActionResult<List<UserResponse>>> Get([FromQuery] UserSearchObject? search = null)
         {
@@ -36,6 +37,10 @@ namespace eCommerce.WebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserResponse>> GetById(int id)
         {
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            if (!_currentUser.IsSuperAdmin && _currentUser.UserId.Value != id)
+                return Forbid();
+
             var user = await _userService.GetByIdAsync(id);
             
             if (user == null)
@@ -48,13 +53,9 @@ namespace eCommerce.WebAPI.Controllers
         //register
         [AllowAnonymous]
         [HttpPost]
-        public async Task<ActionResult<UserResponse>> Create(UserUpsertRequest request)
+        public async Task<ActionResult<UserResponse>> Create(UserCreateRequest request)
         {
-            // Only allow role assignment when the caller is authenticated and has the SuperAdmin role.
-            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole(Roles.SuperAdmin)))
-            {
-                request.RoleIds = new List<int>();
-            }
+            request.RoleIds = new List<int>();
 
             var createdUser = await _userService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
@@ -63,29 +64,29 @@ namespace eCommerce.WebAPI.Controllers
         // update
 
         [HttpPut("update/{id}")]
-        public async Task<ActionResult<UserResponse>> Update(int id, UserUpsertRequest request)
+        public async Task<ActionResult<UserResponse>> Update(int id, UserUpdateRequest request)
         {
-            var currentUserIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                                     ?? User?.FindFirst("nameid")?.Value;
-
-            if (!int.TryParse(currentUserIdClaim, out var currentUserId))
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            if (!_currentUser.IsAdmin && _currentUser.UserId.Value != id)
                 return Forbid();
-
-            var isAdmin = User.IsInRole(Roles.SuperAdmin) || User.IsInRole(Roles.Administrator);
-            if (!isAdmin && currentUserId != id)
-                return Forbid();
-
-            // Prevent non-admins from modifying roles
-            if (!(User?.Identity?.IsAuthenticated == true && User.IsInRole(Roles.SuperAdmin)))
-            {
-                request.RoleIds = new List<int>();
-            }
 
             var updatedUser = await _userService.UpdateAsync(id, request);
             
             if (updatedUser == null)
                 return NotFound();
                 
+            return updatedUser;
+        }
+
+        [Authorize(Roles = Roles.SuperAdmin)]
+        [HttpPut("{id}/roles")]
+        public async Task<ActionResult<UserResponse>> UpdateRoles(int id, [FromBody] List<int> roleIds)
+        {
+            var updatedUser = await _userService.UpdateRolesAsync(id, roleIds);
+
+            if (updatedUser == null)
+                return NotFound();
+
             return updatedUser;
         }
 
@@ -192,11 +193,36 @@ namespace eCommerce.WebAPI.Controllers
             return Ok(new { message = "User successfully unbanned" });
         }
 
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpGet("check-ban/{userId}")]
         public async Task<IActionResult> CheckBan(int userId)
         {
             var isBanned = await _userService.IsUserBannedAsync(userId);
             return Ok(new { isBanned });
+        }
+
+        [HttpGet("check-ban/me")]
+        public async Task<IActionResult> CheckMyBan()
+        {
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            var isBanned = await _userService.IsUserBannedAsync(_currentUser.UserId.Value);
+            return Ok(new { isBanned });
+        }
+
+        // za mobile profil reset lozinke, bez potrebe emaila
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!_currentUser.UserId.HasValue) return Forbid();
+
+            var changed = await _userService.ChangePasswordAsync(_currentUser.UserId.Value, request.CurrentPassword, request.NewPassword);
+            if (!changed)
+                return BadRequest(new { message = "Invalid current password" });
+
+            return Ok(new { message = "Password successfully changed" });
         }
 
         [AllowAnonymous]
@@ -227,6 +253,6 @@ namespace eCommerce.WebAPI.Controllers
             return Ok(new { message = "Password successfully reset" });
         }
 
-       
+
     }
 } 

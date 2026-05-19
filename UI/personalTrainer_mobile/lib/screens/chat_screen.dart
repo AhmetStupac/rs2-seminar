@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:personaltrainer_mobile/providers/messages_provider.dart';
 import 'package:personaltrainer_mobile/models/message.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/utils/message_content.dart';
 
 class ChatScreen extends StatefulWidget {
   final OnlineUser selectedUser;
@@ -52,17 +53,34 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.trim().isEmpty) return;
+    final raw = _messageController.text;
+    final validationError = MessageContent.validateForSend(raw);
+    if (validationError != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(validationError)),
+        );
+      }
+      return;
+    }
 
     final messagesProvider = Provider.of<MessagesProvider>(
       context,
       listen: false,
     );
-    final content = _messageController.text.trim();
+    final content = MessageContent.prepareForSend(raw);
 
     _messageController.clear();
-    await messagesProvider.sendMessage(content);
-    _scrollToBottom();
+    final sent = await messagesProvider.sendMessage(content);
+    if (!mounted) return;
+
+    if (!sent && messagesProvider.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(messagesProvider.error!)),
+      );
+    } else {
+      _scrollToBottom();
+    }
   }
 
   Widget _buildMessagesList(MessagesProvider messagesProvider) {
@@ -121,7 +139,7 @@ class _ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              message.message ?? '',
+              MessageContent.forDisplay(message.message),
               style: TextStyle(
                 color: isMe ? Colors.white : Colors.black87,
                 fontSize: 15,
@@ -176,12 +194,17 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _messageController,
+              maxLength: MessageContent.maxLength,
+              maxLines: 4,
+              minLines: 1,
               decoration: const InputDecoration(
                 hintText: 'Write a message...',
                 border: InputBorder.none,
+                counterText: '',
               ),
               enabled: messagesProvider.isConnected,
               onSubmitted: (_) => _sendMessage(),
+              onChanged: (_) => setState(() {}),
             ),
           ),
           IconButton(

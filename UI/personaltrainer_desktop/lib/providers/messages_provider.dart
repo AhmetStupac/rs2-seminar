@@ -4,6 +4,7 @@ import 'package:signalr_netcore/signalr_client.dart';
 import 'package:personaltrainer_desktop/config/app_config.dart';
 import 'package:personaltrainer_desktop/models/message.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/utils/message_content.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -137,25 +138,39 @@ class MessagesProvider with ChangeNotifier {
     _hubConnection!.on("NewMessage", handleNewMessage);
   }
 
-  Future<void> sendMessage(String content) async {
+  Future<bool> sendMessage(String content) async {
+    final validationError = MessageContent.validateForSend(content);
+    if (validationError != null) {
+      _error = validationError;
+      notifyListeners();
+      return false;
+    }
+
     if (_hubConnection == null ||
         _hubConnection!.state != HubConnectionState.Connected) {
       _error = "Not connected. Please wait or reconnect.";
       _isConnected = false;
       notifyListeners();
-      return;
+      return false;
     }
 
     if (!_isConnected) {
       _error = "Not connected. Please select a user to message.";
       notifyListeners();
-      return;
+      return false;
     }
 
     if (_currentRecipientId == null) {
       _error = "No recipient selected";
       notifyListeners();
-      return;
+      return false;
+    }
+
+    final recipientId = int.tryParse(_currentRecipientId!);
+    if (recipientId == null) {
+      _error = "Invalid recipient";
+      notifyListeners();
+      return false;
     }
 
     try {
@@ -163,16 +178,15 @@ class MessagesProvider with ChangeNotifier {
       if (token == null || token.isEmpty) {
         _error = "No authentication token available";
         notifyListeners();
-        return;
+        return false;
       }
 
-      // Create DTO matching backend CreateMessageDTO
+      final normalized = MessageContent.prepareForSend(content);
       final messageDto = {
-        'recipientId': _currentRecipientId,
-        'content': content,
+        'recipientId': recipientId,
+        'content': normalized,
       };
 
-      // Use HTTP POST instead of SignalR invoke due to compatibility issues
       final url = AppConfig.apiUri('Message/send');
 
       final response = await http.post(
@@ -185,16 +199,30 @@ class MessagesProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        // Don't add locally - backend will broadcast via SignalR
-      } else {
-        _error =
-            "Failed to send message: ${response.statusCode} - ${response.body}";
+        _error = null;
         notifyListeners();
+        return true;
       }
-    } catch (e) {
-      _error = e.toString();
+
+      _error = _parseErrorBody(response.body) ?? 'Failed to send message.';
       notifyListeners();
+      return false;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
     }
+  }
+
+  String? _parseErrorBody(String body) {
+    if (body.isEmpty) return null;
+    try {
+      final data = jsonDecode(body);
+      if (data is Map && data['message'] != null) {
+        return data['message'].toString();
+      }
+    } catch (_) {}
+    return null;
   }
 
   void setOnlineUsers(List<OnlineUser> users) {

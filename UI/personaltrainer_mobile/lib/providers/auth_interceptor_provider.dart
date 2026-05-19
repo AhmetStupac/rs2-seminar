@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
@@ -6,7 +8,9 @@ import 'package:flutter/material.dart';
 // import 'package:personaltrainer_mobile/screens/banned_screen.dart';
 
 class AuthInterceptor extends http.BaseClient {
-  final http.Client _client = http.Client();
+  final http.Client _client = IOClient(
+    HttpClient()..badCertificateCallback = (cert, host, port) => true,
+  );
   final GlobalKey<NavigatorState> navigatorKey;
 
   AuthInterceptor({required this.navigatorKey});

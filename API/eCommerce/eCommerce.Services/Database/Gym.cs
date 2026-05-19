@@ -1,22 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace eCommerce.Services.Database
 {
     public class Gym
     {
+        [Key]
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Address { get; set; }
-        public string City { get; set; }
-        public string Country { get; set; }
-        public string Email { get; set; }
-        public string PhoneNumber { get; set; }
-        public string WorkTime { get; set; }
+
+        [Required]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public string Address { get; set; } = string.Empty;
+
+        [ForeignKey(nameof(City))]
+        public int? CityId { get; set; }
+        public City? City { get; set; }
+
+        [Required]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required]
+        public string WorkTime { get; set; } = string.Empty;
 
         [ForeignKey(nameof(Image))]
         public int? ImageId { get; set; }

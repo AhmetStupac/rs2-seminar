@@ -32,33 +32,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final email = _emailController.text.trim();
-      final success = await _userProvider.forgotPassword(email);
+      await _userProvider.forgotPassword(email);
 
       if (mounted) {
-        if (success) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Verification code has been sent to your email address'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
-          );
-
-          // Navigate to reset password screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => ResetPasswordScreen(email: email),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error sending code. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verification code has been sent to your email address.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => ResetPasswordScreen(email: email),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

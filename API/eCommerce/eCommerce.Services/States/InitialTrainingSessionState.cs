@@ -4,6 +4,7 @@ using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -28,6 +29,16 @@ namespace eCommerce.Services.States
         {
             await EnsureValidAsync(request);
 
+            var currentUserId = GetCurrentUserId();
+            var hasActiveMembership = await _context.Set<Membership>()
+                .AnyAsync(m => m.ClientUserId == currentUserId
+                    && m.PersonalTrainerId == request.PersonalTrainerId
+                    && !m.IsRevoked
+                    && m.ExpiryDate > DateTime.UtcNow);
+
+            if (!hasActiveMembership)
+                throw new UnauthorizedAccessException("Active membership is required to book a training session.");
+
             var available = await IsTrainerAvailableAsync(
                 request.PersonalTrainerId,
                 request.ScheduledDateTime,
@@ -39,7 +50,7 @@ namespace eCommerce.Services.States
             var entity = new TrainingSession();
             _mapper.Map(request, entity);
 
-            entity.ClientId = GetCurrentUserId();
+            entity.ClientId = currentUserId;
             entity.Status = TrainingSessionStatus.Pending;
             entity.CreatedAt = DateTime.UtcNow;
 

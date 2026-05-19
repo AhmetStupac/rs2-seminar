@@ -4,7 +4,6 @@ using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -16,31 +15,24 @@ namespace eCommerce.WebAPI.Controllers
         <PersonalTrainerResponse, PersonalTrainerSearchObject, PersonalTrainerUpsertRequest, PersonalTrainerUpsertRequest>
     {
         private readonly IPersonalTrainerService _personalTrainerService;
+        private readonly ICurrentUserService _currentUser;
 
-        public PersonalTrainerController(IPersonalTrainerService service) : base(service)
+        public PersonalTrainerController(IPersonalTrainerService service, ICurrentUserService currentUser) : base(service)
         {
             _personalTrainerService = service;
+            _currentUser = currentUser;
         }
 
         [HttpGet("recommend")]
         public async Task<ActionResult<PersonalTrainerResponse>> Recommend()
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue)
+            if (!_currentUser.UserId.HasValue)
                 return Forbid();
 
-            var trainer = await _personalTrainerService.RecommendForUserAsync(userId.Value);
+            var trainer = await _personalTrainerService.RecommendForUserAsync(_currentUser.UserId.Value);
             if (trainer == null)
                 return NotFound();
             return Ok(trainer);
-        }
-
-        private int? GetCurrentUserId()
-        {
-            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                        ?? User?.FindFirst("nameid")?.Value;
-
-            return int.TryParse(claim, out var userId) ? userId : null;
         }
     }
 }

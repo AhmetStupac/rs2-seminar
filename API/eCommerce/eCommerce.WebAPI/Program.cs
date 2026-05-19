@@ -35,18 +35,8 @@ catch (FileNotFoundException) { /* Docker supplies env vars directly */ }
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-//builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
-//builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
-
-//builder.Services.AddScoped<BaseProductState>();
-//builder.Services.AddScoped<InitialProductState>();
-//builder.Services.AddScoped<DraftProductState>();
-//builder.Services.AddScoped<ActiveProductState>();
-//builder.Services.AddScoped<DeactivatedProductState>();
 builder.Services.AddScoped<IPersonalTrainerService, PersonalTrainerService>();
 builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
 builder.Services.AddScoped<IExerciseService, ExerciseService>();
@@ -62,6 +52,8 @@ builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<INutritionPlanService, NutritionPlanService>();
 builder.Services.AddScoped<IGymService, GymService>();
+builder.Services.AddScoped<ICountryService, CountryService>();
+builder.Services.AddScoped<ICityService, CityService>();
 builder.Services.AddScoped<ITrainingSessionService, TrainingSessionService>();
 builder.Services.AddScoped<eCommerce.Services.States.InitialTrainingSessionState>();
 builder.Services.AddScoped<eCommerce.Services.States.PendingTrainingSessionState>();
@@ -78,6 +70,7 @@ builder.Services.AddScoped<IMembershipService, MembershipService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
 builder.Services.AddScoped<IDashboardReportService, DashboardReportService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddHostedService<RecommenderTrainingHostedService>();
 builder.Services.AddHttpContextAccessor();
 
@@ -119,10 +112,9 @@ builder.Services.AddSignalR(options =>
 
 builder.Services.AddMapster();
 builder.Services.AddValidatorsFromAssemblyContaining<ExerciseValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<TrainingPlanValidator>();
-//builder.Services.AddValidatorsFromAssemblyContaining<ExercisePlanValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<GymValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<PaymentValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateMessageValidator>();
 
 
 
@@ -145,7 +137,8 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ExceptionFilter>();
 });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddScoped<TrainingOwnershipFilter>();
+builder.Services.AddScoped<PersonalTrainerOnlyFilter>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -174,26 +167,19 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("SignalRCors", builder =>
-//    {
-//        builder.WithOrigins("http://localhost:3000",
-//            "http://10.0.2.2:7093") // Your client URL
-//               .AllowAnyHeader()
-//               .AllowAnyMethod()
-//               .AllowCredentials();
-//    });
-//});
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("SignalRCors", builder =>
+    options.AddPolicy("SignalRCors", corsBuilder =>
     {
-        builder.SetIsOriginAllowed(_ => true)  // Allow all origins in dev
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();
+        corsBuilder
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -221,7 +207,6 @@ if (app.Environment.IsDevelopment() && Environment.GetEnvironmentVariable("DOTNE
     app.Urls.Add("http://localhost:7094");   // HTTP for SignalR
 }
 
-//app.UseHttpsRedirection();
 app.UseCors("SignalRCors");
 
 app.UseAuthentication();

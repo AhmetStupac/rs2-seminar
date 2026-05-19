@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -16,10 +15,12 @@ namespace eCommerce.WebAPI.Controllers
     public class MonthlyTrainingStatisticsController : ControllerBase
     {
         private readonly IMonthlyTrainingStatisticsService _statisticsService;
+        private readonly ICurrentUserService _currentUser;
 
-        public MonthlyTrainingStatisticsController(IMonthlyTrainingStatisticsService statisticsService)
+        public MonthlyTrainingStatisticsController(IMonthlyTrainingStatisticsService statisticsService, ICurrentUserService currentUser)
         {
             _statisticsService = statisticsService;
+            _currentUser = currentUser;
         }
 
         /// <summary>
@@ -95,14 +96,8 @@ namespace eCommerce.WebAPI.Controllers
         [HttpGet("my-statistics")]
         public async Task<ActionResult<List<MonthlyTrainingStatisticsResponse>>> GetMyStatistics()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized();
-            }
-
-            var currentYear = DateTime.UtcNow.Year;
-            var statistics = await _statisticsService.GetYearlyStatisticsAsync(userId, currentYear);
+            if (!_currentUser.UserId.HasValue) return Unauthorized();
+            var statistics = await _statisticsService.GetYearlyStatisticsAsync(_currentUser.UserId.Value, DateTime.UtcNow.Year);
             return Ok(statistics);
         }
 
@@ -112,13 +107,8 @@ namespace eCommerce.WebAPI.Controllers
         [HttpGet("my-statistics/year/{year}")]
         public async Task<ActionResult<List<MonthlyTrainingStatisticsResponse>>> GetMyStatisticsByYear(int year)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized();
-            }
-
-            var statistics = await _statisticsService.GetYearlyStatisticsAsync(userId, year);
+            if (!_currentUser.UserId.HasValue) return Unauthorized();
+            var statistics = await _statisticsService.GetYearlyStatisticsAsync(_currentUser.UserId.Value, year);
             return Ok(statistics);
         }
     }

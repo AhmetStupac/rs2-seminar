@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:personaltrainer_desktop/models/city.dart';
 import 'package:personaltrainer_desktop/models/gym.dart';
+import 'package:personaltrainer_desktop/providers/city_provider.dart';
 import 'package:personaltrainer_desktop/providers/gym_provider.dart';
 import 'package:personaltrainer_desktop/providers/blob_storage_provider.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
@@ -19,14 +21,18 @@ class GymScreen extends StatefulWidget {
 class _GymScreenState extends State<GymScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
-  final TextEditingController countryController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController workTimeController = TextEditingController();
 
   late GymProvider _gymProvider;
   late BlobStorageProvider _blobStorageProvider;
+
+  // City dropdown state
+  List<City> _cities = [];
+  int? _selectedCityId;
+  String? _selectedCountryName;
+  bool _citiesLoading = true;
 
   PlatformFile? _selectedFile;
   Uint8List? _fileBytes;
@@ -38,7 +44,6 @@ class _GymScreenState extends State<GymScreen> {
   String? _nameError;
   String? _addressError;
   String? _cityError;
-  String? _countryError;
   String? _emailError;
   String? _phoneError;
   String? _workTimeError;
@@ -53,13 +58,38 @@ class _GymScreenState extends State<GymScreen> {
     if (widget.gym != null) {
       nameController.text = widget.gym!.name ?? '';
       addressController.text = widget.gym!.address ?? '';
-      cityController.text = widget.gym!.city ?? '';
-      countryController.text = widget.gym!.country ?? '';
       emailController.text = widget.gym!.email ?? '';
       phoneNumberController.text = widget.gym!.phoneNumber ?? '';
       workTimeController.text = widget.gym!.workTime ?? '';
       _uploadedImageId = widget.gym!.imageId;
       _existingImageUrl = widget.gym!.imageUrl;
+      _selectedCityId = widget.gym!.cityId;
+      _selectedCountryName = widget.gym!.countryName;
+    }
+
+    _loadCities();
+  }
+
+  Future<void> _loadCities() async {
+    setState(() => _citiesLoading = true);
+    try {
+      final result = await CityProvider().get();
+      setState(() {
+        _cities = result.result;
+        _citiesLoading = false;
+        // Restore country name from the loaded list when editing
+        if (_selectedCityId != null && _selectedCountryName == null) {
+          final match = _cities.where((c) => c.id == _selectedCityId);
+          if (match.isNotEmpty) _selectedCountryName = match.first.countryName;
+        }
+      });
+    } catch (e) {
+      setState(() => _citiesLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load cities: $e')),
+        );
+      }
     }
   }
 
@@ -67,8 +97,6 @@ class _GymScreenState extends State<GymScreen> {
   void dispose() {
     nameController.dispose();
     addressController.dispose();
-    cityController.dispose();
-    countryController.dispose();
     emailController.dispose();
     phoneNumberController.dispose();
     workTimeController.dispose();
@@ -155,7 +183,6 @@ class _GymScreenState extends State<GymScreen> {
     String? nameError;
     String? addressError;
     String? cityError;
-    String? countryError;
     String? emailError;
     String? phoneError;
     String? workTimeError;
@@ -166,11 +193,8 @@ class _GymScreenState extends State<GymScreen> {
     if (addressController.text.trim().isEmpty) {
       addressError = 'Address cannot be empty.';
     }
-    if (cityController.text.trim().isEmpty) {
-      cityError = 'City cannot be empty.';
-    }
-    if (countryController.text.trim().isEmpty) {
-      countryError = 'Country cannot be empty.';
+    if (_selectedCityId == null) {
+      cityError = 'City is required.';
     }
     if (emailController.text.trim().isEmpty) {
       emailError = 'Email cannot be empty.';
@@ -205,7 +229,6 @@ class _GymScreenState extends State<GymScreen> {
       _nameError = nameError;
       _addressError = addressError;
       _cityError = cityError;
-      _countryError = countryError;
       _emailError = emailError;
       _phoneError = phoneError;
       _workTimeError = workTimeError;
@@ -215,7 +238,6 @@ class _GymScreenState extends State<GymScreen> {
     if (nameError != null ||
         addressError != null ||
         cityError != null ||
-        countryError != null ||
         emailError != null ||
         phoneError != null ||
         workTimeError != null) {
@@ -228,7 +250,6 @@ class _GymScreenState extends State<GymScreen> {
     });
 
     try {
-      // Upload image if selected but not yet uploaded
       if (_selectedFile != null &&
           _fileBytes != null &&
           _uploadedImageId == null) {
@@ -239,8 +260,7 @@ class _GymScreenState extends State<GymScreen> {
         id: widget.gym?.id,
         name: nameController.text,
         address: addressController.text,
-        city: cityController.text,
-        country: countryController.text,
+        cityId: _selectedCityId,
         email: emailController.text,
         phoneNumber: phoneNumberController.text,
         workTime: workTimeController.text,
@@ -326,29 +346,9 @@ class _GymScreenState extends State<GymScreen> {
                               },
                             ),
                             const SizedBox(height: 20),
-                            _buildTextField(
-                              'City',
-                              cityController,
-                              'Mostar',
-                              errorText: _cityError,
-                              onChanged: (_) {
-                                if (_cityError != null) {
-                                  setState(() => _cityError = null);
-                                }
-                              },
-                            ),
+                            _buildCityDropdown(),
                             const SizedBox(height: 20),
-                            _buildTextField(
-                              'Country',
-                              countryController,
-                              'Bosna i Hercegovina',
-                              errorText: _countryError,
-                              onChanged: (_) {
-                                if (_countryError != null) {
-                                  setState(() => _countryError = null);
-                                }
-                              },
-                            ),
+                            _buildCountryDisplay(),
                             const SizedBox(height: 20),
                             _buildTextField(
                               'Email',
@@ -486,6 +486,118 @@ class _GymScreenState extends State<GymScreen> {
     );
   }
 
+  Widget _buildCityDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'City',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        _citiesLoading
+            ? Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            : DropdownButtonFormField<int>(
+                value: _selectedCityId,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  hintText: 'Select a city',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  errorText: _cityError,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide:
+                        const BorderSide(color: Colors.purple, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                items: _cities
+                    .map(
+                      (city) => DropdownMenuItem<int>(
+                        value: city.id,
+                        child: Text(city.name ?? ''),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCityId = value;
+                    _cityError = null;
+                    // Auto-populate country from the selected city
+                    if (value != null) {
+                      final selected =
+                          _cities.where((c) => c.id == value);
+                      _selectedCountryName = selected.isNotEmpty
+                          ? selected.first.countryName
+                          : null;
+                    } else {
+                      _selectedCountryName = null;
+                    }
+                  });
+                },
+              ),
+      ],
+    );
+  }
+
+  Widget _buildCountryDisplay() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Country',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Text(
+            _selectedCountryName ?? '— auto-filled from city —',
+            style: TextStyle(
+              color: _selectedCountryName != null
+                  ? Colors.black87
+                  : Colors.grey[400],
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTextField(
     String label,
     TextEditingController controller,
@@ -543,7 +655,6 @@ class _GymScreenState extends State<GymScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // File selection button or file info
           if (_selectedFile == null)
             ElevatedButton.icon(
               onPressed: _pickImage,
@@ -564,7 +675,7 @@ class _GymScreenState extends State<GymScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.image, color: Colors.blue),
+                  const Icon(Icons.image, color: Colors.blue),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -572,7 +683,8 @@ class _GymScreenState extends State<GymScreen> {
                       children: [
                         Text(
                           _selectedFile!.name,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
+                          style:
+                              const TextStyle(fontWeight: FontWeight.w500),
                         ),
                         Text(
                           '${(_selectedFile!.size / 1024).toStringAsFixed(2)} KB',
@@ -605,7 +717,6 @@ class _GymScreenState extends State<GymScreen> {
               ),
             ),
 
-          // Image preview
           if (_fileBytes != null) ...[
             const SizedBox(height: 16),
             Container(
@@ -659,7 +770,6 @@ class _GymScreenState extends State<GymScreen> {
             ),
           ],
 
-          // Upload button (separate from save)
           if (_selectedFile != null) ...[
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -682,17 +792,17 @@ class _GymScreenState extends State<GymScreen> {
             ),
           ],
 
-          // Upload success indicator
           if (_uploadedImageId != null)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
                   const SizedBox(width: 8),
                   Text(
                     'Image uploaded (ID: $_uploadedImageId)',
-                    style: TextStyle(color: Colors.green[700], fontSize: 12),
+                    style:
+                        TextStyle(color: Colors.green[700], fontSize: 12),
                   ),
                 ],
               ),

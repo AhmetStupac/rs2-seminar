@@ -36,7 +36,10 @@ namespace eCommerce.Services.Database
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+        public int? ApprovedByUserId { get; set; }
         public DateTime? CancelledAt { get; set; }
+        public int? CancelledByUserId { get; set; }
         public string? CancellationReason { get; set; }
 
     }

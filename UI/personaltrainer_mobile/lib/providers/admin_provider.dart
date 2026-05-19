@@ -1,7 +1,7 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:personaltrainer_mobile/config/app_config.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart'; // ⭐ Dodaj import
+import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/providers/base_provider.dart';
 
 class AdminProvider {
   final String baseUrl = AppConfig.apiBaseUrl;
@@ -27,7 +27,7 @@ class AdminProvider {
     DateTime? expiresAt,
   }) async {
     try {
-      final response = await http.post(
+      final response = await BaseProvider.client.post(
         Uri.parse('${baseUrl}users/ban-user'),
         headers: _createHeaders(),
         body: jsonEncode({
@@ -61,7 +61,7 @@ class AdminProvider {
   // Unbanovanje korisnika
   Future<Map<String, dynamic>> unbanUser(int userId) async {
     try {
-      final response = await http.post(
+      final response = await BaseProvider.client.post(
         Uri.parse('${baseUrl}users/unban-user/$userId'),
         headers: _createHeaders(),
       );
@@ -81,7 +81,7 @@ class AdminProvider {
   // Provera ban statusa
   Future<Map<String, dynamic>> checkBan(int userId) async {
     try {
-      final response = await http.get(
+      final response = await BaseProvider.client.get(
         Uri.parse('${baseUrl}users/check-ban/$userId'),
         headers: _createHeaders(),
       );
@@ -115,7 +115,7 @@ class AdminProvider {
   // Dobavi sve korisnike
   Future<List<Map<String, dynamic>>> getAllUsers() async {
     try {
-      final response = await http.get(
+      final response = await BaseProvider.client.get(
         Uri.parse('${baseUrl}users'),
         headers: _createHeaders(),
       );
@@ -146,7 +146,7 @@ class AdminProvider {
   // Dobavi sve obrisane korisnike
   Future<List<Map<String, dynamic>>> getDeletedUsers() async {
     try {
-      final response = await http.get(
+      final response = await BaseProvider.client.get(
         Uri.parse('${baseUrl}users/deleted'),
         headers: _createHeaders(),
       );
@@ -177,7 +177,7 @@ class AdminProvider {
   // Soft delete korisnika
   Future<Map<String, dynamic>> softDeleteUser(int userId) async {
     try {
-      final response = await http.delete(
+      final response = await BaseProvider.client.delete(
         Uri.parse('${baseUrl}users/soft/$userId'),
         headers: _createHeaders(),
       );
@@ -222,7 +222,7 @@ class AdminProvider {
   // Restore obrisanog korisnika
   Future<Map<String, dynamic>> restoreUser(int userId) async {
     try {
-      final response = await http.post(
+      final response = await BaseProvider.client.post(
         Uri.parse('${baseUrl}users/restore/$userId'),
         headers: _createHeaders(),
       );
@@ -251,7 +251,7 @@ class AdminProvider {
   // Trainer dashboard (Administrator / PersonalTrainer – own stats only)
   Future<Map<String, dynamic>?> getTrainerDashboard() async {
     try {
-      final response = await http.get(
+      final response = await BaseProvider.client.get(
         Uri.parse('${baseUrl}dashboard/trainer-dashboard'),
         headers: _createHeaders(),
       );
@@ -269,7 +269,7 @@ class AdminProvider {
   // Dashboard report (SuperAdmin only)
   Future<Map<String, dynamic>?> getDashboardReport() async {
     try {
-      final response = await http.get(
+      final response = await BaseProvider.client.get(
         Uri.parse('${baseUrl}dashboard/report'),
         headers: _createHeaders(),
       );

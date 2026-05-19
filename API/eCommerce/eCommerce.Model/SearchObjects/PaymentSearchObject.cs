@@ -7,5 +7,6 @@ namespace eCommerce.Model.SearchObjects
         public int? UserId { get; set; }
         public PaymentItemType? ItemType { get; set; }
         public string? Status { get; set; }
+        public int? TrainerId { get; set; }
     }
 }

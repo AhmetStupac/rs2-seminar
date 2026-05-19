@@ -58,19 +58,10 @@ namespace eCommerce.Services
 
             query = query.OrderBy(u => u.Id);
 
-            if (!search.RetrieveAll)
-            {
-                if (search.Page.HasValue && search.PageSize.HasValue)
-                {
-                    query = query.Skip(search.Page.Value * search.PageSize.Value)
-                                 .Take(search.PageSize.Value);
-                }
-                else if (search.PageSize.HasValue)
-                {
-                    query = query.Take(search.PageSize.Value);
-                }
-            }
-            
+            var pageSize = Math.Min(search.PageSize ?? 10, 50);
+            var page = search.Page ?? 0;
+            query = query.Skip(page * pageSize).Take(pageSize);
+
             var users = await query.ToListAsync();
             return users.Select(MapToResponse).ToList();
         }
@@ -99,7 +90,7 @@ namespace eCommerce.Services
 
         // image upload koraci, prvo se upload slika na azure, azure vrati imageId na front end...
 
-        public async Task<UserResponse> CreateAsync(UserUpsertRequest request)
+        public async Task<UserResponse> CreateAsync(UserCreateRequest request)
         {
             var strategy = _context.Database.CreateExecutionStrategy();
             UserResponse? createdUser = null;
@@ -161,7 +152,7 @@ namespace eCommerce.Services
             return createdUser!;
         }
 
-        public async Task<UserResponse?> UpdateAsync(int id, UserUpsertRequest request)
+        public async Task<UserResponse?> UpdateAsync(int id, UserUpdateRequest request)
         {
             var strategy = _context.Database.CreateExecutionStrategy();
             UserResponse? updatedUser = null;
@@ -202,12 +193,36 @@ namespace eCommerce.Services
                     user.PasswordSalt = Convert.ToBase64String(salt);
                 }
 
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                updatedUser = await GetUserResponseWithRolesAsync(user.Id);
+            });
+
+            return updatedUser;
+        }
+
+        public async Task<UserResponse?> UpdateRolesAsync(int id, List<int> roleIds)
+        {
+            var strategy = _context.Database.CreateExecutionStrategy();
+            UserResponse? updatedUser = null;
+
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    updatedUser = null;
+                    return;
+                }
+
                 var existingUserRoles = await _context.UserRoles.Where(ur => ur.UserId == id).ToListAsync();
                 _context.UserRoles.RemoveRange(existingUserRoles);
 
-                if (request.RoleIds != null && request.RoleIds.Count > 0)
+                if (roleIds != null && roleIds.Count > 0)
                 {
-                    foreach (var roleId in request.RoleIds)
+                    foreach (var roleId in roleIds)
                     {
                         if (await _context.Roles.AnyAsync(r => r.Id == roleId))
                         {
@@ -490,6 +505,24 @@ namespace eCommerce.Services
                 .FirstOrDefaultAsync(u => u.Id == userId);
         }
 
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return false;
+
+            if (!VerifyPassword(currentPassword, user.PasswordHash, user.PasswordSalt))
+                return false;
+
+            byte[] salt;
+            var hash = HashPassword(newPassword, out salt);
+            user.PasswordHash = hash;
+            user.PasswordSalt = Convert.ToBase64String(salt);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> ForgotPasswordAsync(string email)
         {
             email = email?.Trim();
@@ -509,8 +542,17 @@ namespace eCommerce.Services
             user.ResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
             await _context.SaveChangesAsync();
 
-            // Send email with code
-            await _emailService.SendPasswordResetEmailAsync(email, resetCode, user.FirstName);
+            // Send email with code (best-effort — don't fail the whole request if SMTP is misconfigured)
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(email, resetCode, user.FirstName);
+            }
+            catch (Exception ex)
+            {
+                // Log the code to console so it can be used during development
+                Console.WriteLine($"[ForgotPassword] Email sending failed: {ex.Message}");
+                Console.WriteLine($"[ForgotPassword] Reset code for {email}: {resetCode}");
+            }
 
             return true;
         }

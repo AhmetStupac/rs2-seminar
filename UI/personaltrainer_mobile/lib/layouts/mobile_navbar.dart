@@ -349,7 +349,7 @@ class MobileNavBar extends StatelessWidget {
                 await messagesProvider.disconnect();
                 notificationProvider.stopPolling();
 
-                AuthProvider.logout();
+                await AuthProvider.logout();
                 Navigator.of(context).pop(); // Close drawer
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),

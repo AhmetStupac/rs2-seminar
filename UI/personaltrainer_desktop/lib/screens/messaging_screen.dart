@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:personaltrainer_desktop/providers/messages_provider.dart';
 import 'package:personaltrainer_desktop/providers/signalr_provider.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/utils/message_content.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
 String _formatTimestamp(DateTime? dt) {
@@ -54,14 +55,29 @@ class _MessagingScreenState extends State<MessagingScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+  Future<void> _sendMessage() async {
+    final raw = _messageController.text;
+    final validationError = MessageContent.validateForSend(raw);
+    if (validationError != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(validationError)),
+        );
+      }
+      return;
+    }
 
     final provider = Provider.of<MessagesProvider>(context, listen: false);
-    provider.sendMessage(message);
-
+    final content = MessageContent.prepareForSend(raw);
     _messageController.clear();
+
+    final sent = await provider.sendMessage(content);
+    if (!mounted) return;
+    if (!sent && provider.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(provider.error!)),
+      );
+    }
   }
 
   @override
@@ -316,7 +332,9 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          message.message ?? '',
+                                          MessageContent.forDisplay(
+                                            message.message,
+                                          ),
                                           style: const TextStyle(fontSize: 14),
                                         ),
                                         const SizedBox(height: 4),
@@ -356,14 +374,19 @@ class _MessagingScreenState extends State<MessagingScreen> {
                                   child: TextField(
                                     controller: _messageController,
                                     enabled: canSend,
+                                    maxLength: MessageContent.maxLength,
+                                    maxLines: 4,
+                                    minLines: 1,
                                     decoration: InputDecoration(
                                       hintText: canSend
                                           ? 'Enter your message'
                                           : 'Select a user to start messaging',
+                                      counterText: '',
                                     ),
                                     onSubmitted: canSend
                                         ? (_) => _sendMessage()
                                         : null,
+                                    onChanged: canSend ? (_) => setState(() {}) : null,
                                   ),
                                 ),
                                 IconButton(

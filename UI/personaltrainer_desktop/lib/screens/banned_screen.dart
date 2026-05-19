@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
+import 'package:personaltrainer_desktop/main.dart';
 
 class BannedScreen extends StatelessWidget {
   final String reason;
@@ -107,14 +108,18 @@ class BannedScreen extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () {
                         AuthProvider.logout();
-                        Navigator.of(
-                          context,
-                        ).pushNamedAndRemoveUntil('/login', (route) => false);
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => LoginPage(),
+                          ),
+                          (route) => false,
+                        );
                       },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Log Out'),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Back to Login'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade700,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 16,

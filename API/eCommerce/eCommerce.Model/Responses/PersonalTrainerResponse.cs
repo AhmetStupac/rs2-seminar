@@ -19,5 +19,7 @@ namespace eCommerce.Model.Responses
         // Rating information
         public double AverageRating { get; set; }
         public int TotalRatings { get; set; }
+
+        public string? WhyRecommended { get; set; }
     }
 }

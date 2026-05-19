@@ -23,4 +23,7 @@ Map<String, dynamic> _$OnlineUserToJson(OnlineUser instance) =>
       'userId': instance.userId,
       'email': instance.email,
       'connectionId': instance.connectionId,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
+      'displayName': instance.displayName,
     };

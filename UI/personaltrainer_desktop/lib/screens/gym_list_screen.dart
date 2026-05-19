@@ -59,8 +59,8 @@ class _GymListScreenState extends State<GymListScreen> {
     final query = _searchQuery.toLowerCase();
     return _gyms.where((gym) {
       final name = (gym.name ?? '').toLowerCase();
-      final city = (gym.city ?? '').toLowerCase();
-      final country = (gym.country ?? '').toLowerCase();
+      final city = (gym.cityName ?? '').toLowerCase();
+      final country = (gym.countryName ?? '').toLowerCase();
       final address = (gym.address ?? '').toLowerCase();
 
       return name.contains(query) ||
@@ -400,13 +400,13 @@ class _GymListScreenState extends State<GymListScreen> {
                         ],
                       ),
                     const SizedBox(height: 4),
-                    if (gym.city != null || gym.country != null)
+                    if (gym.cityName != null || gym.countryName != null)
                       Row(
                         children: [
                           Icon(Icons.public, size: 16, color: Colors.grey[600]),
                           const SizedBox(width: 4),
                           Text(
-                            [gym.city, gym.country]
+                            [gym.cityName, gym.countryName]
                                 .where((e) => e != null && e.isNotEmpty)
                                 .join(', '),
                             style: TextStyle(color: Colors.grey[600]),

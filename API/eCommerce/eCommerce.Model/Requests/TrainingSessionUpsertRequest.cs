@@ -1,8 +1,4 @@
-﻿using eCommerce.Model.Enums;
-using eCommerce.Model.Responses;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 
 namespace eCommerce.Model.Requests
 {
@@ -14,7 +10,6 @@ namespace eCommerce.Model.Requests
             public DateTime ScheduledDateTime { get; set; }
             public int DurationMinutes { get; set; }
             public string? Notes { get; set; }
-            public TrainingSessionStatus? Status { get; set; }
             public string? TrainerNotes { get; set; }
     }
 

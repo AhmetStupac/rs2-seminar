@@ -55,6 +55,8 @@ class AuthProvider {
 
   static bool get isAdministrator => _role?.toLowerCase() == 'administrator';
 
+  static bool get isPersonalTrainer => _role?.toLowerCase() == 'personaltrainer';
+
   static dynamic _claimValue(Map<String, dynamic> map, List<String> keys) {
     for (final key in keys) {
       if (map.containsKey(key) && map[key] != null) {

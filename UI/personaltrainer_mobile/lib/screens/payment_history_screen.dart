@@ -66,7 +66,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
     try {
       await _paymentProvider.refundPayment(stripeId);
       if (!mounted) return;
-      _showSnackBar('Refund completed successfully.');
+      _showSnackBar('Refund request submitted.');
       await _loadPayments();
     } catch (e) {
       if (mounted) {

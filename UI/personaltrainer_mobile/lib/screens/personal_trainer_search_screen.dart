@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:personaltrainer_mobile/models/personal_trainer.dart';
-import 'package:personaltrainer_mobile/models/personal_trainer_rating.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
 import 'package:personaltrainer_mobile/providers/personal_trainer_provider.dart';
-import 'package:personaltrainer_mobile/providers/personal_trainer_rating_provider.dart';
 import 'package:personaltrainer_mobile/screens/personal_trainer_detail_screen.dart';
 import 'package:personaltrainer_mobile/layouts/mobile_navbar.dart';
 
@@ -23,10 +21,8 @@ class _PersonalTrainerSearchScreenState
   final _minPriceController = TextEditingController();
   final _maxPriceController = TextEditingController();
   final _personalTrainerProvider = PersonalTrainerProvider();
-  final _ratingProvider = PersonalTrainerRatingProvider();
   List<PersonalTrainer> _trainers = [];
   List<PersonalTrainer> _filteredTrainers = [];
-  Map<int, PersonalTrainerRatingStats> _ratingsMap = {};
   bool _isLoading = false;
   String? _errorMessage;
   String? _selectedSport;
@@ -103,12 +99,6 @@ class _PersonalTrainerSearchScreenState
       setState(() {
         _trainers = result.result;
         _filteredTrainers = result.result;
-      });
-
-      // Load ratings for all trainers
-      await _loadRatings();
-
-      setState(() {
         _isLoading = false;
       });
     } catch (e) {
@@ -138,27 +128,6 @@ class _PersonalTrainerSearchScreenState
         _isLoadingRecommendation = false;
       });
     }
-  }
-
-  Future<void> _loadRatings() async {
-    final Map<int, PersonalTrainerRatingStats> ratingsMap = {};
-
-    for (var trainer in _trainers) {
-      if (trainer.id != null) {
-        try {
-          final stats = await _ratingProvider.getTrainerRatingStats(
-            trainer.id!,
-          );
-          ratingsMap[trainer.id!] = stats;
-        } catch (e) {
-          // Continue loading other ratings even if one fails
-        }
-      }
-    }
-
-    setState(() {
-      _ratingsMap = ratingsMap;
-    });
   }
 
   List<String> _getUniqueSports() {
@@ -603,6 +572,34 @@ class _PersonalTrainerSearchScreenState
                           ),
                         ),
                       ),
+                    if (trainer.whyRecommended != null &&
+                        trainer.whyRecommended!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline,
+                              color: Colors.white70,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                trainer.whyRecommended!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -757,17 +754,14 @@ class _PersonalTrainerSearchScreenState
               ),
             ),
 
-            // Rating stars
+            // Rating
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Row(
                   children: [
                     Text(
-                      _ratingsMap[trainer.id]?.averageRating.toStringAsFixed(
-                            1,
-                          ) ??
-                          '0.0',
+                      (trainer.averageRating ?? 0.0).toStringAsFixed(1),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -778,7 +772,10 @@ class _PersonalTrainerSearchScreenState
                   ],
                 ),
                 const SizedBox(height: 4),
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                Text(
+                  '${trainer.totalRatings ?? 0}',
+                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                ),
               ],
             ),
           ],

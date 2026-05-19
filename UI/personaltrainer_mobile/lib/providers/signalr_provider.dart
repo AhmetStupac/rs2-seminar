@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import 'package:personaltrainer_mobile/models/message.dart';
-import 'package:personaltrainer_mobile/providers/auth_provider.dart';
-import 'package:personaltrainer_mobile/providers/base_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/utils/message_content.dart';
+import 'package:personaltrainer_mobile/config/app_config.dart';
+import 'package:personaltrainer_mobile/providers/base_provider.dart';
 
 class SignalRProvider with ChangeNotifier {
   HubConnection? _hubConnection;
@@ -19,13 +21,7 @@ class SignalRProvider with ChangeNotifier {
   bool get isConnected => _isConnected;
   String? get error => _error;
 
-  // Get base URL for SignalR hubs (same API server)
-  String get _hubBaseUrl {
-    // Strip trailing /api/ from the base URL to get the root
-    final base = BaseProvider.baseUrl;
-    final idx = base.indexOf('/api');
-    return idx != -1 ? base.substring(0, idx) : base;
-  }
+  String get _hubBaseUrl => AppConfig.signalRBaseUrl;
 
   Future<void> connect() async {
     try {
@@ -194,6 +190,13 @@ class SignalRProvider with ChangeNotifier {
   }
 
   Future<void> sendMessage(String message) async {
+    final validationError = MessageContent.validateForSend(message);
+    if (validationError != null) {
+      _error = validationError;
+      notifyListeners();
+      return;
+    }
+
     if (!_isConnected) {
       _error = "Not connected";
       notifyListeners();
@@ -201,7 +204,8 @@ class SignalRProvider with ChangeNotifier {
     }
 
     try {
-      await _hubConnection!.invoke("SendMessage", args: [message]);
+      final normalized = MessageContent.prepareForSend(message);
+      await _hubConnection!.invoke("SendMessage", args: [normalized]);
     } catch (e) {
       _error = e.toString();
       notifyListeners();

@@ -1,11 +1,9 @@
 ﻿using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
-using eCommerce.Model.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Security.Claims;
 
 namespace eCommerce.WebAPI.Controllers
 {
@@ -14,13 +12,25 @@ namespace eCommerce.WebAPI.Controllers
     [Authorize]
     public class BlobStorageController : ControllerBase
     {
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024;
+        private static readonly HashSet<string> AllowedImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "image/bmp"
+        };
+
         private readonly IBlobStorageService _blobStorageService;
         private readonly IImageMetadataService _imageMetadataService;
+        private readonly ICurrentUserService _currentUser;
 
-        public BlobStorageController(IBlobStorageService blobStorageService, IImageMetadataService imageMetadataService)
+        public BlobStorageController(IBlobStorageService blobStorageService, IImageMetadataService imageMetadataService, ICurrentUserService currentUser)
         {
             _blobStorageService = blobStorageService;
             _imageMetadataService = imageMetadataService;
+            _currentUser = currentUser;
         }
 
 
@@ -30,11 +40,14 @@ namespace eCommerce.WebAPI.Controllers
             if (file == null || file.Length == 0) 
                 return BadRequest("File is empty");
 
-            var currentUserId = GetCurrentUserId();
+            if (file.Length > MaxFileSizeBytes)
+                return BadRequest($"File exceeds maximum allowed size of {MaxFileSizeBytes / (1024 * 1024)}MB");
+
+            var currentUserId = _currentUser.UserId;
             if (!currentUserId.HasValue)
                 return Forbid();
 
-            var isAdmin = IsCurrentUserAdmin();
+            var isAdmin = _currentUser.IsAdmin;
 
             var imageObj = JsonConvert.DeserializeObject<Image>(image);
             if (imageObj == null) 
@@ -57,22 +70,35 @@ namespace eCommerce.WebAPI.Controllers
 
             // Upload to Azure Blob Storage
             using var stream = file.OpenReadStream();
-            var url = await _blobStorageService.UploadFileAsync(stream, blobName, file.ContentType);
+            var headerBuffer = new byte[12];
+            var bytesRead = await stream.ReadAsync(headerBuffer, 0, headerBuffer.Length);
+            if (!TryGetImageMimeType(headerBuffer.AsSpan(0, bytesRead), out var detectedMimeType))
+                return BadRequest("Unsupported or invalid image format");
+
+            if (!AllowedImageMimeTypes.Contains(detectedMimeType))
+                return BadRequest("Unsupported image MIME type");
+
+            if (!AllowedImageMimeTypes.Contains(file.ContentType ?? string.Empty))
+                return BadRequest("Unsupported content type");
+
+            if (stream.CanSeek)
+            {
+                stream.Position = 0;
+            }
+            else
+            {
+                using var bufferedStream = new MemoryStream();
+                bufferedStream.Write(headerBuffer, 0, bytesRead);
+                await stream.CopyToAsync(bufferedStream);
+                bufferedStream.Position = 0;
+                var bufferedUrl = await _blobStorageService.UploadFileAsync(bufferedStream, blobName, detectedMimeType);
+                return await SaveMetadataAndRespond(bufferedUrl, blobName, file.Length, effectiveUserId, imageObj.IsHeader);
+            }
+
+            var url = await _blobStorageService.UploadFileAsync(stream, blobName, detectedMimeType);
 
             // Save metadata to database
-            var imageToSql = new Image
-            {
-                UserId = effectiveUserId,
-                Name = blobName,
-                Url = url,
-                Size = file.Length,
-                IsHeader = imageObj.IsHeader
-            };
-
-            await _imageMetadataService.UploadImageMetadata(imageToSql);
-            
-            
-            return Ok(new { FileUrl = url, BlobName = blobName , ImageId = imageToSql.Id});
+            return await SaveMetadataAndRespond(url, blobName, file.Length, effectiveUserId, imageObj.IsHeader);
         }
 
         [HttpDelete("delete")]
@@ -81,7 +107,7 @@ namespace eCommerce.WebAPI.Controllers
             if (string.IsNullOrEmpty(fileName))
                 return BadRequest("File name is required");
 
-            var currentUserId = GetCurrentUserId();
+            var currentUserId = _currentUser.UserId;
             if (!currentUserId.HasValue)
                 return Forbid();
 
@@ -89,7 +115,7 @@ namespace eCommerce.WebAPI.Controllers
             if (image == null)
                 return NotFound("Image metadata not found");
 
-            if (!IsCurrentUserAdmin() && image.UserId != currentUserId.Value)
+            if (!_currentUser.IsAdmin && image.UserId != currentUserId.Value)
                 return Forbid();
 
             if (!string.Equals(image.Name, fileName, StringComparison.Ordinal))
@@ -113,6 +139,9 @@ namespace eCommerce.WebAPI.Controllers
             if (string.IsNullOrEmpty(fileName))
                 return BadRequest("File name is required");
 
+            if (!TryValidateBlobAccess(fileName, out var accessError))
+                return accessError;
+
             var (fileStream, contentType) = await _blobStorageService.DownloadFileAsync(fileName);
             
             if (fileStream == null)
@@ -128,6 +157,9 @@ namespace eCommerce.WebAPI.Controllers
             if (string.IsNullOrEmpty(fileName))
                 return BadRequest("File name is required");
 
+            if (!TryValidateBlobAccess(fileName, out var accessError))
+                return accessError;
+
             var (fileStream, contentType) = await _blobStorageService.GetFileAsync(fileName);
 
             if (fileStream == null)
@@ -139,25 +171,97 @@ namespace eCommerce.WebAPI.Controllers
         [HttpGet("user")]
         public async Task<IActionResult> ListByUser()
         {
-            var userId = GetCurrentUserId();
-            if (!userId.HasValue)
-                return Forbid();
-
-            var images = await _imageMetadataService.GetByUserIdAsync(userId.Value);
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            var images = await _imageMetadataService.GetByUserIdAsync(_currentUser.UserId.Value);
             return Ok(images);
         }
 
-        private int? GetCurrentUserId()
+        private async Task<IActionResult> SaveMetadataAndRespond(string url, string blobName, long size, int? userId, bool isHeader)
         {
-            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                        ?? User?.FindFirst("nameid")?.Value;
+            var imageToSql = new Image
+            {
+                UserId = userId,
+                Name = blobName,
+                Url = url,
+                Size = size,
+                IsHeader = isHeader
+            };
 
-            return int.TryParse(claim, out var userId) ? userId : null;
+            await _imageMetadataService.UploadImageMetadata(imageToSql);
+
+            return Ok(new { FileUrl = url, BlobName = blobName, ImageId = imageToSql.Id });
         }
 
-        private bool IsCurrentUserAdmin()
+        private bool TryValidateBlobAccess(string fileName, out IActionResult accessError)
         {
-            return User.IsInRole(Roles.SuperAdmin) || User.IsInRole(Roles.Administrator);
+            accessError = null!;
+
+            var normalized = fileName.Replace('\\', '/');
+            if (!normalized.StartsWith("users/", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            if (segments.Length < 2 || !int.TryParse(segments[1], out var ownerUserId))
+            {
+                accessError = BadRequest("Invalid user file path");
+                return false;
+            }
+
+            if (_currentUser.IsAdmin)
+                return true;
+
+            var currentUserId = _currentUser.UserId;
+            if (!currentUserId.HasValue || currentUserId.Value != ownerUserId)
+            {
+                accessError = Forbid();
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryGetImageMimeType(ReadOnlySpan<byte> header, out string mimeType)
+        {
+            mimeType = string.Empty;
+
+            if (header.Length >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+            {
+                mimeType = "image/jpeg";
+                return true;
+            }
+
+            if (header.Length >= 8
+                && header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47
+                && header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A)
+            {
+                mimeType = "image/png";
+                return true;
+            }
+
+            if (header.Length >= 6
+                && header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46
+                && header[3] == 0x38 && (header[4] == 0x37 || header[4] == 0x39)
+                && header[5] == 0x61)
+            {
+                mimeType = "image/gif";
+                return true;
+            }
+
+            if (header.Length >= 2 && header[0] == 0x42 && header[1] == 0x4D)
+            {
+                mimeType = "image/bmp";
+                return true;
+            }
+
+            if (header.Length >= 12
+                && header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46
+                && header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50)
+            {
+                mimeType = "image/webp";
+                return true;
+            }
+
+            return false;
         }
     }
 }

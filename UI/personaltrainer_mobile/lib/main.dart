@@ -13,17 +13,43 @@ import 'package:personaltrainer_mobile/screens/register_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   if (StripeConfig.isValid) {
     Stripe.publishableKey = StripeConfig.publishableKey;
     try {
       await Stripe.instance.applySettings();
-    } catch (e) {}
-  } else {}
-  runApp(const MyApp());
+    } catch (_) {}
+  }
+
+  // Load persisted session before the first frame is drawn.
+  final hasStoredSession = await AuthProvider.loadFromStorage();
+
+  runApp(MyApp(startLoggedIn: hasStoredSession));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final bool startLoggedIn;
+
+  const MyApp({super.key, required this.startLoggedIn});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Register the 401 handler: clear session and go back to LoginScreen.
+    AuthProvider.onUnauthorized = _handleUnauthorized;
+  }
+
+  void _handleUnauthorized() {
+    AuthProvider.navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +62,14 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Personal Trainer Mobile',
         debugShowCheckedModeBanner: false,
+        navigatorKey: AuthProvider.navigatorKey,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
-        home: const LoginScreen(),
+        home: widget.startLoggedIn
+            ? const PersonalTrainerSearchScreen()
+            : const LoginScreen(),
       ),
     );
   }
@@ -324,7 +353,7 @@ class HomeScreen extends StatelessWidget {
               await messagesProvider.disconnect();
               notificationProvider.stopPolling();
 
-              AuthProvider.logout();
+              await AuthProvider.logout();
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
               );

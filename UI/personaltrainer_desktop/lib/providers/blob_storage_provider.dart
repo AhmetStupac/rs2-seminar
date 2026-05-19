@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart' hide Image;
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:personaltrainer_desktop/config/app_config.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 
@@ -31,9 +32,15 @@ class BlobStorageProvider with ChangeNotifier {
     var request = http.MultipartRequest('POST', uri);
     request.headers.addAll(headers);
 
-    // Add file
+    // Add file with correct MIME type so the API's ContentType check passes
+    final mimeType = _mimeTypeFromFileName(fileName);
     request.files.add(
-      http.MultipartFile.fromBytes('file', fileBytes, filename: fileName),
+      http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+        contentType: MediaType.parse(mimeType),
+      ),
     );
 
     // Add image name as string field
@@ -72,6 +79,25 @@ class BlobStorageProvider with ChangeNotifier {
       }
     } catch (e) {
       return null;
+    }
+  }
+
+  String _mimeTypeFromFileName(String fileName) {
+    final ext = fileName.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      case 'bmp':
+        return 'image/bmp';
+      default:
+        return 'application/octet-stream';
     }
   }
 

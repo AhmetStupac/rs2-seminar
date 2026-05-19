@@ -22,6 +22,49 @@ namespace eCommerce.Services.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("eCommerce.Services.Database.City", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("Cities");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CountryId = 1,
+                            Name = "Mostar"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CountryId = 1,
+                            Name = "Sarajevo"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CountryId = 1,
+                            Name = "Zenica"
+                        });
+                });
+
             modelBuilder.Entity("eCommerce.Services.Database.Connection", b =>
                 {
                     b.Property<string>("ConnectionId")
@@ -39,6 +82,31 @@ namespace eCommerce.Services.Migrations
                     b.HasIndex("GroupName");
 
                     b.ToTable("Connections");
+                });
+
+            modelBuilder.Entity("eCommerce.Services.Database.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Countries");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Bosnia and Herzegovina"
+                        });
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Equipment", b =>
@@ -484,13 +552,8 @@ namespace eCommerce.Services.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("CityId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -513,6 +576,8 @@ namespace eCommerce.Services.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CityId");
+
                     b.HasIndex("ImageId");
 
                     b.ToTable("Gyms");
@@ -521,26 +586,22 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            Address = "123 Main Street",
-                            City = "New York",
-                            Country = "USA",
-                            Email = "contact@fitlifegym.com",
-                            ImageId = 2,
+                            Address = "Titova 15",
+                            CityId = 2,
+                            Email = "contact@fitlifegym.ba",
                             Name = "FitLife Gym",
-                            PhoneNumber = "+387 62 111 111",
-                            WorkTime = "Mon-Fri: 6am-10pm, Sat-Sun: 8am-6pm"
+                            PhoneNumber = "+387 33 111 111",
+                            WorkTime = "Pon-Pet: 06-22h, Sub-Ned: 08-18h"
                         },
                         new
                         {
                             Id = 2,
-                            Address = "45 Oak Avenue",
-                            City = "London",
-                            Country = "UK",
-                            Email = "info@powerzone.co.uk",
-                            ImageId = 3,
+                            Address = "Bulevar Mira 22",
+                            CityId = 1,
+                            Email = "info@powerzone.ba",
                             Name = "PowerZone Fitness",
-                            PhoneNumber = "+387 62 111 112",
-                            WorkTime = "Mon-Sun: 7am-11pm"
+                            PhoneNumber = "+387 36 222 222",
+                            WorkTime = "Pon-Ned: 07-23h"
                         });
                 });
 
@@ -664,62 +725,6 @@ namespace eCommerce.Services.Migrations
                             Size = 204800L,
                             Url = "https://cloudfordiversclub.blob.core.windows.net/takmicenja/general/lateral-raise.jpeg"
                         });
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.Meal", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Calories")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("NutritionPlanId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NutritionPlanId");
-
-                    b.ToTable("Meals");
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.MealFood", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("FoodName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("MealId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Quantity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MealId");
-
-                    b.ToTable("MealFoods");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Membership", b =>
@@ -1208,31 +1213,6 @@ namespace eCommerce.Services.Migrations
                         });
                 });
 
-            modelBuilder.Entity("eCommerce.Services.Database.PlanCostItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<float>("Amount")
-                        .HasColumnType("real");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TrainingPlanId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrainingPlanId");
-
-                    b.ToTable("PlanCostItems");
-                });
-
             modelBuilder.Entity("eCommerce.Services.Database.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -1268,7 +1248,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(199),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1439),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -1276,7 +1256,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(201),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1440),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -1284,7 +1264,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(203),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1442),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -1447,11 +1427,20 @@ namespace eCommerce.Services.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ApprovedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CancellationReason")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("CancelledByUserId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("ClientId")
                         .HasColumnType("int");
@@ -1630,7 +1619,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(346),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1688),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -1644,7 +1633,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(349),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1692),
                             Email = "adil@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -1658,7 +1647,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(351),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1694),
                             Email = "ahmet2.stupac@edu.fit.ba",
                             FirstName = "Ismail",
                             IsActive = true,
@@ -1672,7 +1661,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(353),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1696),
                             Email = "ahmet3.stupac@edu.fit.ba",
                             FirstName = "Alem",
                             IsActive = true,
@@ -1686,7 +1675,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(355),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1698),
                             Email = "ahmet4.stupac@edu.fit.ba",
                             FirstName = "Adil",
                             IsActive = true,
@@ -1700,7 +1689,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(357),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1701),
                             Email = "ahmet5.stupac@edu.fit.ba",
                             FirstName = "Amel",
                             IsActive = true,
@@ -1714,7 +1703,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(359),
+                            CreatedAt = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1703),
                             Email = "ahmet6.stupac@edu.fit.ba",
                             FirstName = "Emina",
                             IsActive = true,
@@ -1758,52 +1747,63 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(440),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1731),
                             RoleId = 3,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(442),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1732),
                             RoleId = 1,
                             UserId = 2
                         },
                         new
                         {
                             Id = 4,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(444),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1733),
                             RoleId = 1,
                             UserId = 3
                         },
                         new
                         {
                             Id = 5,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(445),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1740),
                             RoleId = 1,
                             UserId = 4
                         },
                         new
                         {
                             Id = 6,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(446),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1741),
                             RoleId = 1,
                             UserId = 5
                         },
                         new
                         {
                             Id = 7,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(447),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1742),
                             RoleId = 1,
                             UserId = 6
                         },
                         new
                         {
                             Id = 8,
-                            DateAssigned = new DateTime(2026, 4, 30, 13, 46, 15, 574, DateTimeKind.Utc).AddTicks(448),
+                            DateAssigned = new DateTime(2026, 5, 17, 11, 39, 25, 533, DateTimeKind.Utc).AddTicks(1744),
                             RoleId = 2,
                             UserId = 7
                         });
+                });
+
+            modelBuilder.Entity("eCommerce.Services.Database.City", b =>
+                {
+                    b.HasOne("eCommerce.Services.Database.Country", "Country")
+                        .WithMany("Cities")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Country");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Connection", b =>
@@ -1904,9 +1904,16 @@ namespace eCommerce.Services.Migrations
 
             modelBuilder.Entity("eCommerce.Services.Database.Gym", b =>
                 {
+                    b.HasOne("eCommerce.Services.Database.City", "City")
+                        .WithMany("Gyms")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("eCommerce.Services.Database.Image", "Image")
                         .WithMany()
                         .HasForeignKey("ImageId");
+
+                    b.Navigation("City");
 
                     b.Navigation("Image");
                 });
@@ -1918,28 +1925,6 @@ namespace eCommerce.Services.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.Meal", b =>
-                {
-                    b.HasOne("eCommerce.Services.Database.NutritionPlan", "NutritionPlan")
-                        .WithMany()
-                        .HasForeignKey("NutritionPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NutritionPlan");
-                });
-
-            modelBuilder.Entity("eCommerce.Services.Database.MealFood", b =>
-                {
-                    b.HasOne("eCommerce.Services.Database.Meal", "Meal")
-                        .WithMany()
-                        .HasForeignKey("MealId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Meal");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Membership", b =>
@@ -2064,17 +2049,6 @@ namespace eCommerce.Services.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("eCommerce.Services.Database.PlanCostItem", b =>
-                {
-                    b.HasOne("eCommerce.Services.Database.TrainingPlan", "TrainingPlan")
-                        .WithMany()
-                        .HasForeignKey("TrainingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TrainingPlan");
-                });
-
             modelBuilder.Entity("eCommerce.Services.Database.Training", b =>
                 {
                     b.HasOne("eCommerce.Services.Database.User", "Client")
@@ -2160,6 +2134,16 @@ namespace eCommerce.Services.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("eCommerce.Services.Database.City", b =>
+                {
+                    b.Navigation("Gyms");
+                });
+
+            modelBuilder.Entity("eCommerce.Services.Database.Country", b =>
+                {
+                    b.Navigation("Cities");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.Exercise", b =>

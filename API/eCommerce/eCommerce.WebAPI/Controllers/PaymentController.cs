@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.WebAPI.Controllers
@@ -20,12 +19,14 @@ namespace eCommerce.WebAPI.Controllers
     {
         private readonly IPaymentService _paymentService;
         private readonly IValidator<PaymentCreateRequest> _validator;
+        private readonly ICurrentUserService _currentUser;
 
-        public PaymentController(IPaymentService paymentService, IValidator<PaymentCreateRequest> validator)
+        public PaymentController(IPaymentService paymentService, IValidator<PaymentCreateRequest> validator, ICurrentUserService currentUser)
             : base(paymentService)
         {
             _paymentService = paymentService;
             _validator = validator;
+            _currentUser = currentUser;
         }
 
         /// <summary>
@@ -35,11 +36,8 @@ namespace eCommerce.WebAPI.Controllers
         [HttpPost("create-intent")]
         public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentCreateRequest request)
         {
-            var currentUserId = GetCurrentUserId();
-            if (!currentUserId.HasValue)
-                return Forbid();
-
-            request.UserId = currentUserId.Value;
+            if (!_currentUser.UserId.HasValue) return Forbid();
+            request.UserId = _currentUser.UserId.Value;
 
             var validation = await _validator.ValidateAsync(request);
             if (!validation.IsValid)
@@ -78,15 +76,41 @@ namespace eCommerce.WebAPI.Controllers
             }
         }
 
-        [HttpPost("refund")]
-        public async Task<IActionResult> RefundPayment([FromBody] RefundPaymentRequest request)
+        [HttpPost("refund-request")]
+        public async Task<IActionResult> RequestRefund([FromBody] RefundRequestCreateRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
                 return BadRequest("StripePaymentIntentId is required.");
 
             try
             {
-                var result = await _paymentService.RefundPaymentAsync(request);
+                await _paymentService.RequestRefundAsync(request);
+                return Ok(new { message = "Refund request submitted." });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
+        [HttpPost("refund-decision")]
+        public async Task<IActionResult> DecideRefund([FromBody] RefundDecisionRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
+                return BadRequest("StripePaymentIntentId is required.");
+
+            try
+            {
+                var result = await _paymentService.DecideRefundAsync(request);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)
@@ -104,37 +128,75 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Returns all payment records for the specified user.
+        /// Returns a paginated payment history for the currently authenticated user.
         /// </summary>
         [HttpGet("user")]
-        public async Task<IActionResult> GetByUser()
+        public async Task<IActionResult> GetByUser([FromQuery] int page = 0, [FromQuery] int pageSize = 10)
         {
-            var currentUserId = GetCurrentUserId();
-            if (!currentUserId.HasValue)
-                return Forbid();
+            if (!_currentUser.UserId.HasValue) return Forbid();
 
-            var userId = currentUserId.Value;
-            var search = new PaymentSearchObject { UserId = userId, RetrieveAll = true };
+            var search = new PaymentSearchObject
+            {
+                UserId = _currentUser.UserId.Value,
+                Page = page,
+                PageSize = pageSize,
+                IncludeTotalCount = true
+            };
             var result = await _paymentService.GetAsync(search);
             return Ok(result);
         }
 
-        private int? GetCurrentUserId()
+        [HttpGet]
+        public override async Task<PagedResult<PaymentResponse>> Get([FromQuery] PaymentSearchObject? search = null)
         {
-            var claim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                        ?? User?.FindFirst("nameid")?.Value;
+            if (!_currentUser.UserId.HasValue)
+                return new PagedResult<PaymentResponse>();
 
-            return int.TryParse(claim, out var userId) ? userId : null;
+            if (!_currentUser.IsAdmin)
+            {
+                search ??= new PaymentSearchObject();
+                search.UserId = _currentUser.UserId.Value;
+                search.TrainerId = null;
+            }
+
+            return await _paymentService.GetAsync(search ?? new PaymentSearchObject());
+        }
+
+        [HttpGet("{id}")]
+        public override async Task<PaymentResponse?> GetById(int id)
+        {
+            if (!_currentUser.UserId.HasValue) return null;
+
+            var payment = await _paymentService.GetByIdAsync(id);
+            if (payment == null) return null;
+
+            if (!_currentUser.IsAdmin && payment.UserId != _currentUser.UserId.Value)
+                return null;
+
+            return payment;
         }
 
         /// <summary>
-        /// Returns all payment records (admin only).
+        /// Returns a paginated list of all payment records (admin only).
+        /// SuperAdmin sees everything; Administrator is filtered server-side by the service layer.
+        /// Accepts optional query params: status (e.g. refund_requested), trainerId, page, pageSize (max 50).
         /// </summary>
-        [Authorize(Roles = Roles.Administrator)]
+        [Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? status,
+            [FromQuery] int? trainerId,
+            [FromQuery] int page = 0,
+            [FromQuery] int pageSize = 20)
         {
-            var search = new PaymentSearchObject { RetrieveAll = true };
+            var search = new PaymentSearchObject
+            {
+                Status = status,
+                TrainerId = trainerId,
+                Page = page,
+                PageSize = pageSize,
+                IncludeTotalCount = true
+            };
             var result = await _paymentService.GetAsync(search);
             return Ok(result);
         }

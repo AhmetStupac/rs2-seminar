@@ -18,6 +18,7 @@ namespace eCommerce.Services.Interface
         /// </summary>
         Task<PaymentResponse> ConfirmPaymentAsync(ConfirmPaymentRequest request);
 
-        Task<PaymentResponse> RefundPaymentAsync(RefundPaymentRequest request);
+        Task RequestRefundAsync(RefundRequestCreateRequest request);
+        Task<PaymentResponse> DecideRefundAsync(RefundDecisionRequest request);
     }
 }

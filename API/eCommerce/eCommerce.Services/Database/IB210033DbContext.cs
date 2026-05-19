@@ -18,16 +18,15 @@ namespace eCommerce.Services.Database
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<ExercisePlan> ExercisePlans { get; set; }
         public DbSet<NutritionPlan> NutritionPlans { get; set; }
-        public DbSet<Meal> Meals { get; set; }
-        public DbSet<MealFood> MealFoods { get; set; }
         public DbSet<Equipment> Equipments { get; set; }
         public DbSet<MuscleGroup> MuscleGroups { get; set; }
-        public DbSet<PlanCostItem> PlanCostItems { get; set; }
         public DbSet<Training> Trainings { get; set; }
         public DbSet<Image> Images { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Connection> Connections { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<City> Cities { get; set; }
         public DbSet<Gym> Gyms { get; set; }
         public DbSet<TrainingSession> TrainingSessions { get; set; }
         public DbSet<PersonalTrainerRating> PersonalTrainerRatings { get; set; }
@@ -194,6 +193,21 @@ namespace eCommerce.Services.Database
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
+            // Configure Country → City relationship
+            modelBuilder.Entity<City>()
+                .HasOne(c => c.Country)
+                .WithMany(co => co.Cities)
+                .HasForeignKey(c => c.CountryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Gym → City relationship
+            modelBuilder.Entity<Gym>()
+                .HasOne(g => g.City)
+                .WithMany(c => c.Gyms)
+                .HasForeignKey(g => g.CityId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
             // Configure GroupTrainingSession relationships
             modelBuilder.Entity<GroupTrainingSession>()
                 .HasOne(g => g.Creator)
@@ -270,10 +284,22 @@ namespace eCommerce.Services.Database
                 new MuscleGroup { Id = 5, Name = "Arms" }
             );
 
+            // Country
+            modelBuilder.Entity<Country>().HasData(
+                new Country { Id = 1, Name = "Bosnia and Herzegovina" }
+            );
+
+            // City
+            modelBuilder.Entity<City>().HasData(
+                new City { Id = 1, Name = "Mostar",   CountryId = 1 },
+                new City { Id = 2, Name = "Sarajevo", CountryId = 1 },
+                new City { Id = 3, Name = "Zenica",   CountryId = 1 }
+            );
+
             // Gym
             modelBuilder.Entity<Gym>().HasData(
-                new Gym { Id = 1, Name = "FitLife Gym", Address = "123 Main Street", City = "New York", Country = "USA", Email = "contact@fitlifegym.com", PhoneNumber = "+387 62 111 111", WorkTime = "Mon-Fri: 6am-10pm, Sat-Sun: 8am-6pm", ImageId = 2 },
-                new Gym { Id = 2, Name = "PowerZone Fitness", Address = "45 Oak Avenue", City = "London", Country = "UK", Email = "info@powerzone.co.uk", PhoneNumber = "+387 62 111 112", WorkTime = "Mon-Sun: 7am-11pm", ImageId = 3 }
+                new Gym { Id = 1, Name = "FitLife Gym",       Address = "Titova 15",        CityId = 2, Email = "contact@fitlifegym.ba",  PhoneNumber = "+387 33 111 111", WorkTime = "Pon-Pet: 06-22h, Sub-Ned: 08-18h" },
+                new Gym { Id = 2, Name = "PowerZone Fitness", Address = "Bulevar Mira 22",  CityId = 1, Email = "info@powerzone.ba",       PhoneNumber = "+387 36 222 222", WorkTime = "Pon-Ned: 07-23h" }
             );
 
             // PersonalTrainer

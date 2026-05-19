@@ -7,6 +7,7 @@ import 'package:http/io_client.dart';
 import 'package:personaltrainer_mobile/config/app_config.dart';
 import 'package:personaltrainer_mobile/models/search_result.dart';
 import 'package:personaltrainer_mobile/providers/auth_provider.dart';
+import 'package:personaltrainer_mobile/utils/api_error.dart';
 
 abstract class BaseProvider<T> with ChangeNotifier {
   String _endpoint = "";
@@ -120,38 +121,21 @@ abstract class BaseProvider<T> with ChangeNotifier {
     if (response.statusCode < 299) {
       return true;
     } else if (response.statusCode == 401) {
-      throw Exception("Unauthorized");
+      AuthProvider.triggerUnauthorized();
+      throw Exception(ApiError.fallbackForStatus(401));
     } else if (response.statusCode == 403) {
-      // ⭐ Proveri da li je ban
-      _handleBanRedirect(response);
-      throw Exception("Access forbidden - User banned");
+      final message = ApiError.fromBody(
+        response.body,
+        statusCode: 403,
+      );
+      throw Exception(message);
     } else {
-      try {
-        var errorData = jsonDecode(response.body);
-        var errorMessage =
-            errorData['message'] ?? errorData['title'] ?? errorData.toString();
-        throw Exception("API Error (${response.statusCode}): $errorMessage");
-      } catch (e) {
-        if (e is Exception && e.toString().contains('API Error')) {
-          rethrow;
-        }
-        throw Exception("API Error (${response.statusCode}): ${response.body}");
-      }
+      final message = ApiError.fromBody(
+        response.body,
+        statusCode: response.statusCode,
+      );
+      throw Exception(message);
     }
-  }
-
-  // ⭐ Handling bana
-  void _handleBanRedirect(Response response) {
-    try {
-      final data = jsonDecode(response.body);
-      final message = data['message']?.toString().toLowerCase() ?? '';
-
-      if (message.contains('banovan') || message.contains('banned')) {
-        // Note: Ban handling should be done at the UI level when user tries to login
-        // or through a proper error state management system
-        // Direct navigation from a provider is not compatible with GoRouter
-      }
-    } catch (e) {}
   }
 
   Map<String, String> createHeaders() {

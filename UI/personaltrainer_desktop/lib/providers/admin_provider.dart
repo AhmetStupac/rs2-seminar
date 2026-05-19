@@ -233,6 +233,124 @@ class AdminProvider {
     }
   }
 
+  // Check if the currently authenticated user is banned
+  Future<bool> checkMyBan() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${baseUrl}Users/check-ban/me'),
+        headers: _createHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['isBanned'] == true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Change user role
+  Future<Map<String, dynamic>> changeUserRole(int userId, int roleId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${baseUrl}Users/$userId/roles'),
+        headers: _createHeaders(),
+        body: jsonEncode([roleId]),
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': 'Role updated successfully'};
+      } else if (response.statusCode == 403) {
+        return {'success': false, 'message': 'Access denied'};
+      } else if (response.statusCode == 404) {
+        return {'success': false, 'message': 'User not found'};
+      } else {
+        return {'success': false, 'message': 'Error: ${response.statusCode}'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Server communication error: $e'};
+    }
+  }
+
+  // Fetch payments with refund_requested status.
+  // Pass [trainerId] to restrict results to a specific trainer's plans.
+  Future<List<Map<String, dynamic>>> getRefundRequests({int? trainerId}) async {
+    try {
+      final buffer = StringBuffer('${baseUrl}Payment/all?status=refund_requested');
+      if (trainerId != null) buffer.write('&trainerId=$trainerId');
+      final url = buffer.toString();
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _createHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final dynamic decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return decoded.cast<Map<String, dynamic>>();
+        } else if (decoded is Map) {
+          final items = decoded['items'] ?? decoded['result'] ?? decoded['data'];
+          if (items is List) return items.cast<Map<String, dynamic>>();
+        }
+        return [];
+      } else {
+        throw Exception('Failed to load refund requests: ${response.statusCode}');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Approve or reject a refund request
+  Future<Map<String, dynamic>> refundDecision({
+    required String stripePaymentIntentId,
+    required bool approve,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}Payment/refund-decision'),
+        headers: _createHeaders(),
+        body: jsonEncode({
+          'stripePaymentIntentId': stripePaymentIntentId,
+          'approve': approve,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        String message;
+        if (response.body.isNotEmpty) {
+          try {
+            final data = jsonDecode(response.body);
+            message = data['message'] ??
+                (approve ? 'Refund approved successfully' : 'Refund rejected successfully');
+          } catch (_) {
+            message = approve ? 'Refund approved successfully' : 'Refund rejected successfully';
+          }
+        } else {
+          message = approve ? 'Refund approved successfully' : 'Refund rejected successfully';
+        }
+        return {'success': true, 'message': message};
+      } else if (response.statusCode == 400) {
+        String message = 'Bad request';
+        if (response.body.isNotEmpty) {
+          try {
+            final data = jsonDecode(response.body);
+            message = data['message'] ?? data['title'] ?? message;
+          } catch (_) {}
+        }
+        return {'success': false, 'message': message};
+      } else if (response.statusCode == 404) {
+        return {'success': false, 'message': 'Payment not found'};
+      } else {
+        return {'success': false, 'message': 'Error: ${response.statusCode}'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Server communication error: $e'};
+    }
+  }
+
   // Restore deleted user
   Future<Map<String, dynamic>> restoreUser(int userId) async {
     try {

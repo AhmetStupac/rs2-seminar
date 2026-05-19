@@ -1,201 +1,55 @@
 ================================================================================
           RECOMMENDER SYSTEM – FindAPersonalTrainer
 ================================================================================
+RecommenderTrainingHostedService se pokreće u pozadini 2 sekunde nakon starta aplikacije i poziva PersonalTrainerService.TrainRecommenderAtStartup().
 
-1. PREGLED
---------------------------------------------------------------------------------
-Aplikacija koristi ML.NET biblioteku za implementaciju recommender sistema koji
-korisnicima preporučuje personalnog trenera na osnovu njihove historije treninga
-i ocjena. Algoritam koji se koristi je Matrix Factorization sa
-SquareLossOneClass loss funkcijom, što je tehnika kolaborativnog filtriranja
-prilagođena za implicitni feedback (korisnik ne daje eksplicitnu ocjenu za
-svakog trenera, ali sistem zaključuje preferencije iz ponašanja).
+Podaci koji se koriste (dva signala):
+
+Signal                                       	          Izvor	                                      label vrijednost
+Korisnik je ikad rezervisao termin kod trenera           TrainingSession gdje ClientId IS NOT NUL     1.0f
+Korisnik je dao ocjenu ≥ 4 treneru                       PersonalTrainerRating gdje Rating >= 4       1.5f
 
 
-2. IZVORI PODATAKA (SIGNALI)
---------------------------------------------------------------------------------
-Sistem koristi dva izvora podataka za treniranje modela:
+Algoritam: ML.NET MatrixFactorization s SquareLossOneClass gubitkom — to je one-class collaborative filtering (implicitni feedback). Parametri: Alpha=0.01, Lambda=0.025, 50 iteracija.
 
-  a) Trening sesije (TrainingSessions tabela)
-     - Ako je korisnik imao trening sesiju sa određenim trenerom, to se
-       tretira kao pozitivan signal.
-     - Label (težina): 1.0
+Model se čuva kao statično polje u memoriji (static ITransformer? _model). Nema perzistencije na disk — gubi se pri svakom restartu. Model se ne retrenirava automatski kada stignu nove sesije ili ocjene.
 
-  b) Ocjene trenera (PersonalTrainerRatings tabela)
-     - Ako je korisnik ocijenio trenera sa ocjenom 4 ili više, to se tretira
-       kao jak pozitivan signal.
-     - Label (težina): 1.5 (veća težina od obične sesije)
+Ako u bazi nema niti jednog od ova dva signala → _model = null → aktivira se cold-start fallback.
 
+Faza 2 — Preporuka (GET /api/PersonalTrainer/recommend)
+Korak-po-korak za korisnika koji ima dovoljno podataka (model postoji):
 
-3. ARHITEKTURA I TOK PODATAKA
---------------------------------------------------------------------------------
-
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                      POKRETANJE APLIKACIJE                      │
-  │                                                                 │
-  │  Program.cs → Task.Run (background, 2s delay)                  │
-  │       └─→ PersonalTrainerService.TrainRecommenderAtStartup()   │
-  │               └─→ Učitaj podatke iz baze                       │
-  │               └─→ Kreiraj FeedbackEntry listu                  │
-  │               └─→ Treniraj MatrixFactorization model           │
-  │               └─→ Spremi model u statičku varijablu _model     │
-  └─────────────────────────────────────────────────────────────────┘
-
-  ┌─────────────────────────────────────────────────────────────────┐
-  │                     ZAHTJEV ZA PREPORUKU                        │
-  │                                                                 │
-  │  Flutter mobilna app                                            │
-  │       └─→ GET /api/PersonalTrainer/recommend/{userId}          │
-  │               └─→ PersonalTrainerController.Recommend()        │
-  │                       └─→ RecommendForUserAsync(userId)        │
-  │                               └─→ ML model predicts score      │
-  │                               └─→ Apply sport & rating boosts  │
-  │                               └─→ Return top-scored trainer    │
-  └─────────────────────────────────────────────────────────────────┘
+Učitaju se svi aktivni treneri (IsActive != false) s ocjenama
+Dohvataju se:
+usedTrainerIds — treneri s kojima je korisnik imao sesiju
+highlyRatedTrainerIds — treneri koje je korisnik ocijenio ≥ 4
+preferredSports — sportovi trenera s kojima je korisnik radio ili koje je visoko ocijenio (unija)
+Za svakog aktivnog trenera izračuna se
+FinalScore = MLScore
+           + 0.5f  (ako trener radi sport iz preferredSports)
+           + 0.3f  (ako je korisnik već dao visoku ocjenu tom treneru)
+		   
+Vraća se trener s najvećim FinalScore zajedno s poljem WhyRecommended (tekst na bosanskom koji objašnjava razlog preporuke)
 
 
-4. TRENIRANJE MODELA
---------------------------------------------------------------------------------
-Fajl: eCommerce.Services/PersonalTrainerService.cs
-Metoda: TrainRecommenderAtStartup(IServiceProvider serviceProvider)
+Faza 3 — Cold-start fallback (RecommendHeuristicAsync)
+Aktivira se kada _model == null (nema dovoljno podataka ili model nije treniran). Nema ML — čisto heuristika:
 
-Model se trenira jednom pri pokretanju API-ja (u background thread-u sa 2
-sekunde kašnjenja kako bi se osiguralo da je baza spremna).
+Preferred: treneri čiji sport odgovara preferiranim sportovima korisnika i s kojima korisnik još nije radio → nasumičan odabir
+Fallback: treneri s kojima korisnik nije radio ili koje je visoko ocijenio → nasumičan odabir
+Last resort: bilo koji aktivni trener → nasumičan odabir
+Šta WhyRecommended polje sadrži
+Gradi se iz tri provjere, i vraća null ako ništa ne odgovara:
 
-Koraci:
-  1. Kreira se MLContext instanca (thread-safe, zaštićena lock-om)
-  2. Iz baze se učitavaju:
-     - Sve trening sesije → FeedbackEntry (UserId, PersonalTrainerId, Label=1.0)
-     - Sve ocjene >= 4   → FeedbackEntry (UserId, PersonalTrainerId, Label=1.5)
-  3. Podaci se spajaju u jednu listu
-  4. Ako nema podataka, model se ne trenira (_model = null)
-  5. Podaci se učitavaju u IDataView
-  6. Konfigurišu se MatrixFactorization opcije
-  7. Model se trenira i sprema u statičku varijablu
-
-Hiperparametri:
-  - LossFunction:        SquareLossOneClass (za implicitni feedback)
-  - Alpha:               0.01
-  - Lambda:              0.025
-  - NumberOfIterations:  50
-  - C:                   0.00001
-
-Objašnjenje hiperparametara:
-  - SquareLossOneClass: Loss funkcija dizajnirana za situacije gdje imamo samo
-    pozitivne primjere (korisnik je trenirao sa trenerom) bez eksplicitnih
-    negativnih primjera. Algoritam sam generira negativne uzorke.
-  - Alpha: Learning rate - kontroliše brzinu konvergencije
-  - Lambda: Regularizacijski faktor - sprečava overfitting
-  - C: Dodatni regularizacijski parametar za one-class scenarij
-  - 50 iteracija: Broj prolaza kroz podatke tokom treniranja
+"ranijih treninga sa ovim trenerom"
+"visokih ocjena koje ste dali ovom treneru"
+"sličnog sporta ({sport}) koji preferirate"
+Ključna ograničenja koja dokumentacija treba da navede
 
 
-5. GENERISANJE PREPORUKE
---------------------------------------------------------------------------------
-Fajl: eCommerce.Services/PersonalTrainerService.cs
-Metoda: RecommendForUserAsync(int userId)
-
-Kada korisnik otvori ekran za pretragu trenera, mobilna aplikacija šalje
-zahtjev na API za preporuku. Proces:
-
-  1. Učitaju se svi aktivni treneri iz baze
-  2. Ako ML model nije treniran, koristi se heuristički fallback
-  3. Ako je model dostupan:
-     a) Kreira se PredictionEngine iz treniranog modela
-     b) Učitaju se treneri sa kojima je korisnik već trenirao
-     c) Učitaju se treneri koje je korisnik visoko ocijenio (>= 4)
-     d) Učitaju se korisnikovi preferirani sportovi
-     e) Za svakog kandidata trenera izračuna se:
-
-        FinalScore = MLScore + TypeBoost + RatingBoost
-
-        - MLScore:    Predikcija ML modela (kolaborativno filtriranje)
-        - TypeBoost:  +0.5 ako trener predaje sport koji korisnik preferira
-        - RatingBoost: +0.3 ako je korisnik tog trenera već visoko ocijenio
-
-     f) Trener sa najvišim FinalScore-om se vraća kao preporuka
-
-Preferirani sportovi se određuju na osnovu:
-  - Sportova trenera sa kojima je korisnik imao sesije
-  - Sportova trenera koje je korisnik visoko ocijenio
-
-
-6. HEURISTIČKI FALLBACK
---------------------------------------------------------------------------------
-Fajl: eCommerce.Services/PersonalTrainerService.cs
-Metoda: RecommendHeuristicAsync(int userId)
-
-Kada ML model nije dostupan (npr. nema dovoljno podataka za treniranje),
-koristi se jednostavnija heuristička logika:
-
-  1. Prioritet: Treneri koji predaju preferirani sport, a korisnik ih još
-     nije probao → nasumični odabir
-  2. Fallback: Treneri koje korisnik nije probao ili koje je visoko ocijenio
-     → nasumični odabir
-  3. Zadnji fallback: Bilo koji aktivni trener → nasumični odabir
-
-
-7. STRUKTURE PODATAKA
---------------------------------------------------------------------------------
-
-  FeedbackEntry (ulaz u ML model):
-  ┌──────────────────────┬────────┬──────────────────────────────────┐
-  │ Polje                │ Tip    │ Opis                             │
-  ├──────────────────────┼────────┼──────────────────────────────────┤
-  │ UserId               │ uint   │ ID korisnika (KeyType)           │
-  │ PersonalTrainerId    │ uint   │ ID trenera (KeyType)             │
-  │ Label                │ float  │ Težina signala (1.0 ili 1.5)     │
-  └──────────────────────┴────────┴──────────────────────────────────┘
-
-  PersonalTrainerScorePrediction (izlaz iz ML modela):
-  ┌──────────────────────┬────────┬──────────────────────────────────┐
-  │ Polje                │ Tip    │ Opis                             │
-  ├──────────────────────┼────────┼──────────────────────────────────┤
-  │ Score                │ float  │ Predviđeni afinitet korisnika    │
-  │                      │        │ prema treneru                    │
-  └──────────────────────┴────────┴──────────────────────────────────┘
-
-
-8. API ENDPOINT
---------------------------------------------------------------------------------
-
-  GET /api/PersonalTrainer/recommend/{userId}
-
-  - Autorizacija: JWT Bearer token (obavezan)
-  - Parametri: userId (int) - ID korisnika za kojeg se traži preporuka
-  - Response 200: PersonalTrainerResponse JSON objekt
-  - Response 404: Nema dostupnih trenera za preporuku
-
-
-9. FLUTTER INTEGRACIJA
---------------------------------------------------------------------------------
-Fajl: UI/personalTrainer_mobile/lib/screens/personal_trainer_search_screen.dart
-
-Mobilna aplikacija:
-  1. Pri otvaranju ekrana za pretragu trenera poziva _loadRecommendation()
-  2. Šalje GET zahtjev na /api/PersonalTrainer/recommend/{userId}
-  3. Ako dobije odgovor, prikazuje "Recommended for you" karticu na vrhu liste
-  4. Kartica sadrži ime trenera, sport, prosječnu ocjenu i dugme za detalje
-  5. Korisnik može kliknuti na preporučenog trenera za više informacija
-
-
-10. KLJUČNE DATOTEKE
---------------------------------------------------------------------------------
-
-  Backend:
-  - eCommerce.Services/PersonalTrainerService.cs
-    (ML model treniranje, predikcija, heuristički fallback)
-  - eCommerce.WebAPI/Controllers/PersonalTrainerController.cs
-    (API endpoint za preporuku)
-  - eCommerce.WebAPI/Program.cs
-    (pokretanje treniranja modela pri startupu)
-
-  Frontend:
-  - UI/personalTrainer_mobile/lib/screens/personal_trainer_search_screen.dart
-    (prikaz preporuke korisniku)
-
-  NuGet paketi:
-  - Microsoft.ML (v4.0.2)
-  - Microsoft.ML.Recommender (v0.17.5)
-
-================================================================================
+Ograničenje                                                                               Detalj
+Samo jedna preporuka                                                    Endpoint vraća jednog trenera, ne listu
+Model se ne retrenirava live                                    Nova sesija/ocjena neće uticati dok se app ne restartuje
+Nema perzistencije modela                                            Svaki restart = trening iznova (2-sekunda odgoda)
+Cold-start = random                                     Novi korisnik bez sesija ili ocjena dobiva nasumičnog aktivnog trenera
+Nije content-based                                       Nema preporuka na osnovu pregledanih profila trenera — samo sesije i ocjene
