@@ -23,6 +23,7 @@ namespace eCommerce.Services.States
         protected readonly IHttpContextAccessor _httpContextAccessor;
         protected readonly INotificationService _notificationService;
         protected readonly IValidator<TrainingSessionUpsertRequest> _validator;
+        protected readonly IValidator<TrainingSessionCancelRequest> _cancelValidator;
 
         protected BaseTrainingSessionState(
             IServiceProvider serviceProvider,
@@ -30,7 +31,8 @@ namespace eCommerce.Services.States
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             INotificationService notificationService,
-            IValidator<TrainingSessionUpsertRequest> validator)
+            IValidator<TrainingSessionUpsertRequest> validator,
+            IValidator<TrainingSessionCancelRequest> cancelValidator)
         {
             _serviceProvider = serviceProvider;
             _context = context;
@@ -38,6 +40,7 @@ namespace eCommerce.Services.States
             _httpContextAccessor = httpContextAccessor;
             _notificationService = notificationService;
             _validator = validator;
+            _cancelValidator = cancelValidator;
         }
 
         public virtual Task<TrainingSession> CreateAsync(TrainingSessionUpsertRequest request)
@@ -93,6 +96,16 @@ namespace eCommerce.Services.States
         protected async Task EnsureValidAsync(TrainingSessionUpsertRequest request)
         {
             var result = await _validator.ValidateAsync(request);
+            if (!result.IsValid)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.ErrorMessage));
+                throw new ArgumentException($"Validation failed: {errors}");
+            }
+        }
+
+        protected async Task EnsureCancelValidAsync(TrainingSessionCancelRequest request)
+        {
+            var result = await _cancelValidator.ValidateAsync(request);
             if (!result.IsValid)
             {
                 var errors = string.Join("; ", result.Errors.Select(e => e.ErrorMessage));

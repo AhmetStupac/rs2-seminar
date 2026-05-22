@@ -19,8 +19,9 @@ namespace eCommerce.Services.States
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             INotificationService notificationService,
-            IValidator<TrainingSessionUpsertRequest> validator)
-            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator)
+            IValidator<TrainingSessionUpsertRequest> validator,
+            IValidator<TrainingSessionCancelRequest> cancelValidator)
+            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator, cancelValidator)
         {
         }
 
@@ -56,9 +57,12 @@ namespace eCommerce.Services.States
             if (entity.ClientId != userId && !isTrainer)
                 throw new UnauthorizedAccessException("You don't have permission to cancel this training session");
 
+            await EnsureCancelValidAsync(request);
+
             entity.Status = TrainingSessionStatus.Cancelled;
             entity.CancelledAt = DateTime.UtcNow;
-            entity.CancellationReason = request?.CancellationReason;
+            entity.CancelledByUserId = userId;
+            entity.CancellationReason = request.CancellationReason;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

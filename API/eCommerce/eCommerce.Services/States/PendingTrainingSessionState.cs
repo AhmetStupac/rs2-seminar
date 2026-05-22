@@ -1,3 +1,4 @@
+using eCommerce.Model.Constants;
 using eCommerce.Model.Requests;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
@@ -19,8 +20,9 @@ namespace eCommerce.Services.States
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             INotificationService notificationService,
-            IValidator<TrainingSessionUpsertRequest> validator)
-            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator)
+            IValidator<TrainingSessionUpsertRequest> validator,
+            IValidator<TrainingSessionCancelRequest> cancelValidator)
+            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator, cancelValidator)
         {
         }
 
@@ -92,10 +94,12 @@ namespace eCommerce.Services.States
             if (entity.ClientId != userId && !isTrainer)
                 throw new UnauthorizedAccessException("You don't have permission to cancel this training session");
 
+            await EnsureCancelValidAsync(request);
+
             entity.Status = TrainingSessionStatus.Cancelled;
             entity.CancelledAt = DateTime.UtcNow;
             entity.CancelledByUserId = userId;
-            entity.CancellationReason = request?.CancellationReason;
+            entity.CancellationReason = request.CancellationReason;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -115,6 +119,6 @@ namespace eCommerce.Services.States
         }
 
         public override List<string> AllowedActions(TrainingSession entity)
-            => new List<string> { nameof(UpdateAsync), nameof(ConfirmAsync), nameof(CancelAsync) };
+            => new List<string> { TrainingSessionConstants.AllowedActions.Confirm, TrainingSessionConstants.AllowedActions.Cancel, TrainingSessionConstants.AllowedActions.Update };
     }
 }

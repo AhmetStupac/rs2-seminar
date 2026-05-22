@@ -20,8 +20,9 @@ namespace eCommerce.Services.States
             IMapper mapper,
             IHttpContextAccessor httpContextAccessor,
             INotificationService notificationService,
-            IValidator<TrainingSessionUpsertRequest> validator)
-            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator)
+            IValidator<TrainingSessionUpsertRequest> validator,
+            IValidator<TrainingSessionCancelRequest> cancelValidator)
+            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator, cancelValidator)
         {
         }
     }
