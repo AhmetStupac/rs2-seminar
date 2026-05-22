@@ -1,3 +1,4 @@
+using eCommerce.Model.Constants;
 using eCommerce.Model.Requests;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
@@ -73,6 +74,6 @@ namespace eCommerce.Services.States
         }
 
         public override List<string> AllowedActions(TrainingSession entity)
-            => new List<string> { nameof(CreateAsync) };
+            => new List<string> { TrainingSessionConstants.AllowedActions.Create };
     }
 }

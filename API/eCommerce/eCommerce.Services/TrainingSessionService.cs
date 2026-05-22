@@ -1,17 +1,16 @@
-﻿using eCommerce.Model.Requests;
+﻿using eCommerce.Model.Constants;
+using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using eCommerce.Services.States;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using TrainingSessionStatus = eCommerce.Model.Enums.TrainingSessionStatus;
 
@@ -30,17 +29,14 @@ namespace eCommerce.Services
           ITrainingSessionService
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public TrainingSessionService(
             IB210033DbContext context,
             IMapper mapper,
-            IServiceProvider serviceProvider,
-            IHttpContextAccessor httpContextAccessor)
+            IServiceProvider serviceProvider)
             : base(context, mapper)
         {
             _serviceProvider = serviceProvider;
-            _httpContextAccessor = httpContextAccessor;
         }
 
         // --- State machine entry points -----------------------------------------------------
@@ -150,9 +146,9 @@ namespace eCommerce.Services
 
             response.StatusDisplay = entity.Status.ToString();
 
-            var userId = TryGetCurrentUserId();
-            response.CanEdit = userId.HasValue && (entity.ClientId == userId || IsCurrentUserTrainer(entity.PersonalTrainerId));
-            response.CanCancel = response.CanEdit && entity.Status != TrainingSessionStatus.Completed;
+            var allowedActions = ResolveState(entity.Status).AllowedActions(entity);
+            response.CanEdit = allowedActions.Contains(TrainingSessionConstants.AllowedActions.Update);
+            response.CanCancel = allowedActions.Contains(TrainingSessionConstants.AllowedActions.Cancel);
 
             return response;
         }
@@ -218,20 +214,6 @@ namespace eCommerce.Services
             if (entity == null)
                 throw new KeyNotFoundException("Training session not found");
             return entity;
-        }
-
-        private int? TryGetCurrentUserId()
-        {
-            var claim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return int.TryParse(claim, out var userId) ? userId : (int?)null;
-        }
-
-        private bool IsCurrentUserTrainer(int trainerId)
-        {
-            var userId = TryGetCurrentUserId();
-            if (!userId.HasValue) return false;
-            return _context.Set<PersonalTrainer>()
-                .Any(pt => pt.Id == trainerId && pt.UserId == userId.Value);
         }
     }
 }
