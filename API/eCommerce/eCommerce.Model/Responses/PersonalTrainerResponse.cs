@@ -15,6 +15,7 @@ namespace eCommerce.Model.Responses
         public string? Gender { get; set; }
         public string? Certifications { get; set; }
         public string? Sport { get; set; }
+        public float MembershipPrice { get; set; }
         
         // Rating information
         public double AverageRating { get; set; }

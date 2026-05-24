@@ -20,5 +20,10 @@ namespace eCommerce.Services.Interface
 
         Task RequestRefundAsync(RefundRequestCreateRequest request);
         Task<PaymentResponse> DecideRefundAsync(RefundDecisionRequest request);
+
+        /// <summary>
+        /// True when the payment is for a plan or membership sold by the given personal trainer.
+        /// </summary>
+        Task<bool> BelongsToPersonalTrainerAsync(int paymentId, int personalTrainerId);
     }
 }

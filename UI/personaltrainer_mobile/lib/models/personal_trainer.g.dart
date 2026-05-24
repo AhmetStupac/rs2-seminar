@@ -18,6 +18,7 @@ PersonalTrainer _$PersonalTrainerFromJson(Map<String, dynamic> json) =>
       whyRecommended: json['whyRecommended'] as String?,
       averageRating: (json['averageRating'] as num?)?.toDouble(),
       totalRatings: (json['totalRatings'] as num?)?.toInt(),
+      membershipPrice: (json['membershipPrice'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$PersonalTrainerToJson(PersonalTrainer instance) =>
@@ -32,4 +33,5 @@ Map<String, dynamic> _$PersonalTrainerToJson(PersonalTrainer instance) =>
       'whyRecommended': instance.whyRecommended,
       'averageRating': instance.averageRating,
       'totalRatings': instance.totalRatings,
+      'membershipPrice': instance.membershipPrice,
     };

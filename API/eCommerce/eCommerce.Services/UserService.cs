@@ -232,7 +232,7 @@ namespace eCommerce.Services
                 user.Email = request.Email;
                 user.Username = request.Username;
                 user.PhoneNumber = request.PhoneNumber;
-                user.IsActive = request.IsActive;
+                user.IsActive = true;
                 user.ProfileImageId = request.ProfileImageId;
 
                 await _context.SaveChangesAsync();

@@ -21,6 +21,11 @@ namespace eCommerce.Services.Database
         public string? Certifications { get; set; }
         public string? Sport { get; set; }
 
+        /// <summary>
+        /// Monthly membership price in EUR (server-side source of truth for membership payments).
+        /// </summary>
+        public float MembershipPrice { get; set; }
+
         // Navigation property for ratings
         public ICollection<PersonalTrainerRating> Ratings { get; set; } = new List<PersonalTrainerRating>();
     }

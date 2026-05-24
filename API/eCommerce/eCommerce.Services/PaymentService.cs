@@ -467,6 +467,23 @@ namespace eCommerce.Services
             return user?.IsInRole(Roles.SuperAdmin) == true || user?.IsInRole(Roles.Administrator) == true;
         }
 
+        public async Task<bool> BelongsToPersonalTrainerAsync(int paymentId, int personalTrainerId)
+        {
+            var payment = await _context.Set<Payment>().FindAsync(paymentId);
+            if (payment == null || !payment.ItemId.HasValue)
+                return false;
+
+            return payment.ItemType switch
+            {
+                PaymentItemType.TrainingPlan => await _context.Set<Database.TrainingPlan>()
+                    .AnyAsync(tp => tp.Id == payment.ItemId && tp.PersonalTrainerId == personalTrainerId),
+                PaymentItemType.NutritionPlan => await _context.Set<Database.NutritionPlan>()
+                    .AnyAsync(np => np.Id == payment.ItemId && np.PersonalTrainerId == personalTrainerId),
+                PaymentItemType.Membership => payment.ItemId == personalTrainerId,
+                _ => false
+            };
+        }
+
         // -----------------------------------------------------------------------
         // Helpers
         // -----------------------------------------------------------------------
@@ -514,14 +531,10 @@ namespace eCommerce.Services
                     if (trainer == null)
                         throw new KeyNotFoundException($"PersonalTrainer with id {request.ItemId.Value} not found.");
 
-                    var averagePrice = await _context.Set<Database.TrainingSession>()
-                        .Where(ts => ts.PersonalTrainerId == request.ItemId.Value && ts.Price.HasValue)
-                        .AverageAsync(ts => (float?)ts.Price);
-
-                    if (!averagePrice.HasValue || averagePrice.Value <= 0)
+                    if (trainer.MembershipPrice <= 0)
                         throw new InvalidOperationException("Membership price is not configured for this trainer.");
 
-                    return (long)Math.Round(averagePrice.Value * 100);
+                    return (long)Math.Round(trainer.MembershipPrice * 100);
                 }
 
                 default:

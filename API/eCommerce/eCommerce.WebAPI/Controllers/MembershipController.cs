@@ -44,13 +44,21 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Returns all memberships for the trainer's clients (trainer-only).
+        /// Returns all memberships for the authenticated trainer's clients.
+        /// The trainer scope is resolved from the JWT user; route ids from the client are not used.
         /// </summary>
-        [HttpGet("trainer/{personalTrainerId:int}/clients")]
+        [HttpGet("trainer/clients")]
         [Authorize(Roles = Roles.Administrator)]
-        public async Task<IActionResult> GetTrainerMemberships(int personalTrainerId)
+        public async Task<IActionResult> GetMyTrainerMemberships()
         {
-            var result = await _membershipService.GetTrainerMembershipsAsync(personalTrainerId);
+            if (!_currentUser.UserId.HasValue)
+                return Forbid();
+
+            var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+            if (!trainerId.HasValue)
+                return NotFound(new { message = "No PersonalTrainer profile found for the current user." });
+
+            var result = await _membershipService.GetTrainerMembershipsAsync(trainerId.Value);
             return Ok(result);
         }
 

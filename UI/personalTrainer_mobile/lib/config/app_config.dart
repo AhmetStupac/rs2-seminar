@@ -1,7 +1,7 @@
-class AppConfig {
-  static const String _defaultServerUrl = 'https://10.0.2.2:7093';
-  static const String _defaultSignalRServerUrl = 'http://10.0.2.2:7094';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
+class AppConfig {
   static const String _legacyBaseUrl = String.fromEnvironment(
     'baseUrl',
     defaultValue: '',
@@ -15,7 +15,23 @@ class AppConfig {
     defaultValue: '',
   );
 
-  /// HTTPS root for REST API (e.g. https://10.0.2.2:7093).
+  /// Dev API root (HTTP on :7093). Desktop uses localhost; Android emulator uses 10.0.2.2.
+  static String get _defaultServerUrl {
+    if (kIsWeb) return 'http://localhost:7093';
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:7093';
+    }
+    return 'http://localhost:7093';
+  }
+
+  static String get _defaultSignalRUrl {
+    if (kIsWeb) return 'http://localhost:7094';
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:7094';
+    }
+    return 'http://localhost:7094';
+  }
+
   static String get serverUrl {
     if (_serverUrlOverride.isNotEmpty) {
       return _trimTrailingSlash(_serverUrlOverride);
@@ -40,8 +56,7 @@ class AppConfig {
     return '$serverUrl/api/';
   }
 
-  /// HTTP root for SignalR hubs (e.g. http://10.0.2.2:7094).
-  /// Backend dev: API on HTTPS :7093, SignalR on HTTP :7094.
+  /// HTTP root for SignalR hubs (e.g. http://localhost:7094).
   static String get signalRBaseUrl {
     if (_signalRUrlOverride.isNotEmpty) {
       return _trimTrailingSlash(_signalRUrlOverride);
@@ -51,7 +66,7 @@ class AppConfig {
       return _toSignalRUrl(serverUrl);
     }
 
-    return _defaultSignalRServerUrl;
+    return _defaultSignalRUrl;
   }
 
   static String get blobStorageBaseUrl => '$serverUrl/';

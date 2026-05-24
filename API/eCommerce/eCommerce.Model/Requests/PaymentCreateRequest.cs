@@ -8,14 +8,8 @@ namespace eCommerce.Model.Requests
         public PaymentItemType ItemType { get; set; }
 
         /// <summary>
-        /// ID of the TrainingPlan or NutritionPlan being purchased.
-        /// Not required for Membership payments (use CustomAmountInCents instead).
+        /// ID of the purchased item: TrainingPlan ID, NutritionPlan ID, or PersonalTrainer ID for Membership.
         /// </summary>
         public int? ItemId { get; set; }
-
-        /// <summary>
-        /// Required only for Membership payments where no item record holds the price.
-        /// </summary>
-        public int? CustomAmountInCents { get; set; }
     }
 }

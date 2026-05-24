@@ -152,14 +152,27 @@ namespace eCommerce.WebAPI.Controllers
             if (!_currentUser.UserId.HasValue)
                 return new PagedResult<PaymentResponse>();
 
-            if (!_currentUser.IsAdmin)
+            search ??= new PaymentSearchObject();
+
+            if (_currentUser.IsSuperAdmin)
             {
-                search ??= new PaymentSearchObject();
-                search.UserId = _currentUser.UserId.Value;
-                search.TrainerId = null;
+                return await _paymentService.GetAsync(search);
             }
 
-            return await _paymentService.GetAsync(search ?? new PaymentSearchObject());
+            if (_currentUser.IsAdministrator)
+            {
+                var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+                if (!trainerId.HasValue)
+                    return new PagedResult<PaymentResponse>();
+
+                search.TrainerId = trainerId.Value;
+                search.UserId = null;
+                return await _paymentService.GetAsync(search);
+            }
+
+            search.UserId = _currentUser.UserId.Value;
+            search.TrainerId = null;
+            return await _paymentService.GetAsync(search);
         }
 
         [HttpGet("{id}")]
@@ -170,15 +183,26 @@ namespace eCommerce.WebAPI.Controllers
             var payment = await _paymentService.GetByIdAsync(id);
             if (payment == null) return null;
 
-            if (!_currentUser.IsAdmin && payment.UserId != _currentUser.UserId.Value)
-                return null;
+            if (_currentUser.IsSuperAdmin)
+                return payment;
 
-            return payment;
+            if (_currentUser.IsAdministrator)
+            {
+                var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+                if (!trainerId.HasValue)
+                    return null;
+
+                var belongsToTrainer = await _paymentService.BelongsToPersonalTrainerAsync(id, trainerId.Value);
+                return belongsToTrainer ? payment : null;
+            }
+
+            return payment.UserId == _currentUser.UserId.Value ? payment : null;
         }
 
         /// <summary>
         /// Returns a paginated list of all payment records (admin only).
-        /// SuperAdmin sees everything; Administrator is filtered server-side by the service layer.
+        /// SuperAdmin sees everything and may optionally filter by trainerId.
+        /// Administrator (trainer) always sees only payments for their own PersonalTrainer profile.
         /// Accepts optional query params: status (e.g. refund_requested), trainerId, page, pageSize (max 50).
         /// </summary>
         [Authorize(Roles = Roles.SuperAdmin + "," + Roles.Administrator)]
@@ -189,14 +213,33 @@ namespace eCommerce.WebAPI.Controllers
             [FromQuery] int page = 0,
             [FromQuery] int pageSize = 20)
         {
+            if (!_currentUser.UserId.HasValue)
+                return Forbid();
+
             var search = new PaymentSearchObject
             {
                 Status = status,
-                TrainerId = trainerId,
                 Page = page,
                 PageSize = pageSize,
                 IncludeTotalCount = true
             };
+
+            if (_currentUser.IsSuperAdmin)
+            {
+                search.TrainerId = trainerId;
+            }
+            else
+            {
+                var ownTrainerId = await _currentUser.GetPersonalTrainerIdAsync();
+                if (!ownTrainerId.HasValue)
+                    return NotFound(new { message = "No PersonalTrainer profile found for the current user." });
+
+                if (trainerId.HasValue && trainerId.Value != ownTrainerId.Value)
+                    return Forbid();
+
+                search.TrainerId = ownTrainerId.Value;
+            }
+
             var result = await _paymentService.GetAsync(search);
             return Ok(result);
         }

@@ -15,7 +15,6 @@ class PaymentProvider extends BaseProvider<dynamic> {
   Future<PaymentIntentResponse> createPaymentIntent({
     required int itemType,
     int? itemId,
-    int? customAmountInCents,
   }) async {
     final uri = Uri.parse("${BaseProvider.baseUrl}Payment/create-intent");
     final response = await BaseProvider.client.post(
@@ -24,7 +23,6 @@ class PaymentProvider extends BaseProvider<dynamic> {
       body: jsonEncode({
         'itemType': itemType,
         if (itemId != null) 'itemId': itemId,
-        if (customAmountInCents != null) 'customAmountInCents': customAmountInCents,
       }),
     );
 

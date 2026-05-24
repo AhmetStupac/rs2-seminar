@@ -11,17 +11,14 @@ class PaymentScreen extends StatefulWidget {
   /// 0 = TrainingPlan, 1 = NutritionPlan, 2 = Membership
   final int itemType;
   final int? itemId;
-  final int? customAmountInCents;
   final String itemName;
   /// Human-readable price string shown in the confirmation dialog (e.g. "€25.00").
-  /// Falls back to formatting [customAmountInCents] if not provided.
   final String? priceLabel;
 
   const PaymentScreen({
     super.key,
     required this.itemType,
     this.itemId,
-    this.customAmountInCents,
     required this.itemName,
     this.priceLabel,
   });
@@ -105,14 +102,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
             _confirmRow(Icons.label_outline, 'Item', widget.itemName),
             const SizedBox(height: 8),
             _confirmRow(_itemTypeIcon, 'Type', _itemTypeLabel),
-            if (widget.priceLabel != null ||
-                widget.customAmountInCents != null) ...[
+            if (widget.priceLabel != null) ...[
               const SizedBox(height: 8),
               _confirmRow(
                 Icons.euro,
                 'Amount',
-                widget.priceLabel ??
-                    _formatAmount(widget.customAmountInCents!),
+                widget.priceLabel!,
               ),
             ],
             const SizedBox(height: 16),
@@ -212,7 +207,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final intentResponse = await _paymentProvider.createPaymentIntent(
         itemType: widget.itemType,
         itemId: widget.itemId,
-        customAmountInCents: widget.customAmountInCents,
       );
 
       setState(() {

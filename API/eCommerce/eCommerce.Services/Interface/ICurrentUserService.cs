@@ -16,5 +16,10 @@ namespace eCommerce.Services.Interface
 
         /// <summary>True when the caller is SuperAdmin OR Administrator.</summary>
         bool IsAdmin { get; }
+
+        /// <summary>
+        /// Resolves the PersonalTrainer profile id for the current JWT user, if one exists.
+        /// </summary>
+        Task<int?> GetPersonalTrainerIdAsync();
     }
 }

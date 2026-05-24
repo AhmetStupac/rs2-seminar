@@ -20,12 +20,6 @@ namespace eCommerce.Model.Validators
                 .NotNull()
                 .GreaterThan(0)
                 .WithMessage("ItemId is required. For TrainingPlan/NutritionPlan it is the plan ID; for Membership it is the PersonalTrainer ID.");
-
-            RuleFor(x => x.CustomAmountInCents)
-                .NotNull()
-                .GreaterThan(0)
-                .When(x => x.ItemType == PaymentItemType.Membership)
-                .WithMessage("CustomAmountInCents is required for Membership purchases and must be greater than 0.");
         }
     }
 }

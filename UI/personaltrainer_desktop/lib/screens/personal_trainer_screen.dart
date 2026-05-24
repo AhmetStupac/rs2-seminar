@@ -22,6 +22,8 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
   final TextEditingController _certificationsController =
       TextEditingController();
   final TextEditingController _sportController = TextEditingController();
+  final TextEditingController _membershipPriceController =
+      TextEditingController(text: '50');
 
   List<User> _users = [];
   int? _selectedUserId;
@@ -40,6 +42,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
     _yearsOfExperienceController.dispose();
     _certificationsController.dispose();
     _sportController.dispose();
+    _membershipPriceController.dispose();
     super.dispose();
   }
 
@@ -77,6 +80,7 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
             ? null
             : _certificationsController.text,
         sport: _sportController.text.isEmpty ? null : _sportController.text,
+        membershipPrice: double.tryParse(_membershipPriceController.text),
       );
 
       await _personalTrainerProvider.insert(personalTrainer.toJson());
@@ -244,6 +248,30 @@ class _PersonalTrainerScreenState extends State<PersonalTrainerScreen> {
                           if (value == null || value.isEmpty) return null;
                           if (!RegExp(r'[a-zA-Z]').hasMatch(value)) {
                             return 'Sport must contain at least one letter';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _membershipPriceController,
+                        decoration: const InputDecoration(
+                          labelText: 'Monthly Membership Price (EUR) *',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.euro),
+                          hintText: 'e.g. 50.00',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter membership price';
+                          }
+                          final price = double.tryParse(value);
+                          if (price == null || price <= 0) {
+                            return 'Please enter a valid price greater than 0';
                           }
                           return null;
                         },

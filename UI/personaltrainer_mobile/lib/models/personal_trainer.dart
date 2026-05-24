@@ -14,6 +14,7 @@ class PersonalTrainer {
   String? whyRecommended;
   double? averageRating;
   int? totalRatings;
+  double? membershipPrice;
 
   PersonalTrainer({
     this.id,
@@ -26,6 +27,7 @@ class PersonalTrainer {
     this.whyRecommended,
     this.averageRating,
     this.totalRatings,
+    this.membershipPrice,
   });
 
   factory PersonalTrainer.fromJson(Map<String, dynamic> json) =>

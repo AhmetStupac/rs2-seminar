@@ -304,10 +304,10 @@ namespace eCommerce.Services.Database
 
             // PersonalTrainer
             modelBuilder.Entity<PersonalTrainer>().HasData(
-                new PersonalTrainer { Id = 1, UserId = 2, YearsOfExperience = 8, IsActive = true, Certifications = "NASM-CPT, CSCS", Sport = "Karate", Gender = "Male" },
-                new PersonalTrainer { Id = 2, UserId = 3, YearsOfExperience = 3, IsActive = true, Certifications = "ACE-CPT", Sport = "Running", Gender = "Male" },
-                new PersonalTrainer { Id = 3, UserId = 4, YearsOfExperience = 4, IsActive = true, Certifications = "ACE-CC", Sport = "Gym" , Gender = "Female" },
-                new PersonalTrainer { Id = 4, UserId = 5, YearsOfExperience = 10, IsActive = true, Certifications = "ACE-DPT", Sport = "Boxing", Gender = "Male" }
+                new PersonalTrainer { Id = 1, UserId = 2, YearsOfExperience = 8, IsActive = true, Certifications = "NASM-CPT, CSCS", Sport = "Karate", Gender = "Male", MembershipPrice = 50f },
+                new PersonalTrainer { Id = 2, UserId = 3, YearsOfExperience = 3, IsActive = true, Certifications = "ACE-CPT", Sport = "Running", Gender = "Male", MembershipPrice = 45f },
+                new PersonalTrainer { Id = 3, UserId = 4, YearsOfExperience = 4, IsActive = true, Certifications = "ACE-CC", Sport = "Gym" , Gender = "Female", MembershipPrice = 40f },
+                new PersonalTrainer { Id = 4, UserId = 5, YearsOfExperience = 10, IsActive = true, Certifications = "ACE-DPT", Sport = "Boxing", Gender = "Male", MembershipPrice = 55f }
             );
 
             // Exerciseq

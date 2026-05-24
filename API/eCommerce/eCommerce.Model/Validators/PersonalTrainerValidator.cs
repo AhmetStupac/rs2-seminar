@@ -24,6 +24,9 @@ namespace eCommerce.Model.Validators
                            string.Equals(g, "Female", System.StringComparison.OrdinalIgnoreCase) ||
                            string.Equals(g, "Other", System.StringComparison.OrdinalIgnoreCase))
                 .WithMessage("Gender must be Male, Female or Other.");
+
+            RuleFor(x => x.MembershipPrice)
+                .GreaterThan(0).WithMessage("Membership price must be greater than 0.");
         }
     }
 }

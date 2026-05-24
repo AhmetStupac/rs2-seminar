@@ -9,9 +9,6 @@ import 'package:personaltrainer_mobile/providers/nutrition_plan_provider.dart';
 import 'package:personaltrainer_mobile/providers/training_plan_provider.dart';
 import 'package:personaltrainer_mobile/screens/payment_screen.dart';
 
-/// Membership fixed price: 50 EUR = 5000 cents
-const int _membershipPriceInCents = 5000;
-
 class PurchaseOptionsScreen extends StatefulWidget {
   final PersonalTrainer trainer;
 
@@ -129,7 +126,6 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
   Future<void> _navigateToPayment({
     required int itemType,
     int? itemId,
-    int? customAmountInCents,
     required String itemName,
     String? priceLabel,
   }) async {
@@ -139,7 +135,6 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
         builder: (context) => PaymentScreen(
           itemType: itemType,
           itemId: itemId,
-          customAmountInCents: customAmountInCents,
           itemName: itemName,
           priceLabel: priceLabel,
         ),
@@ -406,16 +401,21 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
   }
 
   Widget _buildBuyMembershipCard({bool disabled = false}) {
-    final price = _membershipPriceInCents / 100;
+    final membershipPrice = widget.trainer.membershipPrice;
+    final priceConfigured = membershipPrice != null && membershipPrice > 0;
+    final priceLabel = priceConfigured
+        ? '€${membershipPrice!.toStringAsFixed(2)}'
+        : null;
+
     return InkWell(
-      onTap: disabled
+      onTap: disabled || !priceConfigured
           ? null
           : () => _navigateToPayment(
                 itemType: 2,
                 itemId: widget.trainer.id,
-                customAmountInCents: _membershipPriceInCents,
                 itemName:
                     'Membership — ${widget.trainer.userFirstName ?? "Trainer"}',
+                priceLabel: priceLabel,
               ),
       borderRadius: BorderRadius.circular(16),
       child: Container(
@@ -469,7 +469,9 @@ class _PurchaseOptionsScreenState extends State<PurchaseOptionsScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Monthly subscription — €${price.toStringAsFixed(2)}',
+                    priceConfigured
+                        ? 'Monthly subscription — $priceLabel'
+                        : 'Membership price not configured',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withOpacity(0.85),

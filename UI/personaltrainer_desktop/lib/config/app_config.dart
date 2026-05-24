@@ -62,13 +62,14 @@ class AppConfig {
 
   static String _defaultServerBaseUrl() {
     if (kIsWeb) {
-      return 'https://localhost:7093';
+      return 'http://localhost:7093';
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5121';
+      return 'http://10.0.2.2:7093';
     }
 
-    return 'https://localhost:7093';
+    // Local dev API listens on HTTP :7093 (HTTPS on the same port fails with TLS errors).
+    return 'http://localhost:7093';
   }
 }

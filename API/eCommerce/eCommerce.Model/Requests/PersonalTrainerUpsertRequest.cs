@@ -10,5 +10,6 @@ namespace eCommerce.Model.Requests
         public string? Gender { get; set; }
         public string? Certifications { get; set; }
         public string? Sport { get; set; }
+        public float MembershipPrice { get; set; }
     }
 }
