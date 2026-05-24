@@ -160,39 +160,46 @@ class UserProvider extends BaseProvider<User> {
     }
   }
 
-  Future<bool> changePassword(int userId, String newPassword) async {
+  Future<bool> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
-      // First, get the current user data
-      var currentUser = await getCurrentUser();
-      if (currentUser == null) {
-        throw Exception("User not found");
-      }
-
-      // Prepare the update request with current user data + new password
-      var url = "${BaseProvider.baseUrl}Users/update/$userId";
+      var url = "${BaseProvider.baseUrl}Users/change-password";
       var uri = Uri.parse(url);
       var headers = createHeaders();
 
       var body = jsonEncode({
-        "firstName": currentUser.firstName,
-        "lastName": currentUser.lastName,
-        "email": currentUser.email,
-        "username": currentUser.username,
-        "phoneNumber": currentUser.phoneNumber,
-        "isActive": currentUser.isActive ?? true,
-        "password": newPassword,
-        "roleIds": [], // Empty array to maintain current roles
+        "currentPassword": currentPassword,
+        "newPassword": newPassword,
       });
 
-      var response = await http.put(uri, headers: headers, body: body);
+      var response = await http.post(uri, headers: headers, body: body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         return true;
-      } else {
-        return false;
       }
+
+      String errorMessage = 'Failed to change password.';
+      if (response.body.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(response.body);
+          if (decoded is Map) {
+            errorMessage = decoded['message']?.toString() ??
+                decoded['Message']?.toString() ??
+                errorMessage;
+          }
+        } catch (_) {
+          errorMessage = response.body.trim().replaceAll('"', '');
+        }
+      }
+
+      throw Exception(errorMessage);
     } catch (e) {
-      return false;
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Failed to change password.');
     }
   }
 

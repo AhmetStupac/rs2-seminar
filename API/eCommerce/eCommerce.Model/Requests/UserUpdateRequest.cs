@@ -28,8 +28,5 @@ namespace eCommerce.Model.Requests
         public bool IsActive { get; set; } = true;
 
         public int? ProfileImageId { get; set; }
-
-        [MinLength(6)]
-        public string? Password { get; set; }
     }
 }

@@ -2,8 +2,10 @@ using eCommerce.Model.Messages;
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Validators;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -22,13 +24,26 @@ namespace eCommerce.Services
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
         private readonly IRabbitMQPublisher _rabbitMQPublisher;
+        private readonly IValidator<RegisterRequest> _registerValidator;
+        private readonly IValidator<UserCreateRequest> _createValidator;
+        private readonly IValidator<UserUpdateRequest> _updateValidator;
 
-        public UserService(IB210033DbContext context, ITokenService tokenService, IEmailService emailService, IRabbitMQPublisher rabbitMQPublisher)
+        public UserService(
+            IB210033DbContext context,
+            ITokenService tokenService,
+            IEmailService emailService,
+            IRabbitMQPublisher rabbitMQPublisher,
+            IValidator<RegisterRequest> registerValidator,
+            IValidator<UserCreateRequest> createValidator,
+            IValidator<UserUpdateRequest> updateValidator)
         {
             _context = context;
             _tokenService = tokenService;
             _emailService = emailService;
             _rabbitMQPublisher = rabbitMQPublisher;
+            _registerValidator = registerValidator;
+            _createValidator = createValidator;
+            _updateValidator = updateValidator;
         }
 
         public async Task<List<UserResponse>> GetAsync(UserSearchObject search)
@@ -99,15 +114,7 @@ namespace eCommerce.Services
             {
                 await using var transaction = await _context.Database.BeginTransactionAsync();
 
-                if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-                {
-                    throw new InvalidOperationException("A user with this email already exists.");
-                }
-
-                if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-                {
-                    throw new InvalidOperationException("A user with this username already exists.");
-                }
+                await EnsureValidAsync(_createValidator, request);
 
                 var user = new User
                 {
@@ -116,7 +123,7 @@ namespace eCommerce.Services
                     Email = request.Email,
                     Username = request.Username,
                     PhoneNumber = request.PhoneNumber,
-                    IsActive = request.IsActive,
+                    IsActive = true,
                     ProfileImageId = request.ProfileImageId,
                     CreatedAt = DateTime.UtcNow,
                     IsDeleted = false
@@ -128,6 +135,56 @@ namespace eCommerce.Services
                     user.PasswordHash = HashPassword(request.Password, out salt);
                     user.PasswordSalt = Convert.ToBase64String(salt);
                 }
+
+                const int defaultRoleId = 2;
+                var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
+                if (!defaultRoleExists)
+                {
+                    throw new InvalidOperationException("Default role (Id = 2) not found.");
+                }
+
+                user.UserRoles.Add(new UserRole
+                {
+                    RoleId = defaultRoleId,
+                    DateAssigned = DateTime.UtcNow
+                });
+
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                createdUser = await GetUserResponseWithRolesAsync(user.Id);
+            });
+
+            return createdUser!;
+        }
+
+        public async Task<UserResponse> RegisterAsync(RegisterRequest request)
+        {
+            var strategy = _context.Database.CreateExecutionStrategy();
+            UserResponse? createdUser = null;
+
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+
+                await EnsureValidAsync(_registerValidator, request);
+
+                var user = new User
+                {
+                    FirstName = request.FirstName,
+                    LastName = request.LastName,
+                    Email = request.Email,
+                    Username = request.Username,
+                    PhoneNumber = request.PhoneNumber,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+
+                byte[] salt;
+                user.PasswordHash = HashPassword(request.Password, out salt);
+                user.PasswordSalt = Convert.ToBase64String(salt);
 
                 const int defaultRoleId = 2;
                 var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
@@ -168,15 +225,7 @@ namespace eCommerce.Services
                     return;
                 }
 
-                if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != id))
-                {
-                    throw new InvalidOperationException("A user with this email already exists.");
-                }
-
-                if (await _context.Users.AnyAsync(u => u.Username == request.Username && u.Id != id))
-                {
-                    throw new InvalidOperationException("A user with this username already exists.");
-                }
+                await EnsureValidAsync(_updateValidator, request, id);
 
                 user.FirstName = request.FirstName;
                 user.LastName = request.LastName;
@@ -185,13 +234,6 @@ namespace eCommerce.Services
                 user.PhoneNumber = request.PhoneNumber;
                 user.IsActive = request.IsActive;
                 user.ProfileImageId = request.ProfileImageId;
-
-                if (!string.IsNullOrEmpty(request.Password))
-                {
-                    byte[] salt;
-                    user.PasswordHash = HashPassword(request.Password, out salt);
-                    user.PasswordSalt = Convert.ToBase64String(salt);
-                }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -594,6 +636,20 @@ namespace eCommerce.Services
         private string GenerateVerificationCode()
         {
             return RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+        }
+
+        private static async Task EnsureValidAsync<T>(IValidator<T> validator, T request, int? excludeUserId = null)
+        {
+            var context = new ValidationContext<T>(request);
+            if (excludeUserId.HasValue)
+                context.RootContextData[UserValidationContextKeys.ExcludeUserId] = excludeUserId.Value;
+
+            var result = await validator.ValidateAsync(context);
+            if (!result.IsValid)
+            {
+                var errors = string.Join("; ", result.Errors.Select(e => e.ErrorMessage));
+                throw new InvalidOperationException(errors);
+            }
         }
 
     }

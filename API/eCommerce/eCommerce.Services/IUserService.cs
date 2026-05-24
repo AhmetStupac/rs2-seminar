@@ -12,6 +12,7 @@ namespace eCommerce.Services
         Task<List<UserResponse>> GetAsync(UserSearchObject search);
         Task<UserResponse?> GetByIdAsync(int id);
         Task<UserResponse> CreateAsync(UserCreateRequest request);
+        Task<UserResponse> RegisterAsync(RegisterRequest request);
         Task<UserResponse?> UpdateAsync(int id, UserUpdateRequest request);
         Task<UserResponse?> UpdateRolesAsync(int id, List<int> roleIds);
         Task<bool> DeleteAsync(int id);

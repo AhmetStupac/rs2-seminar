@@ -50,9 +50,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         lastName: _lastNameController.text.trim(),
         username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
-        phoneNumber: _phoneNumberController.text.trim(),
+        phoneNumber: _phoneNumberController.text.trim().isEmpty
+            ? null
+            : _phoneNumberController.text.trim(),
         password: _passwordController.text,
-        passwordConfirmation: _confirmPasswordController.text,
       );
 
       if (mounted) {
@@ -131,6 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // First Name field
                 TextFormField(
                   controller: _firstNameController,
+                  maxLength: 50,
                   decoration: InputDecoration(
                     labelText: 'First Name',
                     hintText: 'e.g. John',
@@ -143,6 +145,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your first name';
                     }
+                    if (value.trim().length > 50) {
+                      return 'First name cannot exceed 50 characters';
+                    }
                     return null;
                   },
                   textInputAction: TextInputAction.next,
@@ -152,6 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Last Name field
                 TextFormField(
                   controller: _lastNameController,
+                  maxLength: 50,
                   decoration: InputDecoration(
                     labelText: 'Last Name',
                     hintText: 'e.g. Doe',
@@ -164,6 +170,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your last name';
                     }
+                    if (value.trim().length > 50) {
+                      return 'Last name cannot exceed 50 characters';
+                    }
                     return null;
                   },
                   textInputAction: TextInputAction.next,
@@ -173,6 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Username field
                 TextFormField(
                   controller: _usernameController,
+                  maxLength: 100,
                   decoration: InputDecoration(
                     labelText: 'Username',
                     hintText: 'e.g. johndoe',
@@ -188,6 +198,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value.trim().length < 3) {
                       return 'Username must be at least 3 characters';
                     }
+                    if (value.trim().length > 100) {
+                      return 'Username cannot exceed 100 characters';
+                    }
                     return null;
                   },
                   textInputAction: TextInputAction.next,
@@ -197,6 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Email field
                 TextFormField(
                   controller: _emailController,
+                  maxLength: 100,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     labelText: 'Email',
@@ -209,6 +223,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email';
+                    }
+                    if (value.trim().length > 100) {
+                      return 'Email cannot exceed 100 characters';
                     }
                     final emailRegex = RegExp(
                       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
@@ -225,9 +242,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Phone Number field (+387 6x xxx xxx)
                 TextFormField(
                   controller: _phoneNumberController,
+                  maxLength: 20,
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
-                    labelText: 'Phone Number',
+                    labelText: 'Phone Number (optional)',
                     hintText: '+387 6x xxx xxx',
                     prefixIcon: const Icon(Icons.phone),
                     border: OutlineInputBorder(
@@ -235,14 +253,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    // Format: +387 6x xxx xxx (Bosnia mobile)
+                    final trimmed = value?.trim() ?? '';
+                    if (trimmed.isEmpty) return null;
                     final phoneRegex = RegExp(
                       r'^\+387 6[0-9] \d{3} \d{3}$',
                     );
-                    if (!phoneRegex.hasMatch(value.trim())) {
+                    if (!phoneRegex.hasMatch(trimmed)) {
                       return 'Phone must be in format: +387 6x xxx xxx';
                     }
                     return null;

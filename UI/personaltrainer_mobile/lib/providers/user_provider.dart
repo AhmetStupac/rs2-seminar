@@ -99,22 +99,41 @@ class UserProvider extends BaseProvider<User> {
     required String lastName,
     required String username,
     required String email,
-    required String phoneNumber,
+    String? phoneNumber,
     required String password,
-    required String passwordConfirmation,
   }) async {
-    var request = {
-      "firstName": firstName,
-      "lastName": lastName,
-      "username": username,
-      "email": email,
-      "phoneNumber": phoneNumber,
-      "password": password,
-      "passwordConfirmation": passwordConfirmation,
-      "isActive": true,
+    final request = <String, dynamic>{
+      'firstName': firstName,
+      'lastName': lastName,
+      'username': username,
+      'email': email,
+      'password': password,
     };
 
-    return await insert(request);
+    final phone = phoneNumber?.trim();
+    if (phone != null && phone.isNotEmpty) {
+      request['phoneNumber'] = phone;
+    }
+
+    final url = '${BaseProvider.baseUrl}Users/register';
+    final uri = Uri.parse(url);
+    final response = await BaseProvider.client.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(request),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return fromJson(jsonDecode(response.body));
+    }
+
+    throw Exception(
+      ApiError.fromBody(
+        response.body,
+        statusCode: response.statusCode,
+        fallback: 'Registration failed.',
+      ),
+    );
   }
 
   Future<User?> getCurrentUser() async {

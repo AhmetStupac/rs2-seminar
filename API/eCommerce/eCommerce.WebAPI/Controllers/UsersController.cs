@@ -50,13 +50,18 @@ namespace eCommerce.WebAPI.Controllers
         }
 
 
-        //register
         [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<ActionResult<UserResponse>> Register(RegisterRequest request)
+        {
+            var createdUser = await _userService.RegisterAsync(request);
+            return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
+        }
+
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpPost]
         public async Task<ActionResult<UserResponse>> Create(UserCreateRequest request)
         {
-            request.RoleIds = new List<int>();
-
             var createdUser = await _userService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
         }
