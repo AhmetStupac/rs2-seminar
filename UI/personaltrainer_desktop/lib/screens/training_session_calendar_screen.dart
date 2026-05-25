@@ -6,6 +6,7 @@ import 'package:personaltrainer_desktop/models/personal_trainer.dart';
 import 'package:personaltrainer_desktop/providers/training_session_provider.dart';
 import 'package:personaltrainer_desktop/providers/gym_provider.dart';
 import 'package:personaltrainer_desktop/providers/personal_trainer_provider.dart';
+import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/layouts/navBar.dart';
 
 class TrainingSessionCalendarScreen extends StatefulWidget {
@@ -447,6 +448,8 @@ class _TrainingSessionCalendarScreenState
       cardColor = Colors.green[100]!;
     } else if (session.isCancelled) {
       cardColor = Colors.red[100]!;
+    } else if (session.isNoShow) {
+      cardColor = Colors.purple[100]!;
     } else {
       cardColor = Colors.grey[200]!;
     }
@@ -542,7 +545,12 @@ class _TrainingSessionCalendarScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildDetailRow('Trainer', session.trainerName ?? 'N/A'),
-              _buildDetailRow('Client', session.clientName ?? 'N/A'),
+              _buildDetailRow(
+                'Client',
+                session.clientName?.isNotEmpty == true
+                    ? session.clientName!
+                    : 'Open slot',
+              ),
               _buildDetailRow('Gym', session.gymName ?? 'N/A'),
               _buildDetailRow(
                 'Date & Time',
@@ -559,16 +567,35 @@ class _TrainingSessionCalendarScreenState
               _buildDetailRow('Status', session.statusDisplay ?? 'N/A'),
               if (session.notes != null && session.notes!.isNotEmpty)
                 _buildDetailRow('Notes', session.notes!),
-              if (session.cancellationReason != null &&
-                  session.cancellationReason!.isNotEmpty)
-                _buildDetailRow(
-                  'Cancellation Reason',
-                  session.cancellationReason!,
-                ),
+              if (session.trainerNotes != null && session.trainerNotes!.isNotEmpty)
+                _buildDetailRow('Trainer Notes', session.trainerNotes!),
+              _buildAuditStatusSection(session),
             ],
           ),
         ),
         actions: [
+          if (session.isConfirmed) ...[
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _completeSession(session);
+              },
+              child: const Text(
+                'Mark Completed',
+                style: TextStyle(color: Colors.green),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _markNoShow(session);
+              },
+              child: const Text(
+                'Mark No-Show',
+                style: TextStyle(color: Colors.deepPurple),
+              ),
+            ),
+          ],
           if (session.canCancel == true && !session.isCancelled)
             TextButton(
               onPressed: () {
@@ -597,6 +624,141 @@ class _TrainingSessionCalendarScreenState
     );
   }
 
+  Widget _buildAuditStatusSection(TrainingSession session) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        Text(
+          'Audit trail',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _buildAuditStatusTile(
+          label: 'Created',
+          at: session.createdAt,
+          byUserId: null,
+          icon: Icons.add_circle_outline,
+          color: Colors.blueGrey,
+        ),
+        _buildAuditStatusTile(
+          label: 'Confirmed',
+          at: session.approvedAt,
+          byUserId: session.approvedByUserId,
+          icon: Icons.check_circle_outline,
+          color: Colors.blue,
+        ),
+        _buildAuditStatusTile(
+          label: 'Completed',
+          at: session.completedAt,
+          byUserId: session.completedByUserId,
+          icon: Icons.task_alt,
+          color: Colors.green,
+        ),
+        _buildAuditStatusTile(
+          label: 'No-show',
+          at: session.noShowAt,
+          byUserId: session.noShowByUserId,
+          icon: Icons.person_off_outlined,
+          color: Colors.deepPurple,
+        ),
+        _buildAuditStatusTile(
+          label: 'Cancelled',
+          at: session.cancelledAt,
+          byUserId: session.cancelledByUserId,
+          icon: Icons.cancel_outlined,
+          color: Colors.red,
+          subtitle: session.cancellationReason,
+        ),
+        if (session.updatedAt != null)
+          _buildAuditStatusTile(
+            label: 'Last updated',
+            at: session.updatedAt,
+            byUserId: null,
+            icon: Icons.update,
+            color: Colors.grey,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAuditStatusTile({
+    required String label,
+    required DateTime? at,
+    required int? byUserId,
+    required IconData icon,
+    required Color color,
+    String? subtitle,
+  }) {
+    final isRecorded = at != null;
+    final timestamp = isRecorded
+        ? DateFormat('MMM dd, yyyy HH:mm').format(at.toLocal())
+        : 'Not recorded';
+    final actorText = isRecorded && byUserId != null ? ' · user #$byUserId' : '';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isRecorded ? color.withValues(alpha: 0.08) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isRecorded ? color.withValues(alpha: 0.25) : Colors.grey[300]!,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isRecorded ? color : Colors.grey[500],
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isRecorded ? color : Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$timestamp$actorText',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isRecorded ? Colors.black87 : Colors.grey[500],
+                  ),
+                ),
+                if (subtitle != null && subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -619,6 +781,65 @@ class _TrainingSessionCalendarScreenState
         ],
       ),
     );
+  }
+
+  Future<void> _completeSession(TrainingSession session) async {
+    try {
+      await _trainingSessionProvider.complete(session.id!);
+      _loadSessions();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session marked as completed')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to complete session: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _markNoShow(TrainingSession session) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mark No-Show'),
+        content: const Text(
+          'Mark this session as no-show? The client did not attend the scheduled training.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Back'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.deepPurple),
+            child: const Text('Mark No-Show'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _trainingSessionProvider.markNoShow(session.id!);
+      _loadSessions();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Session marked as no-show')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to mark no-show: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _confirmSession(TrainingSession session) async {
@@ -856,6 +1077,8 @@ class _TrainingSessionCalendarScreenState
                                     sessionColor = Colors.green[300]!;
                                   } else if (session.isCancelled) {
                                     sessionColor = Colors.red[300]!;
+                                  } else if (session.isNoShow) {
+                                    sessionColor = Colors.purple[300]!;
                                   } else {
                                     sessionColor = Colors.grey[300]!;
                                   }
@@ -988,6 +1211,7 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
   String _trainerNotes = '';
   int _status =
       0; // 0: Pending, 1: Confirmed, 2: Completed, 3: Cancelled, 4: NoShow
+  bool _trainerSelectionLocked = false;
 
   @override
   void initState() {
@@ -1004,6 +1228,18 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
       setState(() {
         _gyms = gymsResult.result ?? [];
         _trainers = trainersResult.result ?? [];
+
+        if (!AuthProvider.isSuperAdmin && AuthProvider.userId != null) {
+          final ownTrainer = _trainers.cast<PersonalTrainer?>().firstWhere(
+            (t) => t?.userId == AuthProvider.userId,
+            orElse: () => null,
+          );
+          if (ownTrainer?.id != null) {
+            _selectedPersonalTrainerId = ownTrainer!.id;
+            _trainerSelectionLocked = true;
+          }
+        }
+
         _isLoading = false;
       });
     } catch (e) {
@@ -1172,11 +1408,13 @@ class _AddTrainingSessionDialogState extends State<AddTrainingSessionDialog> {
                             child: Text(trainer.userFirstName ?? 'Unknown'),
                           );
                         }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPersonalTrainerId = value;
-                          });
-                        },
+                        onChanged: _trainerSelectionLocked
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _selectedPersonalTrainerId = value;
+                                });
+                              },
                         validator: (value) {
                           if (value == null) {
                             return 'Please select a personal trainer';

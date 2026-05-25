@@ -47,6 +47,38 @@ class TrainingSessionProvider extends BaseProvider<TrainingSession> {
     }
   }
 
+  // Mark a confirmed session as completed (trainer only)
+  Future<TrainingSession> complete(int id) async {
+    var url = "${BaseProvider.baseUrl}TrainingSession/$id/complete";
+    var uri = Uri.parse(url);
+    var headers = createHeaders();
+
+    var response = await http.put(uri, headers: headers);
+
+    if (isValidResponse(response)) {
+      var data = jsonDecode(response.body);
+      return fromJson(data);
+    } else {
+      throw Exception("Failed to complete training session");
+    }
+  }
+
+  // Mark a confirmed session as no-show (trainer only)
+  Future<TrainingSession> markNoShow(int id) async {
+    var url = "${BaseProvider.baseUrl}TrainingSession/$id/no-show";
+    var uri = Uri.parse(url);
+    var headers = createHeaders();
+
+    var response = await http.put(uri, headers: headers);
+
+    if (isValidResponse(response)) {
+      var data = jsonDecode(response.body);
+      return fromJson(data);
+    } else {
+      throw Exception("Failed to mark training session as no-show");
+    }
+  }
+
   // Get available time slots for a trainer
   Future<List<DateTime>> getAvailableSlots(
     int trainerId,

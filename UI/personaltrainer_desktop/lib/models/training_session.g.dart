@@ -29,10 +29,23 @@ TrainingSession _$TrainingSessionFromJson(Map<String, dynamic> json) =>
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
+      approvedAt: json['approvedAt'] == null
+          ? null
+          : DateTime.parse(json['approvedAt'] as String),
+      approvedByUserId: (json['approvedByUserId'] as num?)?.toInt(),
       cancelledAt: json['cancelledAt'] == null
           ? null
           : DateTime.parse(json['cancelledAt'] as String),
+      cancelledByUserId: (json['cancelledByUserId'] as num?)?.toInt(),
       cancellationReason: json['cancellationReason'] as String?,
+      completedAt: json['completedAt'] == null
+          ? null
+          : DateTime.parse(json['completedAt'] as String),
+      completedByUserId: (json['completedByUserId'] as num?)?.toInt(),
+      noShowAt: json['noShowAt'] == null
+          ? null
+          : DateTime.parse(json['noShowAt'] as String),
+      noShowByUserId: (json['noShowByUserId'] as num?)?.toInt(),
       canEdit: json['canEdit'] as bool?,
       canCancel: json['canCancel'] as bool?,
     );
@@ -54,8 +67,15 @@ Map<String, dynamic> _$TrainingSessionToJson(TrainingSession instance) =>
       'trainerNotes': instance.trainerNotes,
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
+      'approvedAt': instance.approvedAt?.toIso8601String(),
+      'approvedByUserId': instance.approvedByUserId,
       'cancelledAt': instance.cancelledAt?.toIso8601String(),
+      'cancelledByUserId': instance.cancelledByUserId,
       'cancellationReason': instance.cancellationReason,
+      'completedAt': instance.completedAt?.toIso8601String(),
+      'completedByUserId': instance.completedByUserId,
+      'noShowAt': instance.noShowAt?.toIso8601String(),
+      'noShowByUserId': instance.noShowByUserId,
       'canEdit': instance.canEdit,
       'canCancel': instance.canCancel,
     };

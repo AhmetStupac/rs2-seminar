@@ -32,14 +32,19 @@ namespace eCommerce.Services.States
             await EnsureValidAsync(request);
 
             var currentUserId = GetCurrentUserId();
-            var hasActiveMembership = await _context.Set<Membership>()
-                .AnyAsync(m => m.ClientUserId == currentUserId
-                    && m.PersonalTrainerId == request.PersonalTrainerId
-                    && !m.IsRevoked
-                    && m.ExpiryDate > DateTime.UtcNow);
+            var isOwnTrainerSession = IsCurrentUserTrainer(request.PersonalTrainerId);
 
-            if (!hasActiveMembership)
-                throw new UnauthorizedAccessException("Active membership is required to book a training session.");
+            if (!isOwnTrainerSession)
+            {
+                var hasActiveMembership = await _context.Set<Membership>()
+                    .AnyAsync(m => m.ClientUserId == currentUserId
+                        && m.PersonalTrainerId == request.PersonalTrainerId
+                        && !m.IsRevoked
+                        && m.ExpiryDate > DateTime.UtcNow);
+
+                if (!hasActiveMembership)
+                    throw new UnauthorizedAccessException("Active membership is required to book a training session.");
+            }
 
             var available = await IsTrainerAvailableAsync(
                 request.PersonalTrainerId,
@@ -52,7 +57,7 @@ namespace eCommerce.Services.States
             var entity = new TrainingSession();
             _mapper.Map(request, entity);
 
-            entity.ClientId = currentUserId;
+            entity.ClientId = isOwnTrainerSession ? null : currentUserId;
             entity.Status = TrainingSessionStatus.Pending;
             entity.CreatedAt = DateTime.UtcNow;
 

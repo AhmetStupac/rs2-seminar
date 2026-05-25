@@ -41,6 +41,10 @@ namespace eCommerce.Services.Database
         public DateTime? CancelledAt { get; set; }
         public int? CancelledByUserId { get; set; }
         public string? CancellationReason { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public int? CompletedByUserId { get; set; }
+        public DateTime? NoShowAt { get; set; }
+        public int? NoShowByUserId { get; set; }
 
     }
 }

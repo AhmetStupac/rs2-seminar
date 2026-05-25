@@ -19,8 +19,15 @@ class TrainingSession {
   String? trainerNotes;
   DateTime? createdAt;
   DateTime? updatedAt;
+  DateTime? approvedAt;
+  int? approvedByUserId;
   DateTime? cancelledAt;
+  int? cancelledByUserId;
   String? cancellationReason;
+  DateTime? completedAt;
+  int? completedByUserId;
+  DateTime? noShowAt;
+  int? noShowByUserId;
   bool? canEdit;
   bool? canCancel;
 
@@ -40,8 +47,15 @@ class TrainingSession {
     this.trainerNotes,
     this.createdAt,
     this.updatedAt,
+    this.approvedAt,
+    this.approvedByUserId,
     this.cancelledAt,
+    this.cancelledByUserId,
     this.cancellationReason,
+    this.completedAt,
+    this.completedByUserId,
+    this.noShowAt,
+    this.noShowByUserId,
     this.canEdit,
     this.canCancel,
   });

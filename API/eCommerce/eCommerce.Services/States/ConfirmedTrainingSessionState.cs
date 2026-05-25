@@ -31,7 +31,10 @@ namespace eCommerce.Services.States
             if (!IsCurrentUserTrainer(entity.PersonalTrainerId))
                 throw new UnauthorizedAccessException("Only the trainer can complete the training session");
 
+            var userId = GetCurrentUserId();
             entity.Status = TrainingSessionStatus.Completed;
+            entity.CompletedAt = DateTime.UtcNow;
+            entity.CompletedByUserId = userId;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -87,7 +90,10 @@ namespace eCommerce.Services.States
             if (!IsCurrentUserTrainer(entity.PersonalTrainerId))
                 throw new UnauthorizedAccessException("Only the trainer can mark a session as no-show");
 
+            var userId = GetCurrentUserId();
             entity.Status = TrainingSessionStatus.NoShow;
+            entity.NoShowAt = DateTime.UtcNow;
+            entity.NoShowByUserId = userId;
             entity.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
