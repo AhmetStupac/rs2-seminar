@@ -46,5 +46,6 @@ namespace eCommerce.Services.Database
         public DateTime? NoShowAt { get; set; }
         public int? NoShowByUserId { get; set; }
 
+        public ICollection<TrainingSessionHistory> History { get; set; } = new List<TrainingSessionHistory>();
     }
 }

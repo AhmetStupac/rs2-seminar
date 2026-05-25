@@ -79,6 +79,24 @@ class TrainingSessionProvider extends BaseProvider<TrainingSession> {
     }
   }
 
+  Future<List<String>> getAllowedActions(int id) async {
+    var url = "${BaseProvider.baseUrl}TrainingSession/$id/allowed-actions";
+    var uri = Uri.parse(url);
+    var headers = createHeaders();
+
+    var response = await http.get(uri, headers: headers);
+
+    if (isValidResponse(response)) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return data.map((item) => item.toString()).toList();
+      }
+      return const [];
+    } else {
+      throw Exception("Failed to load allowed actions");
+    }
+  }
+
   // Get available time slots for a trainer
   Future<List<DateTime>> getAvailableSlots(
     int trainerId,

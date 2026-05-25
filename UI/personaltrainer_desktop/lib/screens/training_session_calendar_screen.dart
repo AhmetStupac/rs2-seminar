@@ -534,93 +534,179 @@ class _TrainingSessionCalendarScreenState
     }
   }
 
-  void _showSessionDetails(TrainingSession session) {
+  Future<void> _showSessionDetails(TrainingSession session) async {
+    if (session.id == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+    );
+
+    TrainingSession details = session;
+    List<String> allowedActions = [];
+
+    try {
+      details = await _trainingSessionProvider.getById(session.id!);
+      allowedActions =
+          await _trainingSessionProvider.getAllowedActions(session.id!);
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load session details: $e')),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.pop(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Training Session Details'),
+        title: const Text('Training Session Details'),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDetailRow('Trainer', session.trainerName ?? 'N/A'),
+              _buildDetailRow('Trainer', details.trainerName ?? 'N/A'),
               _buildDetailRow(
                 'Client',
-                session.clientName?.isNotEmpty == true
-                    ? session.clientName!
+                details.clientName?.isNotEmpty == true
+                    ? details.clientName!
                     : 'Open slot',
               ),
-              _buildDetailRow('Gym', session.gymName ?? 'N/A'),
+              _buildDetailRow('Gym', details.gymName ?? 'N/A'),
               _buildDetailRow(
                 'Date & Time',
-                session.scheduledDateTime != null
+                details.scheduledDateTime != null
                     ? DateFormat(
                         'MMM dd, yyyy HH:mm',
-                      ).format(session.scheduledDateTime!)
+                      ).format(details.scheduledDateTime!)
                     : 'N/A',
               ),
               _buildDetailRow(
                 'Duration',
-                '${session.durationMinutes ?? 0} minutes',
+                '${details.durationMinutes ?? 0} minutes',
               ),
-              _buildDetailRow('Status', session.statusDisplay ?? 'N/A'),
-              if (session.notes != null && session.notes!.isNotEmpty)
-                _buildDetailRow('Notes', session.notes!),
-              if (session.trainerNotes != null && session.trainerNotes!.isNotEmpty)
-                _buildDetailRow('Trainer Notes', session.trainerNotes!),
-              _buildAuditStatusSection(session),
+              _buildDetailRow('Status', details.statusDisplay ?? 'N/A'),
+              if (details.notes != null && details.notes!.isNotEmpty)
+                _buildDetailRow('Notes', details.notes!),
+              if (details.trainerNotes != null &&
+                  details.trainerNotes!.isNotEmpty)
+                _buildDetailRow('Trainer Notes', details.trainerNotes!),
+              _buildStatusActionsSection(details, allowedActions),
+              _buildAuditStatusSection(details),
             ],
           ),
         ),
         actions: [
-          if (session.isConfirmed) ...[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _completeSession(session);
-              },
-              child: const Text(
-                'Mark Completed',
-                style: TextStyle(color: Colors.green),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _markNoShow(session);
-              },
-              child: const Text(
-                'Mark No-Show',
-                style: TextStyle(color: Colors.deepPurple),
-              ),
-            ),
-          ],
-          if (session.canCancel == true && !session.isCancelled)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _cancelSession(session);
-              },
-              child: const Text(
-                'Cancel Session',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          if (session.isPending)
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _confirmSession(session);
-              },
-              child: const Text('Confirm'),
-            ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Close'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusActionsSection(
+    TrainingSession session,
+    List<String> allowedActions,
+  ) {
+    final hasConfirm = allowedActions.contains('Confirm');
+    final hasComplete = allowedActions.contains('Complete');
+    final hasNoShow = allowedActions.contains('NoShow');
+    final hasCancel = allowedActions.contains('Cancel');
+
+    if (!hasConfirm && !hasComplete && !hasNoShow && !hasCancel) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 12),
+        Text(
+          'Status actions',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (hasConfirm)
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _confirmSession(session);
+                },
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('Confirm'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            if (hasComplete)
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _completeSession(session);
+                },
+                icon: const Icon(Icons.task_alt, size: 18),
+                label: const Text('Mark Completed'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            if (hasNoShow)
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _markNoShow(session);
+                },
+                icon: const Icon(Icons.person_off_outlined, size: 18),
+                label: const Text('Mark No-Show'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.deepPurple,
+                  side: const BorderSide(color: Colors.deepPurple),
+                ),
+              ),
+            if (hasCancel)
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _cancelSession(session);
+                },
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('Cancel Session'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 

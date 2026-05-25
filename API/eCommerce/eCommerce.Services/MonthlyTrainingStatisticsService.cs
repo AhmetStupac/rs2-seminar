@@ -1,15 +1,12 @@
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
-using eCommerce.Model.Constants;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using TrainingSessionStatus = eCommerce.Model.Enums.TrainingSessionStatus;
 
@@ -18,12 +15,12 @@ namespace eCommerce.Services
     public class MonthlyTrainingStatisticsService : IMonthlyTrainingStatisticsService
     {
         private readonly IB210033DbContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
 
-        public MonthlyTrainingStatisticsService(IB210033DbContext context, IHttpContextAccessor httpContextAccessor)
+        public MonthlyTrainingStatisticsService(IB210033DbContext context, ICurrentUserService currentUser)
         {
             _context = context;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
         }
 
         public async Task<List<MonthlyTrainingStatisticsResponse>> GetYearlyStatisticsAsync(int userId, int year)
@@ -195,8 +192,10 @@ namespace eCommerce.Services
 
         private int GetCurrentUserId()
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
-            return int.Parse(userIdClaim?.Value ?? "0");
+            if (!_currentUser.UserId.HasValue)
+                return 0;
+
+            return _currentUser.UserId.Value;
         }
 
         private async Task<bool> IsAuthorizedToViewStatistics(int userId)
@@ -208,11 +207,7 @@ namespace eCommerce.Services
                 .AnyAsync(pt => pt.UserId == currentUserId && 
                     _context.Set<TrainingSession>().Any(ts => ts.ClientId == userId && ts.PersonalTrainerId == pt.Id));
 
-            // Check if current user is admin/superadmin
-            var isAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole(Roles.Administrator) ?? false;
-            var isSuperAdmin = _httpContextAccessor.HttpContext?.User?.IsInRole(Roles.SuperAdmin) ?? false;
-
-            return isTrainer || isAdmin || isSuperAdmin;
+            return isTrainer || _currentUser.IsAdmin;
         }
     }
 }

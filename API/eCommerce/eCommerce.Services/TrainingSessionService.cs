@@ -100,6 +100,20 @@ namespace eCommerce.Services
             return ResolveState(entity.Status).AllowedActions(entity);
         }
 
+        public override async Task<TrainingSessionResponse?> GetByIdAsync(int id)
+        {
+            var entity = await _context.Set<TrainingSession>()
+                .Include(ts => ts.Client)
+                .Include(ts => ts.PersonalTrainer)
+                    .ThenInclude(pt => pt.User)
+                .Include(ts => ts.Gym)
+                .Include(ts => ts.History)
+                    .ThenInclude(h => h.ChangedByUser)
+                .FirstOrDefaultAsync(ts => ts.Id == id);
+
+            return entity == null ? null : MapToResponse(entity);
+        }
+
         // --- Filtering / mapping (unchanged) -------------------------------------------------
 
         protected override IQueryable<TrainingSession> ApplyFilter(IQueryable<TrainingSession> query, TrainingSessionSearchObject search)
@@ -108,7 +122,9 @@ namespace eCommerce.Services
                 .Include(ts => ts.Client)
                 .Include(ts => ts.PersonalTrainer)
                     .ThenInclude(pt => pt.User)
-                .Include(ts => ts.Gym);
+                .Include(ts => ts.Gym)
+                .Include(ts => ts.History)
+                    .ThenInclude(h => h.ChangedByUser);
 
             if (search.ClientId.HasValue)
                 query = query.Where(ts => ts.ClientId == search.ClientId);
@@ -149,6 +165,23 @@ namespace eCommerce.Services
             var allowedActions = ResolveState(entity.Status).AllowedActions(entity);
             response.CanEdit = allowedActions.Contains(TrainingSessionConstants.AllowedActions.Update);
             response.CanCancel = allowedActions.Contains(TrainingSessionConstants.AllowedActions.Cancel);
+
+            response.History = entity.History
+                .OrderBy(h => h.ChangedAt)
+                .Select(h => new TrainingSessionHistoryResponse
+                {
+                    Id = h.Id,
+                    TrainingSessionId = h.TrainingSessionId,
+                    FromStatus = h.FromStatus,
+                    ToStatus = h.ToStatus,
+                    ChangedAt = h.ChangedAt,
+                    ChangedByUserId = h.ChangedByUserId,
+                    ChangedByUserName = h.ChangedByUser != null
+                        ? $"{h.ChangedByUser.FirstName} {h.ChangedByUser.LastName}"
+                        : null,
+                    Note = h.Note
+                })
+                .ToList();
 
             return response;
         }

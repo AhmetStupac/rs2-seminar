@@ -29,6 +29,7 @@ namespace eCommerce.Services.Database
         public DbSet<City> Cities { get; set; }
         public DbSet<Gym> Gyms { get; set; }
         public DbSet<TrainingSession> TrainingSessions { get; set; }
+        public DbSet<TrainingSessionHistory> TrainingSessionHistories { get; set; }
         public DbSet<PersonalTrainerRating> PersonalTrainerRatings { get; set; }
         public DbSet<MonthlyTrainingStatistics> MonthlyTrainingStatistics { get; set; }
         public DbSet<GroupTrainingSession> GroupTrainingSessions { get; set; }
@@ -230,6 +231,21 @@ namespace eCommerce.Services.Database
             modelBuilder.Entity<GroupTrainingSessionParticipant>()
                 .HasIndex(p => new { p.GroupTrainingSessionId, p.UserId })
                 .IsUnique();
+
+            modelBuilder.Entity<TrainingSessionHistory>()
+                .HasOne(h => h.TrainingSession)
+                .WithMany(ts => ts.History)
+                .HasForeignKey(h => h.TrainingSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TrainingSessionHistory>()
+                .HasOne(h => h.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(h => h.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TrainingSessionHistory>()
+                .HasIndex(h => new { h.TrainingSessionId, h.ChangedAt });
 
             // Configure Payment -> User relationship
             modelBuilder.Entity<Payment>()

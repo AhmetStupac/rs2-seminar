@@ -33,7 +33,6 @@ namespace eCommerce.Model.Responses
         public int? NoShowByUserId { get; set; }
         public bool CanEdit { get; set; } // Da li trenutni korisnik može da edituje
         public bool CanCancel { get; set; }
+        public List<TrainingSessionHistoryResponse> History { get; set; } = new List<TrainingSessionHistoryResponse>();
     }
-
-
 }

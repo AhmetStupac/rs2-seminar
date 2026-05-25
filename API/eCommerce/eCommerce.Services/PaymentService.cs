@@ -2,18 +2,15 @@ using eCommerce.Model.Enums;
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
-using eCommerce.Model.Constants;
 using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.Services
@@ -22,15 +19,15 @@ namespace eCommerce.Services
     {
         private readonly IB210033DbContext _context;
         private readonly IConfiguration _configuration;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
         private readonly INotificationService _notificationService;
 
-        public PaymentService(IB210033DbContext context, IMapper mapper, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, INotificationService notificationService)
+        public PaymentService(IB210033DbContext context, IMapper mapper, IConfiguration configuration, ICurrentUserService currentUser, INotificationService notificationService)
             : base(context, mapper)
         {
             _context = context;
             _configuration = configuration;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
             _notificationService = notificationService;
             StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
         }
@@ -119,7 +116,7 @@ namespace eCommerce.Services
                 throw new KeyNotFoundException($"No payment record found for intent '{request.StripePaymentIntentId}'.");
 
             var currentUserId = GetCurrentUserId();
-            var isAdmin = IsCurrentUserAdmin();
+            var isAdmin = _currentUser.IsAdmin;
             if (!isAdmin && record.UserId != currentUserId)
                 throw new UnauthorizedAccessException("You are not allowed to confirm this payment.");
 
@@ -194,7 +191,7 @@ namespace eCommerce.Services
             if (string.IsNullOrWhiteSpace(request.StripePaymentIntentId))
                 throw new ArgumentException("StripePaymentIntentId is required.");
 
-            if (!IsCurrentUserAdmin())
+            if (!_currentUser.IsAdmin)
                 throw new UnauthorizedAccessException("Only admins can approve or reject refunds.");
 
             var record = await _context.Set<Payment>()
@@ -448,23 +445,10 @@ namespace eCommerce.Services
 
         private int GetCurrentUserId()
         {
-            var user = _httpContextAccessor.HttpContext?.User;
-            if (user?.Identity?.IsAuthenticated != true)
+            if (!_currentUser.UserId.HasValue)
                 throw new UnauthorizedAccessException("Unauthorized user.");
 
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                ?? user.FindFirst("nameid")?.Value;
-
-            if (!int.TryParse(userIdClaim, out var userId))
-                throw new UnauthorizedAccessException("Invalid user identity.");
-
-            return userId;
-        }
-
-        private bool IsCurrentUserAdmin()
-        {
-            var user = _httpContextAccessor.HttpContext?.User;
-            return user?.IsInRole(Roles.SuperAdmin) == true || user?.IsInRole(Roles.Administrator) == true;
+            return _currentUser.UserId.Value;
         }
 
         public async Task<bool> BelongsToPersonalTrainerAsync(int paymentId, int personalTrainerId)

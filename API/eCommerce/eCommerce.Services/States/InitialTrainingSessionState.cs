@@ -4,7 +4,6 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,11 +18,11 @@ namespace eCommerce.Services.States
             IServiceProvider serviceProvider,
             IB210033DbContext context,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser,
             INotificationService notificationService,
             IValidator<TrainingSessionUpsertRequest> validator,
             IValidator<TrainingSessionCancelRequest> cancelValidator)
-            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator, cancelValidator)
+            : base(serviceProvider, context, mapper, currentUser, notificationService, validator, cancelValidator)
         {
         }
 
@@ -62,6 +61,9 @@ namespace eCommerce.Services.States
             entity.CreatedAt = DateTime.UtcNow;
 
             _context.Set<TrainingSession>().Add(entity);
+            await _context.SaveChangesAsync();
+
+            RecordStatusChange(entity, null, TrainingSessionStatus.Pending, currentUserId);
             await _context.SaveChangesAsync();
 
             if (entity.ClientId.HasValue)

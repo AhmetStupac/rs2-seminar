@@ -6,9 +6,7 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace eCommerce.Services
 {
@@ -16,13 +14,13 @@ namespace eCommerce.Services
     {
 
         private readonly IValidator<NutritionPlanUpsertRequest> _validator;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
 
-        public NutritionPlanService(IB210033DbContext context, IMapper mapper, IValidator<NutritionPlanUpsertRequest> validator, IHttpContextAccessor httpContextAccessor)
+        public NutritionPlanService(IB210033DbContext context, IMapper mapper, IValidator<NutritionPlanUpsertRequest> validator, ICurrentUserService currentUser)
             : base(context, mapper)
         {
             _validator = validator;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
         }
 
         protected override async Task BeforeInsert(Database.NutritionPlan entity, NutritionPlanUpsertRequest request)
@@ -111,9 +109,9 @@ namespace eCommerce.Services
             else
             {
                 // Filter by authenticated user
-                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+                if (_currentUser.UserId.HasValue)
                 {
+                    var userId = _currentUser.UserId.Value;
                     // Check if user is a personal trainer
                     var personalTrainerId = await _context.PersonalTrainers
                         .Where(pt => pt.UserId == userId)

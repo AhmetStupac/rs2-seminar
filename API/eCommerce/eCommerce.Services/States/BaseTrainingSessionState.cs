@@ -3,13 +3,11 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using TrainingSessionStatus = eCommerce.Model.Enums.TrainingSessionStatus;
 
@@ -20,7 +18,7 @@ namespace eCommerce.Services.States
         protected readonly IServiceProvider _serviceProvider;
         protected readonly IB210033DbContext _context;
         protected readonly IMapper _mapper;
-        protected readonly IHttpContextAccessor _httpContextAccessor;
+        protected readonly ICurrentUserService _currentUser;
         protected readonly INotificationService _notificationService;
         protected readonly IValidator<TrainingSessionUpsertRequest> _validator;
         protected readonly IValidator<TrainingSessionCancelRequest> _cancelValidator;
@@ -29,7 +27,7 @@ namespace eCommerce.Services.States
             IServiceProvider serviceProvider,
             IB210033DbContext context,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser,
             INotificationService notificationService,
             IValidator<TrainingSessionUpsertRequest> validator,
             IValidator<TrainingSessionCancelRequest> cancelValidator)
@@ -37,7 +35,7 @@ namespace eCommerce.Services.States
             _serviceProvider = serviceProvider;
             _context = context;
             _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
             _notificationService = notificationService;
             _validator = validator;
             _cancelValidator = cancelValidator;
@@ -79,11 +77,10 @@ namespace eCommerce.Services.States
 
         protected int GetCurrentUserId()
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            if (!_currentUser.UserId.HasValue)
                 throw new UnauthorizedAccessException("User is not authenticated");
 
-            return userId;
+            return _currentUser.UserId.Value;
         }
 
         protected bool IsCurrentUserTrainer(int trainerId)
@@ -129,6 +126,24 @@ namespace eCommerce.Services.States
                     ts.ScheduledDateTime < endTime &&
                     ts.ScheduledDateTime.AddMinutes(ts.DurationMinutes) > scheduledDateTime)
                 .AnyAsync();
+        }
+
+        protected void RecordStatusChange(
+            TrainingSession entity,
+            TrainingSessionStatus? fromStatus,
+            TrainingSessionStatus toStatus,
+            int changedByUserId,
+            string? note = null)
+        {
+            _context.Set<TrainingSessionHistory>().Add(new TrainingSessionHistory
+            {
+                TrainingSessionId = entity.Id,
+                FromStatus = fromStatus,
+                ToStatus = toStatus,
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = changedByUserId,
+                Note = note
+            });
         }
     }
 }

@@ -4,7 +4,6 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -18,11 +17,11 @@ namespace eCommerce.Services.States
             IServiceProvider serviceProvider,
             IB210033DbContext context,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser,
             INotificationService notificationService,
             IValidator<TrainingSessionUpsertRequest> validator,
             IValidator<TrainingSessionCancelRequest> cancelValidator)
-            : base(serviceProvider, context, mapper, httpContextAccessor, notificationService, validator, cancelValidator)
+            : base(serviceProvider, context, mapper, currentUser, notificationService, validator, cancelValidator)
         {
         }
 
@@ -65,10 +64,13 @@ namespace eCommerce.Services.States
                 throw new UnauthorizedAccessException("Only the trainer can confirm the training session");
 
             var userId = GetCurrentUserId();
+            var previousStatus = entity.Status;
             entity.Status = TrainingSessionStatus.Confirmed;
             entity.ApprovedAt = DateTime.UtcNow;
             entity.ApprovedByUserId = userId;
             entity.UpdatedAt = DateTime.UtcNow;
+
+            RecordStatusChange(entity, previousStatus, entity.Status, userId);
 
             await _context.SaveChangesAsync();
 
@@ -96,11 +98,14 @@ namespace eCommerce.Services.States
 
             await EnsureCancelValidAsync(request);
 
+            var previousStatus = entity.Status;
             entity.Status = TrainingSessionStatus.Cancelled;
             entity.CancelledAt = DateTime.UtcNow;
             entity.CancelledByUserId = userId;
             entity.CancellationReason = request.CancellationReason;
             entity.UpdatedAt = DateTime.UtcNow;
+
+            RecordStatusChange(entity, previousStatus, entity.Status, userId, request.CancellationReason);
 
             await _context.SaveChangesAsync();
 

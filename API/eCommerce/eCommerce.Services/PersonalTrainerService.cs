@@ -271,10 +271,30 @@ namespace eCommerce.Services
             if (!string.IsNullOrEmpty(trainer.Sport) && preferredSports.Contains(trainer.Sport))
                 reasons.Add($"sličnog sporta ({trainer.Sport}) koji preferirate");
 
-            if (reasons.Count == 0)
-                return null;
+            if (reasons.Count > 0)
+                return $"Preporučeno jer imate iskustvo sa {string.Join(" i ", reasons)}.";
 
-            return $"Preporučeno jer imate iskustvo sa {string.Join(" i ", reasons)}.";
+            var hasUserHistory = usedTrainerIds.Count > 0
+                || highlyRatedTrainerIds.Count > 0
+                || preferredSports.Count > 0;
+
+            if (!hasUserHistory)
+                return "Preporučeno kao početni prijedlog dok nemate dovoljno historije.";
+
+            var averageRating = trainer.Ratings != null && trainer.Ratings.Any()
+                ? Math.Round(trainer.Ratings.Average(r => r.Rating), 1)
+                : (double?)null;
+
+            if (averageRating >= 4.0)
+                return "Preporučeno jer je trener aktivan i ima dobar prosječan rating.";
+
+            if (averageRating >= 3.0)
+                return "Preporučeno jer je trener aktivan i ima solidan prosječan rating.";
+
+            if (!string.IsNullOrEmpty(trainer.Sport))
+                return $"Preporučeno jer je trener aktivan i specijalizovan za {trainer.Sport}.";
+
+            return "Preporučeno jer je trener aktivan i dostupan za rezervaciju termina.";
         }
 
         public static void TrainRecommenderAtStartup(IServiceProvider serviceProvider)

@@ -6,13 +6,10 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace eCommerce.Services
@@ -22,17 +19,17 @@ namespace eCommerce.Services
     {
 
         private readonly IValidator<TrainingPlanUpsertRequest> _validator;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
 
         public TrainingPlanService(
             IB210033DbContext context,
             IMapper mapper,
             IValidator<TrainingPlanUpsertRequest> validator,
-            IHttpContextAccessor httpContextAccessor)
+            ICurrentUserService currentUser)
             : base(context, mapper)
         {
             _validator = validator;
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
         }
 
 
@@ -53,9 +50,9 @@ namespace eCommerce.Services
             }
 
             // Filter by authenticated user
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            if (_currentUser.UserId.HasValue)
             {
+                var userId = _currentUser.UserId.Value;
                 // Check if user is a personal trainer
                 var personalTrainerId = await _context.PersonalTrainers
                     .Where(pt => pt.UserId == userId)
@@ -226,11 +223,10 @@ namespace eCommerce.Services
 
         private int GetCurrentUserId()
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            if (!_currentUser.UserId.HasValue)
                 throw new UnauthorizedAccessException("User is not authenticated");
 
-            return userId;
+            return _currentUser.UserId.Value;
         }
     }
 }

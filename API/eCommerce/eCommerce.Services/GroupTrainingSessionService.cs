@@ -5,11 +5,9 @@ using eCommerce.Services.Database;
 using eCommerce.Services.Interface;
 using FluentValidation;
 using MapsterMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace eCommerce.Services
@@ -18,19 +16,19 @@ namespace eCommerce.Services
         : BaseCRUDService<GroupTrainingSessionResponse, GroupTrainingSessionSearchObject, GroupTrainingSession, GroupTrainingSessionUpsertRequest, GroupTrainingSessionUpsertRequest>,
           IGroupTrainingSessionService
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ICurrentUserService _currentUser;
         private readonly IValidator<GroupTrainingSessionUpsertRequest> _validator;
         private readonly INotificationService _notificationService;
 
         public GroupTrainingSessionService(
             IB210033DbContext context,
             IMapper mapper,
-            IHttpContextAccessor httpContextAccessor,
+            ICurrentUserService currentUser,
             IValidator<GroupTrainingSessionUpsertRequest> validator,
             INotificationService notificationService)
             : base(context, mapper)
         {
-            _httpContextAccessor = httpContextAccessor;
+            _currentUser = currentUser;
             _validator = validator;
             _notificationService = notificationService;
         }
@@ -173,8 +171,10 @@ namespace eCommerce.Services
 
         private int GetCurrentUserId()
         {
-            var claim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
-            return int.TryParse(claim?.Value, out var id) ? id : 0;
+            if (!_currentUser.UserId.HasValue)
+                return 0;
+
+            return _currentUser.UserId.Value;
         }
     }
 }
