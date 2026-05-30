@@ -3,6 +3,7 @@ import 'package:personaltrainer_desktop/layouts/navBar.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
 import 'package:personaltrainer_desktop/screens/equipment_screen.dart';
 import 'package:personaltrainer_desktop/screens/image_upload_screen.dart';
+import 'package:personaltrainer_desktop/screens/manual_create_user_screen.dart';
 import 'package:personaltrainer_desktop/screens/muscle_group_screen.dart';
 import 'package:personaltrainer_desktop/screens/personal_trainer_list_screen.dart';
 import 'package:personaltrainer_desktop/screens/statistics_screen.dart';
@@ -56,35 +57,55 @@ class _ExerciseDetailsScreenState extends State<ExerciseDetailsScreen> {
                   foregroundColor: Colors.white,
                 ),
               ),
+              SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ManualCreateUserScreen(),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.person_add),
+                label: Text('Create a user'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueGrey,
+                  foregroundColor: Colors.white,
+                ),
+              ),
             ],
-            SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => EquipmentScreen()),
-                );
-              },
-              icon: Icon(Icons.fitness_center),
-              label: Text('Equipment Management'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
+            if (AuthProvider.isSuperAdmin) ...[
+              SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => EquipmentScreen()),
+                  );
+                },
+                icon: Icon(Icons.fitness_center),
+                label: Text('Equipment Management'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
               ),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => MuscleGroupScreen()),
-                );
-              },
-              icon: Icon(Icons.accessibility_new),
-              label: Text('Muscle Group Management'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
+              SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => MuscleGroupScreen(),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.accessibility_new),
+                label: Text('Muscle Group Management'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  foregroundColor: Colors.white,
+                ),
               ),
-            ),
+            ],
             SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {

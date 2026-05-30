@@ -277,10 +277,14 @@ namespace eCommerce.Services
                     var plan = await _context.Set<Database.NutritionPlan>().FindAsync(record.ItemId.Value);
                     if (plan == null)
                         throw new KeyNotFoundException($"NutritionPlan with id {record.ItemId.Value} not found.");
-                        
-                    // ovdje napravi novi UserPurchasedNutritionPlan zapis umjesto da direktno updateaš NutritionPlan
 
-                    plan.UserId = record.UserId; // ovo izbrisat
+                    _context.Set<UserPurchasedNutritionPlan>().Add(new UserPurchasedNutritionPlan
+                    {
+                        UserId = record.UserId,
+                        PaymentId = record.Id,
+                        NutritionPlanId = record.ItemId.Value,
+                        BoughtAt = DateTime.UtcNow
+                    });
                     break;
                 }
 
@@ -289,9 +293,14 @@ namespace eCommerce.Services
                     var plan = await _context.Set<Database.TrainingPlan>().FindAsync(record.ItemId.Value);
                     if (plan == null)
                         throw new KeyNotFoundException($"TrainingPlan with id {record.ItemId.Value} not found.");
-                        
-                    // ovdje napravi novi UserPurchasedTrainingPlan zapis umjesto da direktno updateaš TrainingPlan
-                    plan.UserId = record.UserId; //ovo izbrisat
+
+                    _context.Set<UserPurchasedTrainingPlan>().Add(new UserPurchasedTrainingPlan
+                    {
+                        UserId = record.UserId,
+                        PaymentId = record.Id,
+                        TrainingPlanId = record.ItemId.Value,
+                        BoughtAt = DateTime.UtcNow
+                    });
                     break;
                 }
 
@@ -331,7 +340,10 @@ namespace eCommerce.Services
                         return;
 
                     var plan = await _context.Set<Database.TrainingPlan>().FindAsync(request.ItemId.Value);
-                    if (plan != null && plan.UserId == request.UserId)
+                    var alreadyPurchased = await _context.Set<UserPurchasedTrainingPlan>()
+                        .AnyAsync(p => p.UserId == request.UserId && p.TrainingPlanId == request.ItemId.Value);
+
+                    if (alreadyPurchased || (plan != null && plan.UserId == request.UserId))
                         throw new InvalidOperationException("You already purchased this training plan.");
                     return;
                 }
@@ -342,7 +354,10 @@ namespace eCommerce.Services
                         return;
 
                     var plan = await _context.Set<Database.NutritionPlan>().FindAsync(request.ItemId.Value);
-                    if (plan != null && plan.UserId == request.UserId)
+                    var alreadyPurchased = await _context.Set<UserPurchasedNutritionPlan>()
+                        .AnyAsync(p => p.UserId == request.UserId && p.NutritionPlanId == request.ItemId.Value);
+
+                    if (alreadyPurchased || (plan != null && plan.UserId == request.UserId))
                         throw new InvalidOperationException("You already purchased this nutrition plan.");
                     return;
                 }
@@ -410,23 +425,21 @@ namespace eCommerce.Services
             {
                 case PaymentItemType.NutritionPlan:
                 {
-                    var plan = await _context.Set<Database.NutritionPlan>().FindAsync(record.ItemId.Value);
-                    if (plan == null)
-                        throw new KeyNotFoundException($"NutritionPlan with id {record.ItemId.Value} not found.");
+                    var purchase = await _context.Set<UserPurchasedNutritionPlan>()
+                        .FirstOrDefaultAsync(p => p.PaymentId == record.Id);
 
-                    if (plan.UserId == record.UserId)
-                        plan.UserId = null;
+                    if (purchase != null)
+                        _context.Set<UserPurchasedNutritionPlan>().Remove(purchase);
                     break;
                 }
 
                 case PaymentItemType.TrainingPlan:
                 {
-                    var plan = await _context.Set<Database.TrainingPlan>().FindAsync(record.ItemId.Value);
-                    if (plan == null)
-                        throw new KeyNotFoundException($"TrainingPlan with id {record.ItemId.Value} not found.");
+                    var purchase = await _context.Set<UserPurchasedTrainingPlan>()
+                        .FirstOrDefaultAsync(p => p.PaymentId == record.Id);
 
-                    if (plan.UserId == record.UserId)
-                        plan.UserId = null;
+                    if (purchase != null)
+                        _context.Set<UserPurchasedTrainingPlan>().Remove(purchase);
                     break;
                 }
 

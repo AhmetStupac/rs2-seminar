@@ -120,6 +120,25 @@ namespace eCommerce.Services
                 var user = await _context.Users.FindAsync(insertRequest.UserId);
                 throw new InvalidOperationException($"A personal trainer with user name '{user?.FirstName}' already exists.");
             }
+
+            const int personalTrainerRoleId = 1;
+            var roleExists = await _context.Roles.AnyAsync(r => r.Id == personalTrainerRoleId);
+            if (!roleExists)
+            {
+                throw new InvalidOperationException("Personal trainer role (Id = 1) not found.");
+            }
+
+            var hasRole = await _context.UserRoles
+                .AnyAsync(ur => ur.UserId == insertRequest.UserId && ur.RoleId == personalTrainerRoleId);
+            if (!hasRole)
+            {
+                _context.UserRoles.Add(new UserRole
+                {
+                    UserId = insertRequest.UserId,
+                    RoleId = personalTrainerRoleId,
+                    DateAssigned = DateTime.UtcNow
+                });
+            }
         }
 
         protected override Task BeforeUpdate(PersonalTrainer entity, PersonalTrainerUpsertRequest updateRequest)

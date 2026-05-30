@@ -1,4 +1,5 @@
-﻿import 'package:http/http.dart' as http;
+﻿import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:personaltrainer_desktop/config/app_config.dart';
 import 'package:personaltrainer_desktop/providers/auth_provider.dart';
@@ -278,7 +279,9 @@ class AdminProvider {
   // Pass [trainerId] to restrict results to a specific trainer's plans.
   Future<List<Map<String, dynamic>>> getRefundRequests({int? trainerId}) async {
     try {
-      final buffer = StringBuffer('${baseUrl}Payment/all?status=refund_requested');
+      final buffer = StringBuffer(
+        '${baseUrl}Payment/all?status=refund_requested',
+      );
       if (trainerId != null) buffer.write('&trainerId=$trainerId');
       final url = buffer.toString();
       final response = await http.get(
@@ -291,12 +294,15 @@ class AdminProvider {
         if (decoded is List) {
           return decoded.cast<Map<String, dynamic>>();
         } else if (decoded is Map) {
-          final items = decoded['items'] ?? decoded['result'] ?? decoded['data'];
+          final items =
+              decoded['items'] ?? decoded['result'] ?? decoded['data'];
           if (items is List) return items.cast<Map<String, dynamic>>();
         }
         return [];
       } else {
-        throw Exception('Failed to load refund requests: ${response.statusCode}');
+        throw Exception(
+          'Failed to load refund requests: ${response.statusCode}',
+        );
       }
     } catch (e) {
       rethrow;
@@ -323,13 +329,20 @@ class AdminProvider {
         if (response.body.isNotEmpty) {
           try {
             final data = jsonDecode(response.body);
-            message = data['message'] ??
-                (approve ? 'Refund approved successfully' : 'Refund rejected successfully');
+            message =
+                data['message'] ??
+                (approve
+                    ? 'Refund approved successfully'
+                    : 'Refund rejected successfully');
           } catch (_) {
-            message = approve ? 'Refund approved successfully' : 'Refund rejected successfully';
+            message = approve
+                ? 'Refund approved successfully'
+                : 'Refund rejected successfully';
           }
         } else {
-          message = approve ? 'Refund approved successfully' : 'Refund rejected successfully';
+          message = approve
+              ? 'Refund approved successfully'
+              : 'Refund rejected successfully';
         }
         return {'success': true, 'message': message};
       } else if (response.statusCode == 400) {
@@ -371,6 +384,68 @@ class AdminProvider {
         return {'success': false, 'message': 'User not found'};
       } else {
         return {'success': false, 'message': 'Error: ${response.statusCode}'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Server communication error: $e'};
+    }
+  }
+
+  // Manually create a user (SuperAdmin only)
+  Future<Map<String, dynamic>> manualCreateUser({
+    required String firstName,
+    required String lastName,
+    required String username,
+    required String email,
+    required String phoneNumber,
+    required String password,
+    required String passwordConfirmation,
+    required int roleId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${baseUrl}users/admin/manual-create'),
+        headers: _createHeaders(),
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'username': username,
+          'email': email,
+          'phoneNumber': phoneNumber,
+          'password': password,
+          'passwordConfirmation': passwordConfirmation,
+          'roleId': roleId,
+        }),
+      );
+
+      debugPrint(
+        'manual-create status=${response.statusCode} body=${response.body}',
+      );
+
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          response.statusCode == 204) {
+        String message = 'User created successfully';
+        if (response.body.isNotEmpty) {
+          try {
+            final data = jsonDecode(response.body);
+            message = data['message']?.toString() ?? message;
+          } catch (_) {}
+        }
+        return {'success': true, 'message': message};
+      } else if (response.statusCode == 403) {
+        return {'success': false, 'message': 'Access denied'};
+      } else {
+        String message = 'Error: ${response.statusCode}';
+        if (response.body.isNotEmpty) {
+          try {
+            final data = jsonDecode(response.body);
+            message =
+                data['message']?.toString() ??
+                data['title']?.toString() ??
+                message;
+          } catch (_) {}
+        }
+        return {'success': false, 'message': message};
       }
     } catch (e) {
       return {'success': false, 'message': 'Server communication error: $e'};

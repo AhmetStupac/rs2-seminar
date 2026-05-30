@@ -136,18 +136,35 @@ namespace eCommerce.Services
                     user.PasswordSalt = Convert.ToBase64String(salt);
                 }
 
-                const int defaultRoleId = 2;
-                var defaultRoleExists = await _context.Roles.AnyAsync(r => r.Id == defaultRoleId);
-                if (!defaultRoleExists)
+                var roleIds = new List<int>();
+                if (request.RoleId.HasValue)
                 {
-                    throw new InvalidOperationException("Default role (Id = 2) not found.");
+                    roleIds.Add(request.RoleId.Value);
+                }
+                else
+                {
+                    const int defaultRoleId = 2;
+                    roleIds.Add(defaultRoleId);
                 }
 
-                user.UserRoles.Add(new UserRole
+                var existingRoleIds = await _context.Roles
+                    .Where(r => roleIds.Contains(r.Id))
+                    .Select(r => r.Id)
+                    .ToListAsync();
+
+                if (existingRoleIds.Count != roleIds.Count)
                 {
-                    RoleId = defaultRoleId,
-                    DateAssigned = DateTime.UtcNow
-                });
+                    throw new InvalidOperationException("One or more roles not found for user creation.");
+                }
+
+                foreach (var roleId in existingRoleIds.Distinct())
+                {
+                    user.UserRoles.Add(new UserRole
+                    {
+                        RoleId = roleId,
+                        DateAssigned = DateTime.UtcNow
+                    });
+                }
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();

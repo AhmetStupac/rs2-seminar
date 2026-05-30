@@ -21,6 +21,20 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         [ServiceFilter(typeof(PersonalTrainerOnlyFilter))]
+        [HttpGet]
+        public override async Task<PagedResult<ExerciseResponse>> Get([FromQuery] ExerciseSearchObject? search = null)
+        {
+            return await base.Get(search);
+        }
+
+        [ServiceFilter(typeof(PersonalTrainerOnlyFilter))]
+        [HttpGet("{id}")]
+        public override async Task<ExerciseResponse?> GetById(int id)
+        {
+            return await base.GetById(id);
+        }
+
+        [ServiceFilter(typeof(PersonalTrainerOnlyFilter))]
         [HttpPost]
         public override async Task<ExerciseResponse> Create([FromBody] ExerciseUpsertRequest request)
         {

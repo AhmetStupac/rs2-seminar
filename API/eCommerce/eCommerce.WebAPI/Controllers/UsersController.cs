@@ -59,7 +59,7 @@ namespace eCommerce.WebAPI.Controllers
         }
 
         [Authorize(Roles = Roles.SuperAdmin)]
-        [HttpPost]
+        [HttpPost("admin/manual-create")]
         public async Task<ActionResult<UserResponse>> Create(UserCreateRequest request)
         {
             var createdUser = await _userService.CreateAsync(request);

@@ -37,6 +37,8 @@ namespace eCommerce.Services.Database
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<UserPurchasedTrainingPlan> UserPurchasedTrainingPlans { get; set; }
+        public DbSet<UserPurchasedNutritionPlan> UserPurchasedNutritionPlans { get; set; }
 
 
 
@@ -254,6 +256,57 @@ namespace eCommerce.Services.Database
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Exercise>()
+                .HasOne(e => e.PersonalTrainer)
+                .WithMany()
+                .HasForeignKey(e => e.PersonalTrainerId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<UserPurchasedTrainingPlan>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPurchasedTrainingPlan>()
+                .HasOne(p => p.Payment)
+                .WithMany()
+                .HasForeignKey(p => p.PaymentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPurchasedTrainingPlan>()
+                .HasOne(p => p.TrainingPlan)
+                .WithMany()
+                .HasForeignKey(p => p.TrainingPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPurchasedTrainingPlan>()
+                .HasIndex(p => new { p.UserId, p.TrainingPlanId })
+                .IsUnique();
+
+            modelBuilder.Entity<UserPurchasedNutritionPlan>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPurchasedNutritionPlan>()
+                .HasOne(p => p.Payment)
+                .WithMany()
+                .HasForeignKey(p => p.PaymentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPurchasedNutritionPlan>()
+                .HasOne(p => p.NutritionPlan)
+                .WithMany()
+                .HasForeignKey(p => p.NutritionPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserPurchasedNutritionPlan>()
+                .HasIndex(p => new { p.UserId, p.NutritionPlanId })
+                .IsUnique();
+
             modelBuilder.Entity<Role>().HasData(
                new Role { Id = 1, Name = "Administrator", Description = "Administrator", IsActive = true, CreatedAt = DateTime.UtcNow },
                new Role { Id = 2, Name = "Kupac", Description = "Korisnik - kupac", IsActive = true, CreatedAt = DateTime.UtcNow },
@@ -328,14 +381,14 @@ namespace eCommerce.Services.Database
 
             // Exerciseq
             modelBuilder.Entity<Exercise>().HasData(
-                new Exercise { Id = 1, Name = "Bench Press", EquipmentId = 1 , ImageId=5},
-                new Exercise { Id = 2, Name = "Deadlift", EquipmentId = 1, ImageId = 8 },
-                new Exercise { Id = 3, Name = "Dumbbell Curl", EquipmentId = 2, ImageId = 9 },
-                new Exercise { Id = 4, Name = "Pull-up", EquipmentId = 3, ImageId = 4},
-                new Exercise { Id = 5, Name = "Barbell Squat", EquipmentId = 1, ImageId = 7},
-                new Exercise { Id = 6, Name = "Barbell Row", EquipmentId = 1, ImageId = 6 },
-                new Exercise { Id = 7, Name = "Treadmill Run", EquipmentId = 5, ImageId = 10},
-                new Exercise { Id = 8, Name = "Lateral Raise", EquipmentId = 2, ImageId = 11 }
+                new Exercise { Id = 1, Name = "Bench Press", EquipmentId = 1 , ImageId=5, PersonalTrainerId = 1 },
+                new Exercise { Id = 2, Name = "Deadlift", EquipmentId = 1, ImageId = 8, PersonalTrainerId = 1 },
+                new Exercise { Id = 3, Name = "Dumbbell Curl", EquipmentId = 2, ImageId = 9, PersonalTrainerId = 1 },
+                new Exercise { Id = 4, Name = "Pull-up", EquipmentId = 3, ImageId = 4, PersonalTrainerId = 1 },
+                new Exercise { Id = 5, Name = "Barbell Squat", EquipmentId = 1, ImageId = 7, PersonalTrainerId = 1 },
+                new Exercise { Id = 6, Name = "Barbell Row", EquipmentId = 1, ImageId = 6, PersonalTrainerId = 1 },
+                new Exercise { Id = 7, Name = "Treadmill Run", EquipmentId = 5, ImageId = 10, PersonalTrainerId = 1 },
+                new Exercise { Id = 8, Name = "Lateral Raise", EquipmentId = 2, ImageId = 11, PersonalTrainerId = 1 }
             );
 
             // ExerciseMuscleGroup
@@ -358,7 +411,8 @@ namespace eCommerce.Services.Database
                 new TrainingPlan { Id = 2, PersonalTrainerId = 1, UserId = 2, Title = "Advanced Hypertrophy", Description = "12-week muscle-building program designed for experienced lifters.", BasePrice = 79.99f, CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
                 new TrainingPlan { Id = 3, PersonalTrainerId = 2, UserId = null, Title = "Cardio Blast", Description = "High-intensity cardio program focused on fat loss and endurance.", BasePrice = 39.99f, CreatedAt = new DateTime(2026, 1, 15, 0, 0, 0, DateTimeKind.Utc) },
                 new TrainingPlan { Id = 4, PersonalTrainerId = 3, UserId = null, Title = "Upper Body Builder", Description = "Focused upper body strength and hypertrophy plan for intermediate clients.", BasePrice = 59.99f, CreatedAt = new DateTime(2026, 1, 16, 0, 0, 0, DateTimeKind.Utc) },
-                new TrainingPlan { Id = 5, PersonalTrainerId = 4, UserId = null, Title = "Boxing Conditioning", Description = "Conditioning plan for boxing stamina, core stability, and footwork.", BasePrice = 69.99f, CreatedAt = new DateTime(2026, 1, 17, 0, 0, 0, DateTimeKind.Utc) }
+                new TrainingPlan { Id = 5, PersonalTrainerId = 4, UserId = null, Title = "Boxing Conditioning", Description = "Conditioning plan for boxing stamina, core stability, and footwork.", BasePrice = 69.99f, CreatedAt = new DateTime(2026, 1, 17, 0, 0, 0, DateTimeKind.Utc) },
+                new TrainingPlan { Id = 6, PersonalTrainerId = 1, UserId = 1, Title = "SuperAdmin Starter Plan", Description = "Seed plan owned by the superadmin for testing and demos.", BasePrice = 0f, CreatedAt = new DateTime(2026, 1, 18, 0, 0, 0, DateTimeKind.Utc) }
             );
 
             // NutritionPlan

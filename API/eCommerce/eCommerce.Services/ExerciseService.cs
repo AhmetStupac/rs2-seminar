@@ -13,9 +13,11 @@ namespace eCommerce.Services
 {
     public class ExerciseService : BaseCRUDService<ExerciseResponse, ExerciseSearchObject, Database.Exercise, ExerciseUpsertRequest, ExerciseUpsertRequest>, IExerciseService
     {
+        private readonly ICurrentUserService _currentUser;
 
-        public ExerciseService(IB210033DbContext context, IMapper mapper) : base(context, mapper)
+        public ExerciseService(IB210033DbContext context, IMapper mapper, ICurrentUserService currentUser) : base(context, mapper)
         {
+            _currentUser = currentUser;
         }
 
         protected override Database.Exercise MapInsertToEntity(Database.Exercise entity, ExerciseUpsertRequest request)
@@ -48,6 +50,12 @@ namespace eCommerce.Services
 
         protected override async Task BeforeInsert(Database.Exercise entity, ExerciseUpsertRequest request)
         {
+            var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+            if (!trainerId.HasValue)
+                throw new UnauthorizedAccessException("Only personal trainers can create exercises.");
+
+            entity.PersonalTrainerId = trainerId.Value;
+
             // Initialize the collection
             entity.ExerciseMuscleGroups = new List<Database.ExerciseMuscleGroup>();
 
@@ -67,6 +75,10 @@ namespace eCommerce.Services
 
         protected override async Task BeforeUpdate(Database.Exercise entity, ExerciseUpsertRequest request)
         {
+            var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+            if (!trainerId.HasValue || entity.PersonalTrainerId != trainerId.Value)
+                throw new UnauthorizedAccessException("You can only update your own exercises.");
+
             // Remove existing muscle group relationships
             var existingRelationships = await _context.Set<Database.ExerciseMuscleGroup>()
                 .Where(emg => emg.ExerciseId == entity.Id)
@@ -104,6 +116,37 @@ namespace eCommerce.Services
                 query = query.Where(ex => ex.ExerciseMuscleGroups.Any(emg => emg.MuscleGroupId == search.MuscleGroupId.Value));
             }
             return query;
+        }
+
+        protected override async Task<IQueryable<Database.Exercise>> ApplyFilterAsync(IQueryable<Database.Exercise> query, ExerciseSearchObject search)
+        {
+            var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+            if (trainerId.HasValue)
+            {
+                query = query.Where(ex => ex.PersonalTrainerId == trainerId.Value);
+            }
+            else
+            {
+                query = query.Where(_ => false);
+            }
+
+            return ApplyFilter(query, search);
+        }
+
+        public override async Task<ExerciseResponse?> GetByIdAsync(int id)
+        {
+            var trainerId = await _currentUser.GetPersonalTrainerIdAsync();
+            if (!trainerId.HasValue)
+                return null;
+
+            var entity = await _context.Set<Database.Exercise>()
+                .Include(e => e.ExerciseMuscleGroups)
+                .ThenInclude(emg => emg.MuscleGroup)
+                .Include(e => e.Equipment)
+                .Include(i => i.Image)
+                .FirstOrDefaultAsync(e => e.Id == id && e.PersonalTrainerId == trainerId.Value);
+
+            return entity == null ? null : MapToResponse(entity);
         }
 
         protected override ExerciseResponse MapToResponse(Database.Exercise entity)

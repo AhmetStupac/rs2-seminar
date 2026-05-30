@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace eCommerce.Model.Requests
@@ -31,5 +32,7 @@ namespace eCommerce.Model.Requests
 
         [MinLength(6)]
         public string? Password { get; set; }
+
+        public int? RoleId { get; set; }
     }
 }

@@ -1,10 +1,11 @@
 using eCommerce.Model.Requests;
 using eCommerce.Model.Responses;
 using eCommerce.Model.SearchObjects;
+using eCommerce.Model.Constants;
 using eCommerce.Services.Interface;
 using eCommerce.WebAPI.Filters;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace eCommerce.WebAPI.Controllers
 {
@@ -20,21 +21,35 @@ namespace eCommerce.WebAPI.Controllers
             
         }
 
-        [ServiceFilter(typeof(PersonalTrainerOnlyFilter))]
+        [ServiceFilter(typeof(AdminOrTrainerOnlyFilter))]
+        [HttpGet]
+        public override async Task<PagedResult<MuscleGroupResponse>> Get([FromQuery] MuscleGroupSearchObject? search = null)
+        {
+            return await base.Get(search);
+        }
+
+        [ServiceFilter(typeof(AdminOrTrainerOnlyFilter))]
+        [HttpGet("{id}")]
+        public override async Task<MuscleGroupResponse?> GetById(int id)
+        {
+            return await base.GetById(id);
+        }
+
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpPost]
         public override async Task<MuscleGroupResponse> Create([FromBody] MuscleGroupUpsertRequest request)
         {
             return await base.Create(request);
         }
 
-        [ServiceFilter(typeof(PersonalTrainerOnlyFilter))]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpPut("{id}")]
         public override async Task<MuscleGroupResponse?> Update(int id, [FromBody] MuscleGroupUpsertRequest request)
         {
             return await base.Update(id, request);
         }
 
-        [ServiceFilter(typeof(PersonalTrainerOnlyFilter))]
+        [Authorize(Roles = Roles.SuperAdmin)]
         [HttpDelete("{id}")]
         public override async Task<bool> Delete(int id)
         {

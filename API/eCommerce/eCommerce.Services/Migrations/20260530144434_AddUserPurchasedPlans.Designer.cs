@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eCommerce.Services.Database;
 
@@ -11,9 +12,11 @@ using eCommerce.Services.Database;
 namespace eCommerce.Services.Migrations
 {
     [DbContext(typeof(IB210033DbContext))]
-    partial class IB210033DbContextModelSnapshot : ModelSnapshot
+    [Migration("20260530144434_AddUserPurchasedPlans")]
+    partial class AddUserPurchasedPlans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,16 +174,11 @@ namespace eCommerce.Services.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PersonalTrainerId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("EquipmentId");
 
                     b.HasIndex("ImageId");
-
-                    b.HasIndex("PersonalTrainerId");
 
                     b.ToTable("Exercises");
 
@@ -190,64 +188,56 @@ namespace eCommerce.Services.Migrations
                             Id = 1,
                             EquipmentId = 1,
                             ImageId = 5,
-                            Name = "Bench Press",
-                            PersonalTrainerId = 1
+                            Name = "Bench Press"
                         },
                         new
                         {
                             Id = 2,
                             EquipmentId = 1,
                             ImageId = 8,
-                            Name = "Deadlift",
-                            PersonalTrainerId = 1
+                            Name = "Deadlift"
                         },
                         new
                         {
                             Id = 3,
                             EquipmentId = 2,
                             ImageId = 9,
-                            Name = "Dumbbell Curl",
-                            PersonalTrainerId = 1
+                            Name = "Dumbbell Curl"
                         },
                         new
                         {
                             Id = 4,
                             EquipmentId = 3,
                             ImageId = 4,
-                            Name = "Pull-up",
-                            PersonalTrainerId = 1
+                            Name = "Pull-up"
                         },
                         new
                         {
                             Id = 5,
                             EquipmentId = 1,
                             ImageId = 7,
-                            Name = "Barbell Squat",
-                            PersonalTrainerId = 1
+                            Name = "Barbell Squat"
                         },
                         new
                         {
                             Id = 6,
                             EquipmentId = 1,
                             ImageId = 6,
-                            Name = "Barbell Row",
-                            PersonalTrainerId = 1
+                            Name = "Barbell Row"
                         },
                         new
                         {
                             Id = 7,
                             EquipmentId = 5,
                             ImageId = 10,
-                            Name = "Treadmill Run",
-                            PersonalTrainerId = 1
+                            Name = "Treadmill Run"
                         },
                         new
                         {
                             Id = 8,
                             EquipmentId = 2,
                             ImageId = 11,
-                            Name = "Lateral Raise",
-                            PersonalTrainerId = 1
+                            Name = "Lateral Raise"
                         });
                 });
 
@@ -1268,7 +1258,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(2972),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 32, DateTimeKind.Utc).AddTicks(9758),
                             Description = "Administrator",
                             IsActive = true,
                             Name = "Administrator"
@@ -1276,7 +1266,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(2973),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 32, DateTimeKind.Utc).AddTicks(9760),
                             Description = "Korisnik - kupac",
                             IsActive = true,
                             Name = "Kupac"
@@ -1284,7 +1274,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(2975),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 32, DateTimeKind.Utc).AddTicks(9762),
                             Description = "Super Administrator sa svim privilegijama",
                             IsActive = true,
                             Name = "SuperAdmin"
@@ -1686,7 +1676,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3233),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(163),
                             Email = "ahmet.stupac@edu.fit.ba",
                             FirstName = "Ahmet",
                             IsActive = true,
@@ -1700,7 +1690,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3236),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(166),
                             Email = "adil@edu.fit.ba",
                             FirstName = "Denis",
                             IsActive = true,
@@ -1714,7 +1704,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3238),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(169),
                             Email = "ahmet2.stupac@edu.fit.ba",
                             FirstName = "Ismail",
                             IsActive = true,
@@ -1728,7 +1718,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3240),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(175),
                             Email = "ahmet3.stupac@edu.fit.ba",
                             FirstName = "Alem",
                             IsActive = true,
@@ -1742,7 +1732,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3242),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(177),
                             Email = "ahmet4.stupac@edu.fit.ba",
                             FirstName = "Adil",
                             IsActive = true,
@@ -1756,7 +1746,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 6,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3243),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(180),
                             Email = "ahmet5.stupac@edu.fit.ba",
                             FirstName = "Amel",
                             IsActive = true,
@@ -1770,7 +1760,7 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 7,
-                            CreatedAt = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3245),
+                            CreatedAt = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(182),
                             Email = "ahmet6.stupac@edu.fit.ba",
                             FirstName = "Emina",
                             IsActive = true,
@@ -1878,49 +1868,49 @@ namespace eCommerce.Services.Migrations
                         new
                         {
                             Id = 1,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3279),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(239),
                             RoleId = 3,
                             UserId = 1
                         },
                         new
                         {
                             Id = 2,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3280),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(241),
                             RoleId = 1,
                             UserId = 2
                         },
                         new
                         {
                             Id = 4,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3281),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(242),
                             RoleId = 1,
                             UserId = 3
                         },
                         new
                         {
                             Id = 5,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3283),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(244),
                             RoleId = 1,
                             UserId = 4
                         },
                         new
                         {
                             Id = 6,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3284),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(246),
                             RoleId = 1,
                             UserId = 5
                         },
                         new
                         {
                             Id = 7,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3285),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(247),
                             RoleId = 1,
                             UserId = 6
                         },
                         new
                         {
                             Id = 8,
-                            DateAssigned = new DateTime(2026, 5, 30, 15, 6, 14, 870, DateTimeKind.Utc).AddTicks(3286),
+                            DateAssigned = new DateTime(2026, 5, 30, 14, 44, 34, 33, DateTimeKind.Utc).AddTicks(249),
                             RoleId = 2,
                             UserId = 7
                         });
@@ -1960,16 +1950,9 @@ namespace eCommerce.Services.Migrations
                         .WithMany()
                         .HasForeignKey("ImageId");
 
-                    b.HasOne("eCommerce.Services.Database.PersonalTrainer", "PersonalTrainer")
-                        .WithMany()
-                        .HasForeignKey("PersonalTrainerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Equipment");
 
                     b.Navigation("Image");
-
-                    b.Navigation("PersonalTrainer");
                 });
 
             modelBuilder.Entity("eCommerce.Services.Database.ExerciseMuscleGroup", b =>

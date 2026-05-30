@@ -140,6 +140,7 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddScoped<TrainingOwnershipFilter>();
 builder.Services.AddScoped<PersonalTrainerOnlyFilter>();
+builder.Services.AddScoped<AdminOrTrainerOnlyFilter>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

@@ -75,6 +75,10 @@ namespace eCommerce.Model.Validators
             RuleFor(x => x.Password)
                 .MinimumLength(6).When(x => !string.IsNullOrEmpty(x.Password))
                 .WithMessage("Password must be at least 6 characters long.");
+
+            RuleFor(x => x.RoleId)
+                .GreaterThan(0).When(x => x.RoleId.HasValue)
+                .WithMessage("RoleId must be greater than 0.");
         }
     }
 

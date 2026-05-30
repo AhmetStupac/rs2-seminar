@@ -14,6 +14,9 @@ namespace eCommerce.Services.Database
         public int Id { get; set; }
         public string Name { get; set; }
         public ICollection<ExerciseMuscleGroup> ExerciseMuscleGroups { get; set; } 
+        [ForeignKey(nameof(PersonalTrainer))]
+        public int? PersonalTrainerId { get; set; }
+        public PersonalTrainer? PersonalTrainer { get; set; }
         [ForeignKey(nameof(Equipment))]
         public int EquipmentId { get; set; }
         public Equipment Equipment { get; set; }
