@@ -277,8 +277,10 @@ namespace eCommerce.Services
                     var plan = await _context.Set<Database.NutritionPlan>().FindAsync(record.ItemId.Value);
                     if (plan == null)
                         throw new KeyNotFoundException($"NutritionPlan with id {record.ItemId.Value} not found.");
+                        
+                    // ovdje napravi novi UserPurchasedNutritionPlan zapis umjesto da direktno updateaš NutritionPlan
 
-                    plan.UserId = record.UserId;
+                    plan.UserId = record.UserId; // ovo izbrisat
                     break;
                 }
 
@@ -287,8 +289,9 @@ namespace eCommerce.Services
                     var plan = await _context.Set<Database.TrainingPlan>().FindAsync(record.ItemId.Value);
                     if (plan == null)
                         throw new KeyNotFoundException($"TrainingPlan with id {record.ItemId.Value} not found.");
-
-                    plan.UserId = record.UserId;
+                        
+                    // ovdje napravi novi UserPurchasedTrainingPlan zapis umjesto da direktno updateaš TrainingPlan
+                    plan.UserId = record.UserId; //ovo izbrisat
                     break;
                 }
 

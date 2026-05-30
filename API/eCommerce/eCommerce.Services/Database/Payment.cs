@@ -27,3 +27,19 @@ namespace eCommerce.Services.Database
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
+
+/*
+ * UserPurchasedTrainingPlans:
+ * - UserId - kupac koji je kupio plan
+ * - paymentId - ID paymenta koji se odnosi na kupovinu - foreign key na Payment tablicu
+ * - training plan id - ID kupljenog plana - foreign key na TrainingPlan tablicu
+ * - boughtAt - datum kupovine
+ */
+
+/*
+ * UserPurchasedNutritionPlans:
+ * - UserId - kupac koji je kupio plan
+ * - paymentId - ID paymenta koji se odnosi na kupovinu - foreign key na Payment tablicu
+ * - nutrition plan id - ID kupljenog plana - foreign key na TrainingPlan tablicu
+ * - boughtAt - datum kupovine
+ */
