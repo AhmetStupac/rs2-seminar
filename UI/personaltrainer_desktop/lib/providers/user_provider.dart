@@ -14,6 +14,28 @@ class UserProvider extends BaseProvider<User> {
   }
 
   @override
+  Future<User> insert(dynamic request) async {
+    final url = "${BaseProvider.baseUrl}Users/register";
+    final uri = Uri.parse(url);
+    final headers = createHeaders();
+
+    final jsonRequest = jsonEncode(request);
+    final response = await http.post(uri, headers: headers, body: jsonRequest);
+
+    if (isValidResponse(response)) {
+      if (response.body.isEmpty) {
+        if (request is User) return request;
+        if (request is Map<String, dynamic>) return fromJson(request);
+        throw Exception("Empty response from register endpoint");
+      }
+      final data = jsonDecode(response.body);
+      return fromJson(data);
+    } else {
+      throw Exception("Unknown error");
+    }
+  }
+
+  @override
   Future<SearchResult<User>> get({dynamic filter}) async {
     try {
       return await super.get(filter: filter);
@@ -185,7 +207,8 @@ class UserProvider extends BaseProvider<User> {
         try {
           final decoded = jsonDecode(response.body);
           if (decoded is Map) {
-            errorMessage = decoded['message']?.toString() ??
+            errorMessage =
+                decoded['message']?.toString() ??
                 decoded['Message']?.toString() ??
                 errorMessage;
           }

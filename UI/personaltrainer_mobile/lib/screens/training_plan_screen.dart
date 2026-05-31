@@ -47,9 +47,21 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
 
     try {
       // Get training plans for the logged-in user
-      final result = await _trainingPlanProvider.get(
-        filter: {'userId': AuthProvider.userId.toString()},
+      var result = await _trainingPlanProvider.get(
+        filter: {'userId': AuthProvider.userId.toString(), 'pageSize': 100},
       );
+
+      if (result.result.isEmpty) {
+        result = await _trainingPlanProvider.get(
+          filter: {'UserId': AuthProvider.userId.toString(), 'pageSize': 100},
+        );
+      }
+
+      if (result.result.isEmpty) {
+        result = await _trainingPlanProvider.get(
+          filter: {'ClientId': AuthProvider.userId.toString(), 'pageSize': 100},
+        );
+      }
 
       for (var plan in result.result) {}
 
